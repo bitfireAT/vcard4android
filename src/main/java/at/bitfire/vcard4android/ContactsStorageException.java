@@ -8,14 +8,14 @@
 
 package at.bitfire.vcard4android;
 
-import android.app.Application;
-import android.test.ApplicationTestCase;
+public class ContactsStorageException extends Exception {
 
-/**
- * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>
- */
-public class ApplicationTest extends ApplicationTestCase<Application> {
-	public ApplicationTest() {
-		super(Application.class);
+	public ContactsStorageException(String message) {
+		super(message);
 	}
+
+	public ContactsStorageException(String message, Throwable ex) {
+		super(message, ex);
+	}
+
 }

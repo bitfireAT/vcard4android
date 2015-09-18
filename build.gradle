@@ -24,9 +24,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'org.apache.commons:commons-lang3:3.4'
+    provided 'org.projectlombok:lombok:1.16.4'
+
+    // ez-vcard to parse/generate VCards
+    compile 'com.googlecode.ez-vcard:ez-vcard:0.9.7'
 }
