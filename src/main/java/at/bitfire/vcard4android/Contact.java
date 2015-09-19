@@ -33,6 +33,8 @@ public class Contact {
 	public String prefix, givenName, middleName, familyName, suffix;
 	public String phoneticGivenName, phoneticMiddleName, phoneticFamilyName;
 
+	public String notes;
+
 	@Getter private List<Telephone> phoneNumbers = new LinkedList<>();
 	@Getter private List<Email> emails = new LinkedList<>();
 

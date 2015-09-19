@@ -17,8 +17,6 @@ import android.test.InstrumentationTestCase;
 
 import java.util.Arrays;
 
-import lombok.Cleanup;
-
 public class AndroidAddressBookTest extends InstrumentationTestCase {
 
 	final Account testAccount = new Account("AndroidAddressBookTest", "at.bitfire.vcard4android");
@@ -38,7 +36,7 @@ public class AndroidAddressBookTest extends InstrumentationTestCase {
 
 
 	public void testSettings() throws ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider);
+		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.DEFAULT, AndroidContactFactory.DEFAULT);
 
 		ContentValues values = new ContentValues();
 		values.put(ContactsContract.Settings.SHOULD_SYNC, false);
@@ -58,7 +56,7 @@ public class AndroidAddressBookTest extends InstrumentationTestCase {
 	}
 
 	public void testSyncState() throws ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider);
+		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.DEFAULT, AndroidContactFactory.DEFAULT);
 
 		addressBook.setSyncState(new byte[0]);
 		assertEquals(0, addressBook.getSyncState().length);

@@ -31,7 +31,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
 		provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
 		assertNotNull(provider);
 
-		addressBook = new AndroidAddressBook(testAccount, provider);
+		addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.DEFAULT, AndroidContactFactory.DEFAULT);
 	}
 
 	@Override
@@ -41,8 +41,6 @@ public class AndroidContactTest extends InstrumentationTestCase {
 
 
 	public void testAddAndReadContact() throws FileNotFoundException, ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider);
-
 		Contact vcard = new Contact();
 		vcard.displayName = "Mya Contact";
 		vcard.givenName = "Mya";

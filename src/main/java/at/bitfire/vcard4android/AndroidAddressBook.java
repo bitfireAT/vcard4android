@@ -18,6 +18,8 @@ import android.os.RemoteException;
 import android.provider.ContactsContract;
 
 import java.io.FileNotFoundException;
+import java.util.LinkedList;
+import java.util.List;
 
 import lombok.Cleanup;
 
@@ -26,12 +28,18 @@ public class AndroidAddressBook {
 
 	final Account account;
 	final ContentProviderClient provider;
+	final AndroidGroupFactory groupFactory;
+	final AndroidContactFactory contactFactory;
 
-	public AndroidAddressBook(Account account, ContentProviderClient provider) {
+	public AndroidAddressBook(Account account, ContentProviderClient provider, AndroidGroupFactory groupFactory, AndroidContactFactory contactFactory) {
 		this.account = account;
 		this.provider = provider;
+		this.groupFactory = groupFactory;
+		this.contactFactory = contactFactory;
 	}
 
+
+	// account-specific address book settings
 
 	public ContentValues getSettings() throws ContactsStorageException {
 		try {
@@ -43,7 +51,7 @@ public class AndroidAddressBook {
 			} else
 				throw new FileNotFoundException();
 		} catch(FileNotFoundException|RemoteException e) {
-			throw new ContactsStorageException("Couldn't read local contacts settings", e);
+			throw new ContactsStorageException("Couldn't read contacts settings", e);
 		}
 	}
 
@@ -53,16 +61,18 @@ public class AndroidAddressBook {
 		try {
 			provider.insert(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), values);
 		} catch(RemoteException e) {
-			throw new ContactsStorageException("Couldn't write local contacts settings", e);
+			throw new ContactsStorageException("Couldn't write contacts settings", e);
 		}
 	}
 
+
+	// account-specific address book sync state
 
 	public byte[] getSyncState() throws ContactsStorageException {
 		try {
 			return ContactsContract.SyncState.get(provider, account);
 		} catch (RemoteException e) {
-			throw new ContactsStorageException("Couldn't read local contacts sync state", e);
+			throw new ContactsStorageException("Couldn't read contacts sync state", e);
 		}
 	}
 
@@ -70,10 +80,43 @@ public class AndroidAddressBook {
 		try {
 			ContactsContract.SyncState.set(provider, account, data);
 		} catch (RemoteException e) {
-			throw new ContactsStorageException("Couldn't write local contacts sync state", e);
+			throw new ContactsStorageException("Couldn't write contacts sync state", e);
 		}
 	}
 
+
+	// groups
+
+	AndroidGroup[] queryGroups(String where, String[] whereArgs) throws ContactsStorageException {
+		try {
+			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.Groups.CONTENT_URI),
+					new String[] { ContactsContract.Groups._ID }, where, whereArgs, null);
+
+			List<AndroidGroup> groups = new LinkedList<>();
+			while (cursor != null && cursor.moveToNext())
+				groups.add(groupFactory.newInstance(this, cursor.getLong(0)));
+			return groups.toArray(groupFactory.newArray(groups.size()));
+		} catch (RemoteException e) {
+			throw new ContactsStorageException("Couldn't query contact groups", e);
+		}
+	}
+
+	AndroidContact[] queryContacts(String where, String[] whereArgs) throws ContactsStorageException {
+		try {
+			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.RawContacts.CONTENT_URI),
+					new String[] { ContactsContract.RawContacts._ID }, where, whereArgs, null);
+
+			List<AndroidContact> contacts = new LinkedList<>();
+			while (cursor != null && cursor.moveToNext())
+				contacts.add(contactFactory.newInstance(this, cursor.getLong(0)));
+			return contacts.toArray(contactFactory.newArray(contacts.size()));
+		} catch (RemoteException e) {
+			throw new ContactsStorageException("Couldn't query contacts", e);
+		}
+	}
+
+
+	// helpers
 
 	public Uri syncAdapterURI(Uri uri) {
 		return uri.buildUpon()
