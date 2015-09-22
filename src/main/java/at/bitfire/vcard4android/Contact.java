@@ -8,16 +8,66 @@
 
 package at.bitfire.vcard4android;
 
+import android.util.Log;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
+import ezvcard.Ezvcard;
+import ezvcard.VCard;
+import ezvcard.VCardVersion;
 import ezvcard.parameter.EmailType;
+import ezvcard.parameter.ImageType;
 import ezvcard.parameter.TelephoneType;
+import ezvcard.property.Address;
+import ezvcard.property.Anniversary;
+import ezvcard.property.Birthday;
+import ezvcard.property.Categories;
 import ezvcard.property.Email;
+import ezvcard.property.FormattedName;
+import ezvcard.property.Impp;
+import ezvcard.property.Logo;
+import ezvcard.property.Nickname;
+import ezvcard.property.Note;
+import ezvcard.property.Organization;
+import ezvcard.property.Photo;
+import ezvcard.property.ProductId;
+import ezvcard.property.RawProperty;
+import ezvcard.property.Related;
+import ezvcard.property.Revision;
+import ezvcard.property.Role;
+import ezvcard.property.Sound;
+import ezvcard.property.Source;
+import ezvcard.property.StructuredName;
 import ezvcard.property.Telephone;
+import ezvcard.property.Title;
+import ezvcard.property.Uid;
+import ezvcard.property.Url;
+import lombok.Cleanup;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
 public class Contact {
+	private static final String TAG = "vcard4android.Contact";
+
+    @Getter @Setter
+    private static String productID = null;
+
+	public static final String
+			PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME",
+			PROPERTY_PHONETIC_MIDDLE_NAME = "X-PHONETIC-MIDDLE-NAME",
+			PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME",
+			PROPERTY_SIP = "X-SIP";
 
 	public static final TelephoneType
 			PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback"),
@@ -28,14 +78,345 @@ public class Contact {
 
 	public static final EmailType EMAIL_TYPE_MOBILE = EmailType.get("x-mobile");
 
-
+	public String uid;
 	public String displayName, nickName;
 	public String prefix, givenName, middleName, familyName, suffix;
 	public String phoneticGivenName, phoneticMiddleName, phoneticFamilyName;
 
-	public String notes;
+    public Organization organization;
+    public String jobTitle, jobDescription;
 
 	@Getter private List<Telephone> phoneNumbers = new LinkedList<>();
 	@Getter private List<Email> emails = new LinkedList<>();
+    @Getter private List<Impp> impps = new LinkedList<>();
+    @Getter private List<Address> addresses = new LinkedList<>();
+    @Getter private List<String> categories = new LinkedList<>();
+    @Getter private List<String> URLs = new LinkedList<>();
+    @Getter private List<Related> relations = new LinkedList<>();
+
+    public String notes;
+
+    public Anniversary anniversary;
+    public Birthday birthDay;
+
+    public byte[] photo;
+
+    // unknown properties in text VCARD format
+    public String unknownProperties;
+
+
+
+    /**
+	 * Parses an InputStream that contains a VCard.
+	 *
+	 * @param stream  input stream containing the VCard (any parsable version, i.e. 3 or 4)
+	 * @param charset charset of the input stream or null (will assume UTF-8)
+	 * @return array of filled Event data objects (may have size 0) – doesn't return null
+	 */
+	public static Contact[] fromStream(@NonNull InputStream stream, Charset charset) throws IOException {
+		final List<VCard> vcards;
+		if (charset != null) {
+			@Cleanup InputStreamReader reader = new InputStreamReader(stream, charset);
+			vcards = Ezvcard.parse(reader).all();
+		} else
+			vcards = Ezvcard.parse(stream).all();
+
+		List<Contact> contacts = new LinkedList<>();
+		for (VCard vcard : vcards)
+			contacts.add(fromVCard(vcard));
+		return contacts.toArray(new Contact[contacts.size()]);
+	}
+
+
+	protected static Contact fromVCard(VCard vCard) {
+		Contact c = new Contact();
+
+		// UID
+		Uid uid = vCard.getUid();
+		if (uid != null) {
+			c.uid = uid.getValue();
+			vCard.removeProperties(Uid.class);
+		} else {
+			Log.w(TAG, "Received VCard without UID, generating new one");
+			c.generateUID();
+		}
+
+		// FN
+		FormattedName fn = vCard.getFormattedName();
+		if (fn != null) {
+			c.displayName = fn.getValue();
+			vCard.removeProperties(FormattedName.class);
+		} else
+			Log.w(TAG, "Received invalid VCard without FN (formatted name) property");
+
+		// N
+		StructuredName n = vCard.getStructuredName();
+		if (n != null) {
+			c.prefix = StringUtils.join(n.getPrefixes(), " ");
+			c.givenName = n.getGiven();
+			c.middleName = StringUtils.join(n.getAdditional(), " ");
+			c.familyName = n.getFamily();
+			c.suffix = StringUtils.join(n.getSuffixes(), " ");
+			vCard.removeProperties(StructuredName.class);
+		}
+
+		// phonetic names
+		RawProperty phoneticFirstName = vCard.getExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME),
+					phoneticMiddleName = vCard.getExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME),
+					phoneticLastName = vCard.getExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
+		if (phoneticFirstName != null) {
+			c.phoneticGivenName = phoneticFirstName.getValue();
+			vCard.removeExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME);
+		}
+		if (phoneticMiddleName != null) {
+			c.phoneticMiddleName = phoneticMiddleName.getValue();
+			vCard.removeExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME);
+		}
+		if (phoneticLastName != null) {
+			c.phoneticFamilyName = phoneticLastName.getValue();
+			vCard.removeExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
+		}
+
+		// TEL
+		c.phoneNumbers = vCard.getTelephoneNumbers();
+		vCard.removeProperties(Telephone.class);
+
+		// EMAIL
+		c.emails = vCard.getEmails();
+		vCard.removeProperties(Email.class);
+
+        // ORG
+        c.organization = vCard.getOrganization();
+        vCard.removeProperties(Organization.class);
+        // TITLE
+        for (Title title : vCard.getTitles()) {
+            c.jobTitle = title.getValue();
+            vCard.removeProperties(Title.class);
+            break;
+        }
+        // ROLE
+        for (Role role : vCard.getRoles()) {
+            c.jobDescription = role.getValue();
+            vCard.removeProperties(Role.class);
+            break;
+        }
+
+        // IMPP
+        c.impps = vCard.getImpps();
+        vCard.removeProperties(Impp.class);
+        // add X-SIP properties as IMPP, too
+        for (RawProperty sip : vCard.getExtendedProperties(PROPERTY_SIP))
+            c.impps.add(new Impp("sip", sip.getValue()));
+        vCard.removeExtendedProperty(PROPERTY_SIP);
+
+        // NICKNAME
+        Nickname nicknames = vCard.getNickname();
+        if (nicknames != null) {
+            if (nicknames.getValues() != null)
+                c.nickName = StringUtils.join(nicknames.getValues(), ", ");
+            vCard.removeProperties(Nickname.class);
+        }
+
+        // ADR
+        c.addresses = vCard.getAddresses();
+        vCard.removeProperties(Address.class);
+
+        // NOTE
+        List<String> notes = new LinkedList<>();
+        for (Note note : vCard.getNotes())
+            notes.add(note.getValue());
+        if (!notes.isEmpty())
+            c.notes = StringUtils.join(notes, "\n\n\n");
+        vCard.removeProperties(Note.class);
+
+        // CATEGORY
+        Categories categories = vCard.getCategories();
+        if (categories != null)
+            c.categories = categories.getValues();
+        vCard.removeProperties(Categories.class);
+
+        // URL
+        for (Url url : vCard.getUrls())
+            c.URLs.add(url.getValue());
+        vCard.removeProperties(Url.class);
+
+        // BDAY
+        c.birthDay = vCard.getBirthday();
+        vCard.removeProperties(Birthday.class);
+        // ANNIVERSARY
+        c.anniversary = vCard.getAnniversary();
+        vCard.removeProperties(Anniversary.class);
+
+        // RELATED
+        Log.w(TAG, "Looking for RELATED");
+        for (Related related : vCard.getRelations()) {
+            String text = related.getText();
+            if (StringUtils.isNotEmpty(text)) {
+                // process only free-form relations with text
+                c.relations.add(related);
+                vCard.removeProperty(related);
+            }
+        }
+
+        // PHOTO
+        for (Photo photo : vCard.getPhotos()) {
+            c.photo = photo.getData();
+            if (photo == null && photo.getUrl() != null)
+                /* TODO download photo */;
+                /*try {
+                    URI uri = new URI(photo.getUrl());
+                    Log.i(TAG, "Downloading contact photo from " + uri);
+                    this.photo = downloader.download(uri);
+                } catch(Exception e) {
+                    Log.w(TAG, "Couldn't fetch contact photo", e);
+                }*/
+            vCard.removeProperties(Photo.class);
+            break;
+        }
+
+        // remove binary properties because of potential OutOfMemory / TransactionTooLarge exceptions
+        vCard.removeProperties(Logo.class);
+        vCard.removeProperties(Sound.class);
+        // remove properties that don't apply anymore
+        vCard.removeProperties(ProductId.class);
+        vCard.removeProperties(Revision.class);
+        vCard.removeProperties(Source.class);
+        // store all remaining properties into unknownProperties
+        if (!vCard.getProperties().isEmpty() || !vCard.getExtendedProperties().isEmpty())
+            try {
+                c.unknownProperties = vCard.write();
+            } catch(Exception e) {
+                Log.w(TAG, "Couldn't serialize unknown properties, dropping them");
+            }
+
+        return c;
+	}
+
+    public ByteArrayOutputStream toStream(VCardVersion vCardVersion) throws IOException {
+        VCard vCard = null;
+        try {
+            if (unknownProperties != null)
+                vCard = Ezvcard.parse(unknownProperties).first();
+        } catch (Exception e) {
+            Log.e(TAG, "Couldn't parse unknown original properties, creating from scratch");
+        }
+        if (vCard == null)
+            vCard = new VCard();
+
+        // UID
+        if (uid != null)
+            vCard.setUid(new Uid(uid));
+        else
+            Log.wtf(TAG, "Generating VCard without UID");
+
+        // PRODID
+        if (productID != null)
+            vCard.setProductId(productID);
+
+        // FN
+        if (displayName != null)
+            vCard.setFormattedName(displayName);
+        else if (organization != null && organization.getValues() != null && organization.getValues().get(0) != null)
+            vCard.setFormattedName(organization.getValues().get(0));
+        else
+            Log.w(TAG, "No FN (formatted name) available to generate VCard");
+
+        // N
+        if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
+            StructuredName n = new StructuredName();
+            if (prefix != null)
+                for (String p : StringUtils.split(prefix))
+                    n.addPrefix(p);
+            n.setGiven(givenName);
+            if (middleName != null)
+                for (String middle : StringUtils.split(middleName))
+                    n.addAdditional(middle);
+            n.setFamily(familyName);
+            if (suffix != null)
+                for (String s : StringUtils.split(suffix))
+                    n.addSuffix(s);
+            vCard.setStructuredName(n);
+        }
+
+        // phonetic names
+        if (phoneticGivenName != null)
+            vCard.addExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME, phoneticGivenName);
+        if (phoneticMiddleName != null)
+            vCard.addExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME, phoneticMiddleName);
+        if (phoneticFamilyName != null)
+            vCard.addExtendedProperty(PROPERTY_PHONETIC_LAST_NAME, phoneticFamilyName);
+
+        // TEL
+        for (Telephone phoneNumber : phoneNumbers)
+            vCard.addTelephoneNumber(phoneNumber);
+
+        // EMAIL
+        for (Email email : emails)
+            vCard.addEmail(email);
+
+        // ORG, TITLE, ROLE
+        if (organization != null)
+            vCard.setOrganization(organization);
+        if (jobTitle != null)
+            vCard.addTitle(jobTitle);
+        if (jobDescription != null)
+            vCard.addRole(jobDescription);
+
+        // IMPP
+        for (Impp impp : impps)
+            vCard.addImpp(impp);
+
+        // NICKNAME
+        if (nickName != null)
+            // "Nick1, Nick2" → NICKNAME:Nick1,Nick2
+            vCard.setNickname(nickName.replace(" ,",","));
+
+        // ADR
+        for (Address address : addresses)
+            vCard.addAddress(address);
+
+        // NOTE
+        if (notes != null)
+            vCard.addNote(notes);
+
+        // CATEGORIES
+        if (!categories.isEmpty())
+            vCard.setCategories(categories.toArray(new String[categories.size()]));
+
+        // URL
+        for (String url : URLs)
+            vCard.addUrl(url);
+
+        // ANNIVERSARY
+        if (anniversary != null)
+            vCard.setAnniversary(anniversary);
+        // BDAY
+        if (birthDay != null)
+            vCard.setBirthday(birthDay);
+
+        // RELATED
+        for (Related related : relations)
+            vCard.addRelated(related);
+
+        // PHOTO
+        if (photo != null)
+            vCard.addPhoto(new Photo(photo, ImageType.JPEG));
+
+        // REV
+        vCard.setRevision(Revision.now());
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        Ezvcard .write(vCard)
+                .version(vCardVersion)
+                .versionStrict(false)
+                .prodId(productID == null)
+                .go(os);
+        return os;
+    }
+
+
+	protected void generateUID() {
+		uid = UUID.randomUUID().toString();
+	}
 
 }
