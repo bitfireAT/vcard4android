@@ -36,7 +36,7 @@ public class AndroidAddressBookTest extends InstrumentationTestCase {
 
 
 	public void testSettings() throws ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.DEFAULT, AndroidContactFactory.DEFAULT);
+		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
 
 		ContentValues values = new ContentValues();
 		values.put(ContactsContract.Settings.SHOULD_SYNC, false);
@@ -56,7 +56,7 @@ public class AndroidAddressBookTest extends InstrumentationTestCase {
 	}
 
 	public void testSyncState() throws ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.DEFAULT, AndroidContactFactory.DEFAULT);
+		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
 
 		addressBook.setSyncState(new byte[0]);
 		assertEquals(0, addressBook.getSyncState().length);

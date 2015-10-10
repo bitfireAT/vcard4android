@@ -87,7 +87,7 @@ public class AndroidAddressBook {
 
 	// groups
 
-	AndroidGroup[] queryGroups(String where, String[] whereArgs) throws ContactsStorageException {
+	protected AndroidGroup[] queryGroups(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
 			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.Groups.CONTENT_URI),
 					new String[] { ContactsContract.Groups._ID }, where, whereArgs, null);
@@ -101,7 +101,7 @@ public class AndroidAddressBook {
 		}
 	}
 
-	AndroidContact[] queryContacts(String where, String[] whereArgs) throws ContactsStorageException {
+    protected AndroidContact[] queryContacts(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
 			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.RawContacts.CONTENT_URI),
 					new String[] { ContactsContract.RawContacts._ID }, where, whereArgs, null);

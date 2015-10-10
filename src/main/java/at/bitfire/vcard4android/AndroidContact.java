@@ -15,15 +15,12 @@ import android.content.Entity;
 import android.content.EntityIterator;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
-import android.provider.ContactsContract.CommonDataKinds.*;
 import android.provider.ContactsContract.CommonDataKinds.Email;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import android.text.TextUtils;
 
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -32,7 +29,7 @@ import java.util.Set;
 
 import ezvcard.parameter.EmailType;
 import ezvcard.parameter.TelephoneType;
-import ezvcard.property.*;
+import ezvcard.property.Telephone;
 import lombok.Cleanup;
 
 public class AndroidContact {
@@ -210,7 +207,7 @@ public class AndroidContact {
 					break;
 				case Phone.TYPE_CUSTOM:
 					String customType = row.getAsString(CommonDataKinds.Phone.LABEL);
-					if (StringUtils.isNotEmpty(customType))
+					if (!TextUtils.isEmpty(customType))
 						number.addType(TelephoneType.get(labelToXName(customType)));
 			}
 		if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
@@ -234,7 +231,7 @@ public class AndroidContact {
 					break;
 				case Email.TYPE_CUSTOM:
 					String customType = row.getAsString(Email.LABEL);
-					if (StringUtils.isNotEmpty(customType))
+					if (!TextUtils.isEmpty(customType))
 						email.addType(EmailType.get(labelToXName(customType)));
 			}
 		if (row.getAsInteger(Email.IS_PRIMARY) != 0)
@@ -414,6 +411,8 @@ public class AndroidContact {
 				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
 		if (typeLabel != null)
 			builder.withValue(Email.LABEL, typeLabel);
+
+        batch.enqueue(builder.build());
 	}
 
 
@@ -427,10 +426,11 @@ public class AndroidContact {
 		// 2. remove x- from beginning -> "my_property"
 		// 3. replace "_" by " " -> "my property"
 		// 4. capitalize -> "My Property"
-		String	lowerCase = StringUtils.lowerCase(xname, Locale.US),
-				withoutPrefix = StringUtils.removeStart(lowerCase, "x-"),
-				withSpaces = StringUtils.replace(withoutPrefix, "_", " ");
-		return WordUtils.capitalize(withSpaces);
+        String s = xname.toLowerCase();
+        if (s.startsWith("x-"))
+            s = s.substring(2);
+        // TODO capitalize
+        return s.replace('_', ' ');
 	}
 
 }

@@ -31,7 +31,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
 		provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
 		assertNotNull(provider);
 
-		addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.DEFAULT, AndroidContactFactory.DEFAULT);
+		addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
 	}
 
 	@Override

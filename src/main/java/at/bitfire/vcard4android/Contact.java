@@ -8,15 +8,13 @@
 
 package at.bitfire.vcard4android;
 
+import android.text.TextUtils;
 import android.util.Log;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -152,11 +150,11 @@ public class Contact {
 		// N
 		StructuredName n = vCard.getStructuredName();
 		if (n != null) {
-			c.prefix = StringUtils.join(n.getPrefixes(), " ");
+			c.prefix = TextUtils.join(" ", n.getPrefixes());
 			c.givenName = n.getGiven();
-			c.middleName = StringUtils.join(n.getAdditional(), " ");
+			c.middleName = TextUtils.join(" ", n.getAdditional());
 			c.familyName = n.getFamily();
-			c.suffix = StringUtils.join(n.getSuffixes(), " ");
+			c.suffix = TextUtils.join(" ", n.getSuffixes());
 			vCard.removeProperties(StructuredName.class);
 		}
 
@@ -213,7 +211,7 @@ public class Contact {
         Nickname nicknames = vCard.getNickname();
         if (nicknames != null) {
             if (nicknames.getValues() != null)
-                c.nickName = StringUtils.join(nicknames.getValues(), ", ");
+                c.nickName = TextUtils.join(", ", nicknames.getValues());
             vCard.removeProperties(Nickname.class);
         }
 
@@ -226,7 +224,7 @@ public class Contact {
         for (Note note : vCard.getNotes())
             notes.add(note.getValue());
         if (!notes.isEmpty())
-            c.notes = StringUtils.join(notes, "\n\n\n");
+            c.notes = TextUtils.join("\n\n\n", notes);
         vCard.removeProperties(Note.class);
 
         // CATEGORY
@@ -248,10 +246,9 @@ public class Contact {
         vCard.removeProperties(Anniversary.class);
 
         // RELATED
-        Log.w(TAG, "Looking for RELATED");
         for (Related related : vCard.getRelations()) {
             String text = related.getText();
-            if (StringUtils.isNotEmpty(text)) {
+            if (!TextUtils.isEmpty(text)) {
                 // process only free-form relations with text
                 c.relations.add(related);
                 vCard.removeProperty(related);
@@ -325,15 +322,15 @@ public class Contact {
         if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
             StructuredName n = new StructuredName();
             if (prefix != null)
-                for (String p : StringUtils.split(prefix))
+                for (String p : TextUtils.split(prefix, " "))
                     n.addPrefix(p);
             n.setGiven(givenName);
             if (middleName != null)
-                for (String middle : StringUtils.split(middleName))
+                for (String middle : TextUtils.split(middleName, " "))
                     n.addAdditional(middle);
             n.setFamily(familyName);
             if (suffix != null)
-                for (String s : StringUtils.split(suffix))
+                for (String s : TextUtils.split(suffix, " "))
                     n.addSuffix(s);
             vCard.setStructuredName(n);
         }

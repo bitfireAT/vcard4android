@@ -10,7 +10,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.0"
+    buildToolsVersion "23.0.1"
 
     defaultConfig {
         minSdkVersion 14
@@ -33,9 +33,14 @@ android {
 }
 
 dependencies {
-    compile 'org.apache.commons:commons-lang3:3.4'
-    provided 'org.projectlombok:lombok:1.16.4'
+    provided 'org.projectlombok:lombok:1.16.6'
 
     // ez-vcard to parse/generate VCards
-    compile 'com.googlecode.ez-vcard:ez-vcard:0.9.7'
+    compile('com.googlecode.ez-vcard:ez-vcard:0.9.7') {
+        // hCard functionality not needed
+        exclude group: 'org.jsoup', module: 'jsoup'
+        exclude group: 'org.freemarker', module: 'freemarker'
+        // jCard functionality not needed
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    }
 }

@@ -10,17 +10,17 @@ package at.bitfire.vcard4android;
 
 public class AndroidContactFactory {
 
-	public static final AndroidContactFactory DEFAULT = new AndroidContactFactory();
+	public static final AndroidContactFactory INSTANCE = new AndroidContactFactory();
 
-	AndroidContact newInstance(AndroidAddressBook addressBook, long id) {
+	public AndroidContact newInstance(AndroidAddressBook addressBook, long id) {
 		return new AndroidContact(addressBook, id);
 	}
 
-	AndroidContact newInstance(AndroidAddressBook addressBook, Contact contact) {
+    public 	AndroidContact newInstance(AndroidAddressBook addressBook, Contact contact) {
 		return new AndroidContact(addressBook, contact);
 	}
 
-	AndroidContact[] newArray(int size) {
+    public AndroidContact[] newArray(int size) {
 		return new AndroidContact[size];
 	}
 

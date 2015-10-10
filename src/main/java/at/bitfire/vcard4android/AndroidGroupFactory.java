@@ -10,7 +10,7 @@ package at.bitfire.vcard4android;
 
 public class AndroidGroupFactory {
 
-	public static final AndroidGroupFactory DEFAULT = new AndroidGroupFactory();
+	public static final AndroidGroupFactory INSTANCE = new AndroidGroupFactory();
 
 	AndroidGroup newInstance(AndroidAddressBook addressBook, long id) {
 		return new AndroidGroup(addressBook, id);
