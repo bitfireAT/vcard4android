@@ -15,6 +15,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -107,11 +109,12 @@ public class Contact {
     /**
 	 * Parses an InputStream that contains a VCard.
 	 *
-	 * @param stream  input stream containing the VCard (any parsable version, i.e. 3 or 4)
-	 * @param charset charset of the input stream or null (will assume UTF-8)
+	 * @param stream     input stream containing the VCard (any parsable version, i.e. 3 or 4)
+	 * @param charset    charset of the input stream or null (will assume UTF-8)
+     * @param downloader will be used to download external resources like contact photos (may be null)
 	 * @return array of filled Event data objects (may have size 0) – doesn't return null
 	 */
-	public static Contact[] fromStream(@NonNull InputStream stream, Charset charset) throws IOException {
+	public static Contact[] fromStream(@NonNull InputStream stream, Charset charset, Downloader downloader) throws IOException {
 		final List<VCard> vcards;
 		if (charset != null) {
 			@Cleanup InputStreamReader reader = new InputStreamReader(stream, charset);
@@ -121,12 +124,12 @@ public class Contact {
 
 		List<Contact> contacts = new LinkedList<>();
 		for (VCard vcard : vcards)
-			contacts.add(fromVCard(vcard));
+			contacts.add(fromVCard(vcard, downloader));
 		return contacts.toArray(new Contact[contacts.size()]);
 	}
 
 
-	protected static Contact fromVCard(VCard vCard) {
+	protected static Contact fromVCard(VCard vCard, Downloader downloader) {
 		Contact c = new Contact();
 
 		// UID
@@ -135,7 +138,7 @@ public class Contact {
 			c.uid = uid.getValue();
 			vCard.removeProperties(Uid.class);
 		} else {
-			Log.w(TAG, "Received VCard without UID, generating new one");
+			Constants.log.warn("Received VCard without UID, generating new one");
 			c.generateUID();
 		}
 
@@ -145,7 +148,7 @@ public class Contact {
 			c.displayName = fn.getValue();
 			vCard.removeProperties(FormattedName.class);
 		} else
-			Log.w(TAG, "Received invalid VCard without FN (formatted name) property");
+            Constants.log.warn("Received VCard without FN (formatted name)");
 
 		// N
 		StructuredName n = vCard.getStructuredName();
@@ -156,7 +159,8 @@ public class Contact {
 			c.familyName = n.getFamily();
 			c.suffix = TextUtils.join(" ", n.getSuffixes());
 			vCard.removeProperties(StructuredName.class);
-		}
+		} else
+            Constants.log.warn("Received VCard without N (structured name)");
 
 		// phonetic names
 		RawProperty phoneticFirstName = vCard.getExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME),
@@ -258,18 +262,15 @@ public class Contact {
         // PHOTO
         for (Photo photo : vCard.getPhotos()) {
             c.photo = photo.getData();
-            if (photo == null && photo.getUrl() != null)
-                /* TODO download photo */;
-                /*try {
-                    URI uri = new URI(photo.getUrl());
-                    Log.i(TAG, "Downloading contact photo from " + uri);
-                    this.photo = downloader.download(uri);
-                } catch(Exception e) {
-                    Log.w(TAG, "Couldn't fetch contact photo", e);
-                }*/
-            vCard.removeProperties(Photo.class);
-            break;
+            if (c.photo == null && photo.getUrl() != null) {
+                String url = photo.getUrl();
+                Constants.log.info("Downloading photo from " + url);
+                c.photo = downloader.download(url, "image/*");
+            }
+            if (c.photo != null)
+                break;
         }
+        vCard.removeProperties(Photo.class);
 
         // remove binary properties because of potential OutOfMemory / TransactionTooLarge exceptions
         vCard.removeProperties(Logo.class);
@@ -311,16 +312,27 @@ public class Contact {
             vCard.setProductId(productID);
 
         // FN
+        String fn = null;
         if (displayName != null)
-            vCard.setFormattedName(displayName);
+            fn = displayName;
         else if (organization != null && organization.getValues() != null && organization.getValues().get(0) != null)
-            vCard.setFormattedName(organization.getValues().get(0));
-        else
-            Log.w(TAG, "No FN (formatted name) available to generate VCard");
+            fn = organization.getValues().get(0);
+        else {
+            if (!phoneNumbers.isEmpty())
+                fn = phoneNumbers.get(0).getText();
+            else if (!emails.isEmpty())
+                fn = emails.get(0).getValue();
+            Constants.log.warn("No FN (formatted name) available, using " + fn);
+        }
+        if (TextUtils.isEmpty(fn)) {
+            fn = "-";
+            Constants.log.warn("No FN (formatted name) available, using \"-\"");
+        }
+        vCard.setFormattedName(fn);
 
         // N
+        StructuredName n = new StructuredName();
         if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
-            StructuredName n = new StructuredName();
             if (prefix != null)
                 for (String p : TextUtils.split(prefix, " "))
                     n.addPrefix(p);
@@ -332,8 +344,11 @@ public class Contact {
             if (suffix != null)
                 for (String s : TextUtils.split(suffix, " "))
                     n.addSuffix(s);
-            vCard.setStructuredName(n);
+        } else {
+            n.setFamily("-");
+            Constants.log.warn("No N (structured name) available, using family name \"-\"");
         }
+        vCard.setStructuredName(n);
 
         // phonetic names
         if (phoneticGivenName != null)
@@ -415,5 +430,10 @@ public class Contact {
 	protected void generateUID() {
 		uid = UUID.randomUUID().toString();
 	}
+
+
+    public interface Downloader {
+        byte[] download(String url, String accepts);
+    }
 
 }

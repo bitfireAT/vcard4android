@@ -15,8 +15,6 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
     }
     buildTypes {
         release {
@@ -34,6 +32,7 @@ android {
 
 dependencies {
     provided 'org.projectlombok:lombok:1.16.6'
+    compile 'org.slf4j:slf4j-android:1.7.12'
 
     // ez-vcard to parse/generate VCards
     compile('com.googlecode.ez-vcard:ez-vcard:0.9.7') {

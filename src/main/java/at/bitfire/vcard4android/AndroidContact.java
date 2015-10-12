@@ -13,24 +13,32 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Entity;
 import android.content.EntityIterator;
+import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
+import android.provider.ContactsContract.CommonDataKinds.*;
 import android.provider.ContactsContract.CommonDataKinds.Email;
-import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.CommonDataKinds.Organization;
+import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.RawContacts;
 import android.text.TextUtils;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 import ezvcard.parameter.EmailType;
 import ezvcard.parameter.TelephoneType;
-import ezvcard.property.Telephone;
+import ezvcard.property.*;
+import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.NonNull;
@@ -95,13 +103,13 @@ public class AndroidContact {
 						case Email.CONTENT_ITEM_TYPE:
 							populateEmail(values);
 							break;
-						/*case Photo.CONTENT_ITEM_TYPE:
-							populatePhoto(c, values);
+						case Photo.CONTENT_ITEM_TYPE:
+							populatePhoto(values);
 							break;
 						case Organization.CONTENT_ITEM_TYPE:
-							populateOrganization(c, values);
+							populateOrganization(values);
 							break;
-						case Im.CONTENT_ITEM_TYPE:
+						/*case Im.CONTENT_ITEM_TYPE:
 							populateIMPP(c, values);
 							break;
 						case Nickname.CONTENT_ITEM_TYPE:
@@ -162,7 +170,8 @@ public class AndroidContact {
 
 	protected void populatePhoneNumber(ContentValues row) {
 		Telephone number = new Telephone(row.getAsString(Phone.NUMBER));
-		if (row.containsKey(Phone.TYPE))
+        Integer type = row.getAsInteger(Phone.TYPE);
+		if (type != null)
 			switch (row.getAsInteger(Phone.TYPE)) {
 				case Phone.TYPE_HOME:
 					number.addType(TelephoneType.HOME);
@@ -238,8 +247,9 @@ public class AndroidContact {
 
 	protected void populateEmail(ContentValues row) {
 		ezvcard.property.Email email = new ezvcard.property.Email(row.getAsString(Email.ADDRESS));
-		if (row.containsKey(Email.TYPE))
-			switch (row.getAsInteger(Email.TYPE)) {
+        Integer type = row.getAsInteger(Email.TYPE);
+        if (type != null)
+			switch (type) {
 				case Email.TYPE_HOME:
 					email.addType(EmailType.HOME);
 					break;
@@ -259,8 +269,44 @@ public class AndroidContact {
 		contact.getEmails().add(email);
 	}
 
+    protected void populatePhoto(ContentValues row) throws RemoteException {
+        if (row.containsKey(Photo.PHOTO_FILE_ID)) {
+            Uri photoUri = Uri.withAppendedPath(
+                    rawContactSyncURI(),
+                    RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
+            try {
+                @Cleanup AssetFileDescriptor fd = addressBook.provider.openAssetFile(photoUri, "r");
+                contact.photo = IOUtils.toByteArray(fd.createInputStream(), true);
+            } catch(IOException e) {
+                Constants.log.warn("Couldn't read local contact photo file", e);
+            }
+        } else
+            contact.photo = row.getAsByteArray(Photo.PHOTO);
+    }
 
-	public Uri add() throws ContactsStorageException {
+    protected void populateOrganization(ContentValues row) {
+        String	company = row.getAsString(Organization.COMPANY),
+                department = row.getAsString(Organization.DEPARTMENT),
+                title = row.getAsString(Organization.TITLE),
+                role = row.getAsString(Organization.JOB_DESCRIPTION);
+
+        if (!TextUtils.isEmpty(company) || !TextUtils.isEmpty(department)) {
+            ezvcard.property.Organization org = new ezvcard.property.Organization();
+            if (!TextUtils.isEmpty(company))
+                org.addValue(company);
+            if (!TextUtils.isEmpty(department))
+                org.addValue(department);
+            contact.organization = org;
+        }
+
+        if (!TextUtils.isEmpty(title))
+            contact.jobTitle = title;
+        if (!TextUtils.isEmpty(role))
+            contact.jobDescription = role;
+    }
+
+
+    public Uri add() throws ContactsStorageException {
 		BatchOperation batch = new BatchOperation(addressBook.provider);
 
 		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI));
@@ -272,6 +318,10 @@ public class AndroidContact {
 		batch.commit();
 		Uri uri = batch.getResult(0).uri;
 		id = ContentUris.parseId(uri);
+
+        // we need a raw contact ID to insert the photo
+        insertPhoto(contact.photo);
+
 		return uri;
 	}
 
@@ -290,8 +340,11 @@ public class AndroidContact {
                 .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=?", new String[] { String.valueOf(id) })
                 .build());
         addDataRows(batch);
+        int results = batch.commit();
 
-        return batch.commit();
+        insertPhoto(contact.photo);
+
+        return results;
     }
 
 	public int delete() throws ContactsStorageException {
@@ -321,6 +374,7 @@ public class AndroidContact {
 			addPhoneNumber(batch, number);
 		for (ezvcard.property.Email email : contact.getEmails())
 			addEmail(batch, email);
+        addOrganization(batch);
 	}
 
 	protected void addStructuredName(BatchOperation batch) {
@@ -329,7 +383,7 @@ public class AndroidContact {
             builder.withValueBackReference(StructuredName.RAW_CONTACT_ID, 0);
         else
             builder.withValue(StructuredName.RAW_CONTACT_ID, id);
-		builder .withValue(ContactsContract.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+		builder .withValue(RawContacts.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
 				.withValue(StructuredName.PREFIX, contact.prefix)
 				.withValue(StructuredName.DISPLAY_NAME, contact.displayName)
 				.withValue(StructuredName.GIVEN_NAME, contact.givenName)
@@ -410,7 +464,7 @@ public class AndroidContact {
 			typeLabel = xNameToLabel(type.getValue());
 		}
 
-		builder	.withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
+		builder	.withValue(RawContacts.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
 				.withValue(Phone.NUMBER, number.getText())
 				.withValue(Phone.TYPE, typeCode)
 				.withValue(Phone.IS_PRIMARY, is_primary ? 1 : 0)
@@ -424,9 +478,9 @@ public class AndroidContact {
 	protected void addEmail(BatchOperation batch, ezvcard.property.Email email) {
 		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Phone.RAW_CONTACT_ID, 0);
+            builder.withValueBackReference(Email.RAW_CONTACT_ID, 0);
         else
-            builder.withValue(Phone.RAW_CONTACT_ID, id);
+            builder.withValue(Email.RAW_CONTACT_ID, id);
 
 		int typeCode = 0;
 		String typeLabel = null;
@@ -456,7 +510,7 @@ public class AndroidContact {
 			}
 		}
 
-		builder	.withValue(ContactsContract.Data.MIMETYPE, Email.CONTENT_ITEM_TYPE)
+		builder	.withValue(RawContacts.Data.MIMETYPE, Email.CONTENT_ITEM_TYPE)
 				.withValue(Email.ADDRESS, email.getValue())
 				.withValue(Email.TYPE, typeCode)
 				.withValue(Email.IS_PRIMARY, is_primary ? 1 : 0)
@@ -466,6 +520,69 @@ public class AndroidContact {
 
         batch.enqueue(builder.build());
 	}
+
+    protected void addOrganization(BatchOperation batch) {
+        if (contact.organization == null && contact.jobTitle == null && contact.jobDescription == null)
+            return;
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Organization.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Organization.RAW_CONTACT_ID, id);
+
+        String company = null, department = null;
+        ezvcard.property.Organization organization = contact.organization;
+        if (organization != null) {
+            Iterator<String> org = organization.getValues().iterator();
+            if (org.hasNext())
+                company = org.next();
+            if (org.hasNext())
+                department = org.next();
+        }
+
+        batch.enqueue(builder
+                .withValue(Organization.MIMETYPE, Organization.CONTENT_ITEM_TYPE)
+                .withValue(Organization.COMPANY, company)
+                .withValue(Organization.DEPARTMENT, department)
+                .withValue(Organization.TITLE, contact.jobTitle)
+                .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription)
+                .build());
+    }
+
+    protected void insertPhoto(byte[] photo) {
+        if (photo != null) {
+            // The following approach would be correct, but it doesn't work:
+            // the ContactsProvider handler will process the image in background and update
+            // the raw contact with the new photo ID when it's finished, setting it to dirty again!
+            /*Uri photoUri = addressBook.syncAdapterURI(Uri.withAppendedPath(
+                    ContentUris.withAppendedId(RawContacts.CONTENT_URI, id),
+                    RawContacts.DisplayPhoto.CONTENT_DIRECTORY));
+            Constants.log.debug("Setting local photo " + photoUri);
+            try {
+                @Cleanup AssetFileDescriptor fd = addressBook.provider.openAssetFile(photoUri, "w");
+                @Cleanup OutputStream stream = fd.createOutputStream();
+                if (stream != null)
+                    stream.write(photo);
+                else
+                    Constants.log.warn("Couldn't create local contact photo file");
+            } catch (IOException|RemoteException e) {
+                Constants.log.warn("Couldn't write local contact photo file", e);
+            }*/
+
+            // So we have to write the photo directly into the PHOTO BLOB, which causes
+            // a TransactionTooLargeException for photos > 1 MB
+            ContentValues values = new ContentValues(2);
+            values.put(RawContacts.Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
+            values.put(Photo.RAW_CONTACT_ID, id);
+            values.put(Photo.PHOTO, photo);
+            try {
+                addressBook.provider.insert(dataSyncURI(), values);
+            } catch (RemoteException e) {
+                Constants.log.warn("Couldn't set local contact photo, ignoring", e);
+            }
+        }
+    }
 
 
     protected static String labelToXName(String label) {
@@ -491,8 +608,9 @@ public class AndroidContact {
         String s = xname.toLowerCase();
         if (s.startsWith("x-"))
             s = s.substring(2);
+        s = s.replace('_', ' ');
         // TODO capitalize
-        return s.replace('_', ' ');
+        return s;
 	}
 
 }
