@@ -20,6 +20,7 @@ import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
+import android.provider.ContactsContract.RawContacts;
 import android.text.TextUtils;
 
 import java.io.FileNotFoundException;
@@ -31,22 +32,38 @@ import ezvcard.parameter.EmailType;
 import ezvcard.parameter.TelephoneType;
 import ezvcard.property.Telephone;
 import lombok.Cleanup;
+import lombok.Getter;
+import lombok.NonNull;
 
 public class AndroidContact {
+    public static final String
+            COLUMN_FILENAME = RawContacts.SOURCE_ID,
+            COLUMN_UID = RawContacts.SYNC1,
+            COLUMN_ETAG = RawContacts.SYNC2;
 
-	final protected AndroidAddressBook addressBook;
+	protected final AndroidAddressBook addressBook;
 
+    @Getter
 	protected Long id;
-	private Contact contact;
 
-	protected AndroidContact(AndroidAddressBook addressBook, long id) {
+    @Getter
+    protected String fileName;
+    public String eTag;
+
+	protected Contact contact;
+
+	protected AndroidContact(@NonNull AndroidAddressBook addressBook, long id, String fileName, String eTag) {
 		this.addressBook = addressBook;
 		this.id = id;
+        this.fileName = fileName;
+        this.eTag = eTag;
 	}
 
-	protected AndroidContact(AndroidAddressBook addressBook, Contact contact) {
+	protected AndroidContact(@NonNull AndroidAddressBook addressBook, @NonNull Contact contact, String fileName, String eTag) {
 		this.addressBook = addressBook;
 		this.contact = contact;
+        this.fileName = fileName;
+        this.eTag = eTag;
 	}
 
 	public Contact getContact() throws FileNotFoundException, ContactsStorageException {
@@ -54,10 +71,9 @@ public class AndroidContact {
 			return contact;
 
 		try {
-			@Cleanup EntityIterator iter = ContactsContract.RawContacts.newEntityIterator(addressBook.provider.query(
+			@Cleanup EntityIterator iter = RawContacts.newEntityIterator(addressBook.provider.query(
 					addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
-					null, ContactsContract.RawContacts._ID + "=" + id,
-					null, null));
+					null, ContactsContract.RawContacts._ID + "=?", new String[] { String.valueOf(id) }, null));
 
 			if (iter.hasNext()) {
 				Entity e = iter.next();
@@ -123,8 +139,12 @@ public class AndroidContact {
 		}
 	}
 
-	protected void populateContact(ContentValues values) {
-	}
+	protected void populateContact(ContentValues row) {
+        fileName = row.getAsString(COLUMN_FILENAME);
+        eTag = row.getAsString(COLUMN_ETAG);
+
+        contact.uid = row.getAsString(COLUMN_UID);
+    }
 
 	protected void populateStructuredName(ContentValues row) {
 		contact.displayName = row.getAsString(StructuredName.DISPLAY_NAME);
@@ -243,11 +263,11 @@ public class AndroidContact {
 	public Uri add() throws ContactsStorageException {
 		BatchOperation batch = new BatchOperation(addressBook.provider);
 
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(ContactsContract.RawContacts.CONTENT_URI));
+		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI));
 		buildContact(builder, false);
 		batch.enqueue(builder.build());
 
-		addDataRows(batch, false);
+		addDataRows(batch);
 
 		batch.commit();
 		Uri uri = batch.getResult(0).uri;
@@ -255,9 +275,28 @@ public class AndroidContact {
 		return uri;
 	}
 
+    public int update(Contact contact) throws ContactsStorageException {
+        this.contact = contact;
+
+        BatchOperation batch = new BatchOperation(addressBook.provider);
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newUpdate(rawContactSyncURI());
+        buildContact(builder, true);
+        batch.enqueue(builder.build());
+
+        // delete old data rows before adding the new ones
+        Uri dataRowsUri = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI);
+        batch.enqueue(ContentProviderOperation.newDelete(dataRowsUri)
+                .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=?", new String[] { String.valueOf(id) })
+                .build());
+        addDataRows(batch);
+
+        return batch.commit();
+    }
+
 	public int delete() throws ContactsStorageException {
 		try {
-			return addressBook.provider.delete(addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, id)), null, null);
+			return addressBook.provider.delete(rawContactSyncURI(), null, null);
 		} catch (RemoteException e) {
 			throw new ContactsStorageException("Couldn't delete local contact", e);
 		}
@@ -265,12 +304,18 @@ public class AndroidContact {
 
 	protected void buildContact(ContentProviderOperation.Builder builder, boolean update) {
 		if (!update)
-			builder	.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, addressBook.account.name)
-					.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, addressBook.account.type);
+			builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.account.name)
+					.withValue(RawContacts.ACCOUNT_TYPE, addressBook.account.type);
+
+        builder .withValue(RawContacts.DIRTY, 0)
+                .withValue(RawContacts.DELETED, 0)
+                .withValue(COLUMN_FILENAME, fileName)
+                .withValue(COLUMN_ETAG, eTag)
+                .withValue(COLUMN_UID, contact.uid);
 	}
 
 
-	protected void addDataRows(BatchOperation batch, boolean update) {
+	protected void addDataRows(BatchOperation batch) {
 		addStructuredName(batch);
 		for (Telephone number : contact.getPhoneNumbers())
 			addPhoneNumber(batch, number);
@@ -279,9 +324,12 @@ public class AndroidContact {
 	}
 
 	protected void addStructuredName(BatchOperation batch) {
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
-		builder .withValueBackReference(StructuredName.RAW_CONTACT_ID, 0)
-				.withValue(ContactsContract.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(StructuredName.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(StructuredName.RAW_CONTACT_ID, id);
+		builder .withValue(ContactsContract.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
 				.withValue(StructuredName.PREFIX, contact.prefix)
 				.withValue(StructuredName.DISPLAY_NAME, contact.displayName)
 				.withValue(StructuredName.GIVEN_NAME, contact.givenName)
@@ -295,9 +343,11 @@ public class AndroidContact {
 	}
 
 	protected void addPhoneNumber(BatchOperation batch, Telephone number) {
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
-		builder .withValueBackReference(CommonDataKinds.Phone.RAW_CONTACT_ID, 0)
-				.withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE);
+		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Phone.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Phone.RAW_CONTACT_ID, id);
 
 		int typeCode = Phone.TYPE_OTHER;
 		String typeLabel = null;
@@ -372,9 +422,11 @@ public class AndroidContact {
 	}
 
 	protected void addEmail(BatchOperation batch, ezvcard.property.Email email) {
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI);
-		builder .withValueBackReference(CommonDataKinds.Email.RAW_CONTACT_ID, 0)
-				.withValue(ContactsContract.Data.MIMETYPE, Email.CONTENT_ITEM_TYPE);
+		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Phone.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Phone.RAW_CONTACT_ID, id);
 
 		int typeCode = 0;
 		String typeLabel = null;
@@ -416,9 +468,19 @@ public class AndroidContact {
 	}
 
 
-	protected static String labelToXName(String label) {
+    protected static String labelToXName(String label) {
 		return "X-" + label.replaceAll(" ","_").replaceAll("[^\\p{L}\\p{Nd}\\-_]", "").toUpperCase(Locale.US);
 	}
+
+    protected Uri rawContactSyncURI() {
+        if (id == null)
+            throw new IllegalStateException("Contact hasn't been saved yet");
+        return addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, id));
+    }
+
+    protected Uri dataSyncURI() {
+        return addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI);
+    }
 
 	protected static String xNameToLabel(String xname) {
 		// "X-MY_PROPERTY"

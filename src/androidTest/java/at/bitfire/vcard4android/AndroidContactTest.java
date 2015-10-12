@@ -46,10 +46,10 @@ public class AndroidContactTest extends InstrumentationTestCase {
 		vcard.givenName = "Mya";
 		vcard.familyName = "Contact";
 
-		@Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard);
+		@Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
 		contact.add();
 
-		AndroidContact contact2 = new AndroidContact(addressBook, contact.id);
+		AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
 		Contact vcard2 = contact2.getContact();
 		assertEquals(vcard2.displayName, vcard.displayName);
 		assertEquals(vcard2.givenName, vcard.givenName);

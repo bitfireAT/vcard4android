@@ -53,13 +53,13 @@ import ezvcard.property.Url;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 
 public class Contact {
 	private static final String TAG = "vcard4android.Contact";
 
-    @Getter @Setter
-    private static String productID = null;
+    // productID (if set) will be used to generate a PRODID property.
+    // You may set this statically from the calling application.
+    public static String productID = null;
 
 	public static final String
 			PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME",

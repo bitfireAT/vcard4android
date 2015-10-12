@@ -12,12 +12,12 @@ public class AndroidContactFactory {
 
 	public static final AndroidContactFactory INSTANCE = new AndroidContactFactory();
 
-	public AndroidContact newInstance(AndroidAddressBook addressBook, long id) {
-		return new AndroidContact(addressBook, id);
+	public AndroidContact newInstance(AndroidAddressBook addressBook, long id, String fileName, String eTag) {
+		return new AndroidContact(addressBook, id, fileName, eTag);
 	}
 
-    public 	AndroidContact newInstance(AndroidAddressBook addressBook, Contact contact) {
-		return new AndroidContact(addressBook, contact);
+    public 	AndroidContact newInstance(AndroidAddressBook addressBook, Contact contact, String fileName, String eTag) {
+		return new AndroidContact(addressBook, contact, fileName, eTag);
 	}
 
     public AndroidContact[] newArray(int size) {

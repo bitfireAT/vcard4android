@@ -22,12 +22,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import lombok.Cleanup;
+import lombok.Getter;
 
 public class AndroidAddressBook {
 	private static final String TAG = "vcard4android.AddrBook";
 
-	final Account account;
-	final ContentProviderClient provider;
+	final public Account account;
+	final public ContentProviderClient provider;
 	final AndroidGroupFactory groupFactory;
 	final AndroidContactFactory contactFactory;
 
@@ -104,11 +105,12 @@ public class AndroidAddressBook {
     protected AndroidContact[] queryContacts(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
 			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.RawContacts.CONTENT_URI),
-					new String[] { ContactsContract.RawContacts._ID }, where, whereArgs, null);
+					new String[] { ContactsContract.RawContacts._ID, AndroidContact.COLUMN_FILENAME, AndroidContact.COLUMN_ETAG },
+                    where, whereArgs, null);
 
 			List<AndroidContact> contacts = new LinkedList<>();
 			while (cursor != null && cursor.moveToNext())
-				contacts.add(contactFactory.newInstance(this, cursor.getLong(0)));
+				contacts.add(contactFactory.newInstance(this, cursor.getLong(0), cursor.getString(1), cursor.getString(2)));
 			return contacts.toArray(contactFactory.newArray(contacts.size()));
 		} catch (RemoteException e) {
 			throw new ContactsStorageException("Couldn't query contacts", e);
