@@ -15,27 +15,38 @@ import android.content.Entity;
 import android.content.EntityIterator;
 import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
-import android.os.CancellationSignal;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.CommonDataKinds.*;
 import android.provider.ContactsContract.CommonDataKinds.Email;
+import android.provider.ContactsContract.CommonDataKinds.Nickname;
+import android.provider.ContactsContract.CommonDataKinds.Note;
 import android.provider.ContactsContract.CommonDataKinds.Organization;
 import android.provider.ContactsContract.CommonDataKinds.Photo;
+import android.provider.ContactsContract.CommonDataKinds.Relation;
+import android.provider.ContactsContract.CommonDataKinds.SipAddress;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
+import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
 import android.provider.ContactsContract.RawContacts;
 import android.text.TextUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import ezvcard.parameter.AddressType;
 import ezvcard.parameter.EmailType;
+import ezvcard.parameter.ImppType;
+import ezvcard.parameter.RelatedType;
 import ezvcard.parameter.TelephoneType;
 import ezvcard.property.*;
 import ezvcard.util.IOUtils;
@@ -109,33 +120,33 @@ public class AndroidContact {
 						case Organization.CONTENT_ITEM_TYPE:
 							populateOrganization(values);
 							break;
-						/*case Im.CONTENT_ITEM_TYPE:
-							populateIMPP(c, values);
+						case Im.CONTENT_ITEM_TYPE:
+							populateIMPP(values);
 							break;
 						case Nickname.CONTENT_ITEM_TYPE:
-							populateNickname(c, values);
+							populateNickname(values);
 							break;
 						case Note.CONTENT_ITEM_TYPE:
-							populateNote(c, values);
+							populateNote(values);
 							break;
 						case StructuredPostal.CONTENT_ITEM_TYPE:
-							populatePostalAddress(c, values);
+							populateStructuredPostal(values);
 							break;
-						case GroupMembership.CONTENT_ITEM_TYPE:
-							populateGroupMembership(c, values);
-							break;
+						/*case GroupMembership.CONTENT_ITEM_TYPE:
+							populateGroupMembership(values);
+							break;*/
 						case Website.CONTENT_ITEM_TYPE:
-							populateURL(c, values);
+							populateWebsite(values);
 							break;
-						case CommonDataKinds.Event.CONTENT_ITEM_TYPE:
-							populateEvent(c, values);
+						case Event.CONTENT_ITEM_TYPE:
+							populateEvent(values);
 							break;
 						case Relation.CONTENT_ITEM_TYPE:
-							populateRelation(c, values);
+							populateRelation(values);
 							break;
 						case SipAddress.CONTENT_ITEM_TYPE:
-							populateSipAddress(c, values);
-							break;*/
+							populateSipAddress(values);
+							break;
 					}
 				}
 
@@ -276,7 +287,11 @@ public class AndroidContact {
                     RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
             try {
                 @Cleanup AssetFileDescriptor fd = addressBook.provider.openAssetFile(photoUri, "r");
-                contact.photo = IOUtils.toByteArray(fd.createInputStream(), true);
+                @Cleanup InputStream stream = fd.createInputStream();
+                if (stream != null)
+                    contact.photo = IOUtils.toByteArray(stream);
+                else
+                    Constants.log.warn("Ignoring inaccessible local contact photo file");
             } catch(IOException e) {
                 Constants.log.warn("Couldn't read local contact photo file", e);
             }
@@ -305,6 +320,245 @@ public class AndroidContact {
             contact.jobDescription = role;
     }
 
+    protected void populateIMPP(ContentValues row) {
+        String handle = row.getAsString(Im.DATA);
+
+        if (TextUtils.isEmpty(handle)) {
+            Constants.log.warn("Ignoring instant messenger record without handle");
+            return;
+        }
+
+        Impp impp = null;
+        if (row.containsKey(Im.PROTOCOL))
+            switch (row.getAsInteger(Im.PROTOCOL)) {
+                case Im.PROTOCOL_AIM:
+                    impp = Impp.aim(handle);
+                    break;
+                case Im.PROTOCOL_MSN:
+                    impp = Impp.msn(handle);
+                    break;
+                case Im.PROTOCOL_YAHOO:
+                    impp = Impp.yahoo(handle);
+                    break;
+                case Im.PROTOCOL_SKYPE:
+                    impp = Impp.skype(handle);
+                    break;
+                case Im.PROTOCOL_QQ:
+                    impp = new Impp("qq", handle);
+                    break;
+                case Im.PROTOCOL_GOOGLE_TALK:
+                    impp = new Impp("google-talk", handle);
+                    break;
+                case Im.PROTOCOL_ICQ:
+                    impp = Impp.icq(handle);
+                    break;
+                case Im.PROTOCOL_JABBER:
+                    impp = Impp.xmpp(handle);
+                    break;
+                case Im.PROTOCOL_NETMEETING:
+                    impp = new Impp("netmeeting", handle);
+                    break;
+                case Im.PROTOCOL_CUSTOM:
+                    impp = new Impp(row.getAsString(Im.CUSTOM_PROTOCOL), handle);
+            }
+
+        if (impp != null) {
+            if (row.containsKey(Im.TYPE))
+                switch (row.getAsInteger(Im.TYPE)) {
+                    case Im.TYPE_HOME:
+                        impp.addType(ImppType.HOME);
+                        break;
+                    case Im.TYPE_WORK:
+                        impp.addType(ImppType.WORK);
+                        break;
+                    case Im.TYPE_CUSTOM:
+                        String customType = row.getAsString(Im.LABEL);
+                        if (!TextUtils.isEmpty(customType))
+                            impp.addType(ImppType.get(labelToXName(customType)));
+                }
+
+            contact.getImpps().add(impp);
+        }
+    }
+
+    protected void populateNickname(ContentValues row) {
+        if (row.containsKey(Nickname.NAME)) {
+            ezvcard.property.Nickname nick = new ezvcard.property.Nickname();
+
+            nick.addValue(row.getAsString(Nickname.NAME));
+
+            if (row.containsKey(Nickname.TYPE))
+                switch (row.getAsInteger(Nickname.TYPE)) {
+                    case Nickname.TYPE_MAIDEN_NAME:
+                        nick.setType(Contact.NICKNAME_TYPE_MAIDEN_NAME);
+                        break;
+                    case Nickname.TYPE_SHORT_NAME:
+                        nick.setType(Contact.NICKNAME_TYPE_SHORT_NAME);
+                        break;
+                    case Nickname.TYPE_INITIALS:
+                        nick.setType(Contact.NICKNAME_TYPE_INITIALS);
+                        break;
+                    case Nickname.TYPE_OTHER_NAME:
+                        nick.setType(Contact.NICKNAME_TYPE_OTHER_NAME);
+                        break;
+                    case Nickname.TYPE_CUSTOM:
+                        String label = row.getAsString(Nickname.LABEL);
+                        if (!TextUtils.isEmpty(label))
+                            nick.setType(labelToXName(label));
+                        break;
+                }
+
+            contact.nickName = nick;
+        }
+    }
+
+    protected void populateNote(ContentValues row) {
+        contact.note = row.getAsString(Note.NOTE);
+    }
+
+    protected void populateStructuredPostal(ContentValues row) {
+        Address address = new Address();
+        address.setLabel(row.getAsString(StructuredPostal.FORMATTED_ADDRESS));
+        if (row.containsKey(StructuredPostal.TYPE))
+            switch (row.getAsInteger(StructuredPostal.TYPE)) {
+                case StructuredPostal.TYPE_HOME:
+                    address.addType(AddressType.HOME);
+                    break;
+                case StructuredPostal.TYPE_WORK:
+                    address.addType(AddressType.WORK);
+                    break;
+                case StructuredPostal.TYPE_CUSTOM:
+                    String customType = row.getAsString(StructuredPostal.LABEL);
+                    if (!TextUtils.isEmpty(customType))
+                        address.addType(AddressType.get(labelToXName(customType)));
+                    break;
+            }
+        address.setStreetAddress(row.getAsString(StructuredPostal.STREET));
+        address.setPoBox(row.getAsString(StructuredPostal.POBOX));
+        address.setExtendedAddress(row.getAsString(StructuredPostal.NEIGHBORHOOD));
+        address.setLocality(row.getAsString(StructuredPostal.CITY));
+        address.setRegion(row.getAsString(StructuredPostal.REGION));
+        address.setPostalCode(row.getAsString(StructuredPostal.POSTCODE));
+        address.setCountry(row.getAsString(StructuredPostal.COUNTRY));
+        contact.getAddresses().add(address);
+    }
+
+    protected void populateWebsite(ContentValues row) {
+        Url url = new Url(row.getAsString(Website.URL));
+        if (row.containsKey(Website.TYPE))
+            switch (row.getAsInteger(Website.TYPE)) {
+                case Website.TYPE_HOMEPAGE:
+                    url.setType(Contact.URL_TYPE_HOMEPAGE);
+                    break;
+                case Website.TYPE_BLOG:
+                    url.setType(Contact.URL_TYPE_BLOG);
+                    break;
+                case Website.TYPE_PROFILE:
+                    url.setType(Contact.URL_TYPE_PROFILE);
+                    break;
+                case Website.TYPE_HOME:
+                    url.setType("home");
+                    break;
+                case Website.TYPE_WORK:
+                    url.setType("work");
+                    break;
+                case Website.TYPE_FTP:
+                    url.setType(Contact.URL_TYPE_FTP);
+                    break;
+                case Website.TYPE_CUSTOM:
+                    String label = row.getAsString(Website.LABEL);
+                    if (!TextUtils.isEmpty(label))
+                        url.setType(labelToXName(label));
+                    break;
+            }
+        contact.getURLs().add(url);
+    }
+
+    protected void populateEvent(ContentValues row) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        try {
+            Date date = formatter.parse(row.getAsString(CommonDataKinds.Event.START_DATE));
+            if (row.containsKey(Event.TYPE))
+            switch (row.getAsInteger(Event.TYPE)) {
+                case Event.TYPE_ANNIVERSARY:
+                    contact.anniversary = new Anniversary(date);
+                    break;
+                case Event.TYPE_BIRTHDAY:
+                    contact.birthDay = new Birthday(date);
+                    break;
+            }
+        } catch (ParseException e) {
+            Constants.log.warn("Couldn't parse birthday/anniversary date from database", e);
+        }
+    }
+
+    protected void populateRelation(ContentValues row) {
+        String name = row.getAsString(Relation.NAME);
+
+        if (TextUtils.isEmpty(name))
+            return;
+
+        Related related = new Related();
+        related.setText(name);
+
+        if (row.containsKey(Relation.TYPE))
+            switch (row.getAsInteger(Relation.TYPE)) {
+                case Relation.TYPE_ASSISTANT:
+                case Relation.TYPE_MANAGER:
+                    related.addType(RelatedType.CO_WORKER);
+                    break;
+                case Relation.TYPE_BROTHER:
+                case Relation.TYPE_SISTER:
+                    related.addType(RelatedType.SIBLING);
+                    break;
+                case Relation.TYPE_CHILD:
+                    related.addType(RelatedType.CHILD);
+                    break;
+                case Relation.TYPE_DOMESTIC_PARTNER:
+                    related.addType(RelatedType.CO_RESIDENT);
+                    break;
+                case Relation.TYPE_FRIEND:
+                    related.addType(RelatedType.FRIEND);
+                    break;
+                case Relation.TYPE_FATHER:
+                case Relation.TYPE_MOTHER:
+                case Relation.TYPE_PARENT:
+                    related.addType(RelatedType.PARENT);
+                    break;
+                case Relation.TYPE_PARTNER:
+                case Relation.TYPE_SPOUSE:
+                    related.addType(RelatedType.SWEETHEART);
+                    break;
+                case Relation.TYPE_RELATIVE:
+                    related.addType(RelatedType.KIN);
+                    break;
+            }
+
+        contact.getRelations().add(related);
+    }
+
+    protected void populateSipAddress(ContentValues row) {
+        try {
+            Impp impp = new Impp("sip:" + row.getAsString(SipAddress.SIP_ADDRESS));
+            if (row.containsKey(SipAddress.TYPE))
+                switch (row.getAsInteger(SipAddress.TYPE)) {
+                    case SipAddress.TYPE_HOME:
+                        impp.addType(ImppType.HOME);
+                        break;
+                    case SipAddress.TYPE_WORK:
+                        impp.addType(ImppType.WORK);
+                        break;
+                    case SipAddress.TYPE_CUSTOM:
+                        String customType = row.getAsString(SipAddress.LABEL);
+                        if (!TextUtils.isEmpty(customType))
+                            impp.addType(ImppType.get(labelToXName(customType)));
+                }
+            contact.getImpps().add(impp);
+        } catch(IllegalArgumentException e) {
+            Constants.log.warn("Ignoring invalid locally stored SIP address");
+        }
+    }
+
 
     public Uri add() throws ContactsStorageException {
 		BatchOperation batch = new BatchOperation(addressBook.provider);
@@ -313,7 +567,7 @@ public class AndroidContact {
 		buildContact(builder, false);
 		batch.enqueue(builder.build());
 
-		addDataRows(batch);
+		insertDataRows(batch);
 
 		batch.commit();
 		Uri uri = batch.getResult(0).uri;
@@ -339,7 +593,7 @@ public class AndroidContact {
         batch.enqueue(ContentProviderOperation.newDelete(dataRowsUri)
                 .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=?", new String[] { String.valueOf(id) })
                 .build());
-        addDataRows(batch);
+        insertDataRows(batch);
         int results = batch.commit();
 
         insertPhoto(contact.photo);
@@ -368,16 +622,40 @@ public class AndroidContact {
 	}
 
 
-	protected void addDataRows(BatchOperation batch) {
-		addStructuredName(batch);
+	protected void insertDataRows(BatchOperation batch) {
+		insertStructuredName(batch);
+
 		for (Telephone number : contact.getPhoneNumbers())
-			addPhoneNumber(batch, number);
+			insertPhoneNumber(batch, number);
+
 		for (ezvcard.property.Email email : contact.getEmails())
-			addEmail(batch, email);
-        addOrganization(batch);
+			insertEmail(batch, email);
+
+        insertOrganization(batch);
+
+        for (Impp impp : contact.getImpps())        // handles SIP addresses, too
+            insertIMPP(batch, impp);
+
+        insertNickname(batch);
+
+        insertNote(batch);
+
+        for (Address address : contact.getAddresses())
+            insertStructuredPostal(batch, address);
+
+        for (Url url : contact.getURLs())
+            insertWebsite(batch, url);
+
+        if (contact.anniversary != null)
+            insertEvent(batch, Event.TYPE_ANNIVERSARY, contact.anniversary);
+        if (contact.birthDay != null)
+            insertEvent(batch, Event.TYPE_BIRTHDAY, contact.birthDay);
+
+        for (Related related : contact.getRelations())
+            insertRelation(batch, related);
 	}
 
-	protected void addStructuredName(BatchOperation batch) {
+	protected void insertStructuredName(BatchOperation batch) {
 		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
             builder.withValueBackReference(StructuredName.RAW_CONTACT_ID, 0);
@@ -396,13 +674,7 @@ public class AndroidContact {
 		batch.enqueue(builder.build());
 	}
 
-	protected void addPhoneNumber(BatchOperation batch, Telephone number) {
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
-        if (id == null)
-            builder.withValueBackReference(Phone.RAW_CONTACT_ID, 0);
-        else
-            builder.withValue(Phone.RAW_CONTACT_ID, id);
-
+	protected void insertPhoneNumber(BatchOperation batch, Telephone number) {
 		int typeCode = Phone.TYPE_OTHER;
 		String typeLabel = null;
 
@@ -464,24 +736,21 @@ public class AndroidContact {
 			typeLabel = xNameToLabel(type.getValue());
 		}
 
-		builder	.withValue(RawContacts.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Phone.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Phone.RAW_CONTACT_ID, id);
+		builder	.withValue(Phone.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
 				.withValue(Phone.NUMBER, number.getText())
 				.withValue(Phone.TYPE, typeCode)
+                .withValue(Phone.LABEL, typeLabel)
 				.withValue(Phone.IS_PRIMARY, is_primary ? 1 : 0)
 				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
-		if (typeLabel != null)
-			builder.withValue(Phone.LABEL, typeLabel);
-
 		batch.enqueue(builder.build());
 	}
 
-	protected void addEmail(BatchOperation batch, ezvcard.property.Email email) {
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
-        if (id == null)
-            builder.withValueBackReference(Email.RAW_CONTACT_ID, 0);
-        else
-            builder.withValue(Email.RAW_CONTACT_ID, id);
-
+	protected void insertEmail(BatchOperation batch, ezvcard.property.Email email) {
 		int typeCode = 0;
 		String typeLabel = null;
 
@@ -510,26 +779,23 @@ public class AndroidContact {
 			}
 		}
 
-		builder	.withValue(RawContacts.Data.MIMETYPE, Email.CONTENT_ITEM_TYPE)
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Email.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Email.RAW_CONTACT_ID, id);
+		builder	.withValue(Email.MIMETYPE, Email.CONTENT_ITEM_TYPE)
 				.withValue(Email.ADDRESS, email.getValue())
 				.withValue(Email.TYPE, typeCode)
+                .withValue(Email.LABEL, typeLabel)
 				.withValue(Email.IS_PRIMARY, is_primary ? 1 : 0)
 				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
-		if (typeLabel != null)
-			builder.withValue(Email.LABEL, typeLabel);
-
         batch.enqueue(builder.build());
 	}
 
-    protected void addOrganization(BatchOperation batch) {
+    protected void insertOrganization(BatchOperation batch) {
         if (contact.organization == null && contact.jobTitle == null && contact.jobDescription == null)
             return;
-
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
-        if (id == null)
-            builder.withValueBackReference(Organization.RAW_CONTACT_ID, 0);
-        else
-            builder.withValue(Organization.RAW_CONTACT_ID, id);
 
         String company = null, department = null;
         ezvcard.property.Organization organization = contact.organization;
@@ -541,13 +807,305 @@ public class AndroidContact {
                 department = org.next();
         }
 
-        batch.enqueue(builder
-                .withValue(Organization.MIMETYPE, Organization.CONTENT_ITEM_TYPE)
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Organization.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Organization.RAW_CONTACT_ID, id);
+        builder .withValue(Organization.MIMETYPE, Organization.CONTENT_ITEM_TYPE)
                 .withValue(Organization.COMPANY, company)
                 .withValue(Organization.DEPARTMENT, department)
                 .withValue(Organization.TITLE, contact.jobTitle)
-                .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription)
-                .build());
+                .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription);
+        batch.enqueue(builder.build());
+    }
+
+    protected void insertIMPP(BatchOperation batch, Impp impp) {
+        int typeCode = Im.TYPE_OTHER;       // default value
+        String typeLabel = null;
+
+        for (ImppType type : impp.getTypes())
+            if (type == ImppType.HOME) {
+                typeCode = Im.TYPE_HOME;
+                break;
+            } else if (type == ImppType.WORK || type == ImppType.BUSINESS) {
+                typeCode = Im.TYPE_WORK;
+                break;
+            }
+
+        if (typeCode == Im.TYPE_OTHER)      // still default value?
+            if (!impp.getTypes().isEmpty()) {
+                typeCode = Im.TYPE_CUSTOM;
+                typeLabel = xNameToLabel(impp.getTypes().iterator().next().getValue());
+            }
+
+        String protocol = impp.getProtocol();
+        if (protocol == null) {
+            Constants.log.warn("Ignoring IMPP address without protocol");
+            return;
+        }
+
+        int protocolCode = 0;
+        String protocolLabel = null;
+
+        // SIP addresses are IMPP entries in the VCard but locally stored in SipAddress rather than Im
+        boolean sipAddress = false;
+
+        if (impp.isAim())
+            protocolCode = Im.PROTOCOL_AIM;
+        else if (impp.isMsn())
+            protocolCode = Im.PROTOCOL_MSN;
+        else if (impp.isYahoo())
+            protocolCode = Im.PROTOCOL_YAHOO;
+        else if (impp.isSkype())
+            protocolCode = Im.PROTOCOL_SKYPE;
+        else if (protocol.equalsIgnoreCase("qq"))
+            protocolCode = Im.PROTOCOL_QQ;
+        else if (protocol.equalsIgnoreCase("google-talk"))
+            protocolCode = Im.PROTOCOL_GOOGLE_TALK;
+        else if (impp.isIcq())
+            protocolCode = Im.PROTOCOL_ICQ;
+        else if (impp.isXmpp() || protocol.equalsIgnoreCase("jabber"))
+            protocolCode = Im.PROTOCOL_JABBER;
+        else if (protocol.equalsIgnoreCase("netmeeting"))
+            protocolCode = Im.PROTOCOL_NETMEETING;
+        else if (protocol.equalsIgnoreCase("sip"))
+            sipAddress = true;
+        else {
+            protocolCode = Im.PROTOCOL_CUSTOM;
+            protocolLabel = protocol;
+        }
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Im.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Im.RAW_CONTACT_ID, id);
+        if (sipAddress)
+            // save as SIP address
+            builder	.withValue(SipAddress.MIMETYPE, SipAddress.CONTENT_ITEM_TYPE)
+                    .withValue(SipAddress.DATA, impp.getHandle())
+                    .withValue(SipAddress.TYPE, typeCode)
+                    .withValue(SipAddress.LABEL, typeLabel);
+        else {
+            // save as IM address
+            builder	.withValue(Im.MIMETYPE, Im.CONTENT_ITEM_TYPE)
+                    .withValue(Im.DATA, impp.getHandle())
+                    .withValue(Im.TYPE, typeCode)
+                    .withValue(Im.LABEL, typeLabel)
+                    .withValue(Im.PROTOCOL, protocolCode)
+                    .withValue(Im.CUSTOM_PROTOCOL, protocolLabel);
+        }
+        batch.enqueue(builder.build());
+    }
+
+    protected void insertNickname(BatchOperation batch) {
+        ezvcard.property.Nickname nick = contact.nickName;
+        if (nick != null && !nick.getValues().isEmpty()) {
+            int typeCode = Nickname.TYPE_DEFAULT;
+            String typeLabel = null;
+
+            String type = nick.getType();
+            if (!TextUtils.isEmpty(type))
+                switch (type) {
+                    case Contact.NICKNAME_TYPE_MAIDEN_NAME:
+                        typeCode = Nickname.TYPE_MAIDEN_NAME;
+                        break;
+                    case Contact.NICKNAME_TYPE_SHORT_NAME:
+                        typeCode = Nickname.TYPE_SHORT_NAME;
+                        break;
+                    case Contact.NICKNAME_TYPE_INITIALS:
+                        typeCode = Nickname.TYPE_INITIALS;
+                        break;
+                    case Contact.NICKNAME_TYPE_OTHER_NAME:
+                        typeCode = Nickname.TYPE_OTHER_NAME;
+                        break;
+                    default:
+                        typeCode = Nickname.TYPE_CUSTOM;
+                        typeLabel = xNameToLabel(type);
+                }
+
+            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+            if (id == null)
+                builder.withValueBackReference(Nickname.RAW_CONTACT_ID, 0);
+            else
+                builder.withValue(Nickname.RAW_CONTACT_ID, id);
+            builder .withValue(Nickname.MIMETYPE, Nickname.CONTENT_ITEM_TYPE)
+                    .withValue(Nickname.NAME, nick.getValues().get(0))
+                    .withValue(Nickname.TYPE, typeCode)
+                    .withValue(Nickname.LABEL, typeLabel);
+            batch.enqueue(builder.build());
+        }
+    }
+
+    protected void insertNote(BatchOperation batch) {
+        if (!TextUtils.isEmpty(contact.note)) {
+            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+            if (id == null)
+                builder.withValueBackReference(Note.RAW_CONTACT_ID, 0);
+            else
+                builder.withValue(Note.RAW_CONTACT_ID, id);
+            builder .withValue(Note.MIMETYPE, Note.CONTENT_ITEM_TYPE)
+                    .withValue(Note.NOTE, contact.note);
+            batch.enqueue(builder.build());
+        }
+    }
+
+    protected void insertStructuredPostal(BatchOperation batch, Address address) {
+		/*	street po.box (extended)
+		 *	postcode city
+		 *	region
+		 *	COUNTRY
+		 */
+        String formattedAddress = address.getLabel();
+        if (!TextUtils.isEmpty(formattedAddress)) {
+            String	lineStreet = TextUtils.join(" ", new String[] { address.getStreetAddress(), address.getPoBox(), address.getExtendedAddress() }),
+                    lineLocality = TextUtils.join(" ", new String[] { address.getPostalCode(), address.getLocality() });
+
+            List<String> lines = new LinkedList<>();
+            if (!TextUtils.isEmpty(lineStreet))
+                lines.add(lineStreet);
+            if (!TextUtils.isEmpty(lineLocality))
+                lines.add(lineLocality);
+            if (!TextUtils.isEmpty(address.getRegion()))
+                lines.add(address.getRegion());
+            if (!TextUtils.isEmpty(address.getCountry()))
+                lines.add(address.getCountry().toUpperCase());
+
+            formattedAddress = TextUtils.join("\n", lines);
+        }
+
+        int typeCode = StructuredPostal.TYPE_OTHER;
+        String typeLabel = null;
+
+        for (AddressType type : address.getTypes())
+            if (type == AddressType.HOME) {
+                typeCode = StructuredPostal.TYPE_HOME;
+                break;
+            } else if (type == AddressType.WORK) {
+                typeCode = StructuredPostal.TYPE_WORK;
+                break;
+            }
+
+        if (typeCode == StructuredPostal.TYPE_OTHER)        // still default value?
+            if (!address.getTypes().isEmpty()) {
+                typeCode = StructuredPostal.TYPE_CUSTOM;
+                typeLabel = xNameToLabel(address.getTypes().iterator().next().getValue());
+            }
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(StructuredPostal.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(StructuredPostal.RAW_CONTACT_ID, id);
+        builder .withValue(StructuredPostal.MIMETYPE, StructuredPostal.CONTENT_ITEM_TYPE)
+                .withValue(StructuredPostal.FORMATTED_ADDRESS, formattedAddress)
+                .withValue(StructuredPostal.TYPE, typeCode)
+                .withValue(StructuredPostal.LABEL, typeLabel)
+                .withValue(StructuredPostal.STREET, address.getStreetAddress())
+                .withValue(StructuredPostal.POBOX, address.getPoBox())
+                .withValue(StructuredPostal.NEIGHBORHOOD, address.getExtendedAddress())
+                .withValue(StructuredPostal.CITY, address.getLocality())
+                .withValue(StructuredPostal.REGION, address.getRegion())
+                .withValue(StructuredPostal.POSTCODE, address.getPostalCode())
+                .withValue(StructuredPostal.COUNTRY, address.getCountry());
+        batch.enqueue(builder.build());
+    }
+
+    protected void insertWebsite(BatchOperation batch, Url url) {
+        int typeCode = Website.TYPE_OTHER;
+        String typeLabel = null;
+
+        String type = url.getType();
+        if (!TextUtils.isEmpty(type))
+            switch (type) {
+                case Contact.URL_TYPE_HOMEPAGE:
+                    typeCode = Website.TYPE_HOMEPAGE;
+                    break;
+                case Contact.URL_TYPE_BLOG:
+                    typeCode = Website.TYPE_BLOG;
+                    break;
+                case Contact.URL_TYPE_PROFILE:
+                    typeCode = Website.TYPE_PROFILE;
+                    break;
+                case "home":
+                    typeCode = Website.TYPE_HOME;
+                    break;
+                case "work":
+                    typeCode = Website.TYPE_WORK;
+                    break;
+                case Contact.URL_TYPE_FTP:
+                    typeCode = Website.TYPE_FTP;
+                    break;
+                default:
+                    typeCode = Website.TYPE_CUSTOM;
+                    typeLabel = xNameToLabel(type);
+            }
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Website.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Website.RAW_CONTACT_ID, id);
+        builder .withValue(Website.MIMETYPE, Website.CONTENT_ITEM_TYPE)
+                .withValue(Website.URL, url.getValue())
+                .withValue(Website.TYPE, typeCode)
+                .withValue(Website.LABEL, typeLabel);
+        batch.enqueue(builder.build());
+    }
+
+    protected void insertEvent(BatchOperation batch, int type, DateOrTimeProperty dateOrTime) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        if (dateOrTime.getDate() == null) {
+            Constants.log.warn("Ignoring contact event (birthday/anniversary) without date");
+            return;
+        }
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Event.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Event.RAW_CONTACT_ID, id);
+        builder .withValue(Event.MIMETYPE, Event.CONTENT_ITEM_TYPE)
+                .withValue(Event.TYPE, type)
+                .withValue(Event.START_DATE, formatter.format(dateOrTime.getDate()));
+        batch.enqueue(builder.build());
+    }
+
+    protected void insertRelation(BatchOperation batch, Related related) {
+        if (TextUtils.isEmpty(related.getText()))
+            return;
+
+        int typeCode = Event.TYPE_CUSTOM;
+
+        List<String> labels = new LinkedList<>();
+        for (RelatedType type : related.getTypes()) {
+            if (type == RelatedType.CHILD)
+                typeCode = Relation.TYPE_CHILD;
+            else if (type == RelatedType.CO_RESIDENT)
+                typeCode = Relation.TYPE_DOMESTIC_PARTNER;
+            else if (type == RelatedType.CRUSH || type == RelatedType.DATE || type == RelatedType.SPOUSE || type == RelatedType.SWEETHEART)
+                typeCode = Relation.TYPE_PARTNER;
+            else if (type == RelatedType.FRIEND)
+                typeCode = Relation.TYPE_FRIEND;
+            else if (type == RelatedType.KIN)
+                typeCode = Relation.TYPE_RELATIVE;
+            else if (type == RelatedType.PARENT)
+                typeCode = Relation.TYPE_PARENT;
+            else
+                labels.add(type.getValue());
+        }
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        if (id == null)
+            builder.withValueBackReference(Relation.RAW_CONTACT_ID, 0);
+        else
+            builder.withValue(Relation.RAW_CONTACT_ID, id);
+        builder .withValue(Relation.MIMETYPE, Relation.CONTENT_ITEM_TYPE)
+                .withValue(Relation.NAME, related.getText())
+                .withValue(Relation.TYPE, typeCode)
+                .withValue(Relation.LABEL, TextUtils.join("/", labels));
+        batch.enqueue(builder.build());
     }
 
     protected void insertPhoto(byte[] photo) {
@@ -601,16 +1159,27 @@ public class AndroidContact {
 
 	protected static String xNameToLabel(String xname) {
 		// "X-MY_PROPERTY"
+
 		// 1. ensure lower case -> "x-my_property"
-		// 2. remove x- from beginning -> "my_property"
-		// 3. replace "_" by " " -> "my property"
-		// 4. capitalize -> "My Property"
         String s = xname.toLowerCase();
+
+        // 2. remove x- from beginning -> "my_property"
         if (s.startsWith("x-"))
             s = s.substring(2);
+
+        // 3. replace "_" by " " -> "my property"
         s = s.replace('_', ' ');
-        // TODO capitalize
-        return s;
+
+        // 4. capitalize -> "My Property"
+        List<String> words = new LinkedList<>();
+        for (String word : s.split(" ")) {
+            if (word.length() >= 1) {
+                char[] chars = word.toCharArray();
+                chars[0] = Character.toUpperCase(chars[0]);
+                words.add(String.valueOf(chars));
+            }
+        }
+        return TextUtils.join(" ", words);
 	}
 
 }

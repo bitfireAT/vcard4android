@@ -18,7 +18,6 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 
 import ezvcard.VCardVersion;
 import ezvcard.parameter.AddressType;
@@ -140,7 +139,7 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("Klöster-Reich", addr.getCountry());
 
         // NOTE
-        assertEquals("This fax number is operational 0800 to 1715EST, Mon-Fri.\n\n\nSecond note", c.notes);
+        assertEquals("This fax number is operational 0800 to 1715EST, Mon-Fri.\n\n\nSecond note", c.note);
 
         // CATEGORIES
         assertTrue(Arrays.equals(
@@ -203,11 +202,11 @@ public class ContactTest extends InstrumentationTestCase {
 	private Contact parseContact(String fname, Charset charset) throws IOException {
 		Log.d(TAG, "Loading VCard file " + fname);
 		@Cleanup InputStream is = assetMgr.open(fname, AssetManager.ACCESS_STREAMING);
-		return Contact.fromStream(is, charset)[0];
+		return Contact.fromStream(is, charset, null)[0];
 	}
 
 	private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
-		return Contact.fromStream(new ByteArrayInputStream(c.toStream(vCardVersion).toByteArray()), null)[0];
+		return Contact.fromStream(new ByteArrayInputStream(c.toStream(vCardVersion).toByteArray()), null, null)[0];
 	}
 
 

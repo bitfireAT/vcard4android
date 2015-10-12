@@ -15,8 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,23 +76,37 @@ public class Contact {
 
 	public static final EmailType EMAIL_TYPE_MOBILE = EmailType.get("x-mobile");
 
-	public String uid;
-	public String displayName, nickName;
+    public static final String
+            NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name",
+            NICKNAME_TYPE_SHORT_NAME = "x-short-name",
+            NICKNAME_TYPE_INITIALS = "x-initials",
+            NICKNAME_TYPE_OTHER_NAME = "x-other-name";
+
+    public static final String
+            URL_TYPE_HOMEPAGE = "x-homepage",
+            URL_TYPE_BLOG = "x-blog",
+            URL_TYPE_PROFILE = "x-profile",
+            URL_TYPE_FTP = "x-ftp";
+
+    public String uid;
+	public String displayName;
 	public String prefix, givenName, middleName, familyName, suffix;
 	public String phoneticGivenName, phoneticMiddleName, phoneticFamilyName;
+    public Nickname nickName;
 
     public Organization organization;
-    public String jobTitle, jobDescription;
+    public String   jobTitle,           // VCard TITLE
+                    jobDescription;     // VCard ROLE
 
 	@Getter private List<Telephone> phoneNumbers = new LinkedList<>();
 	@Getter private List<Email> emails = new LinkedList<>();
     @Getter private List<Impp> impps = new LinkedList<>();
     @Getter private List<Address> addresses = new LinkedList<>();
     @Getter private List<String> categories = new LinkedList<>();
-    @Getter private List<String> URLs = new LinkedList<>();
+    @Getter private List<Url> URLs = new LinkedList<>();
     @Getter private List<Related> relations = new LinkedList<>();
 
-    public String notes;
+    public String note;
 
     public Anniversary anniversary;
     public Birthday birthDay;
@@ -212,12 +224,8 @@ public class Contact {
         vCard.removeExtendedProperty(PROPERTY_SIP);
 
         // NICKNAME
-        Nickname nicknames = vCard.getNickname();
-        if (nicknames != null) {
-            if (nicknames.getValues() != null)
-                c.nickName = TextUtils.join(", ", nicknames.getValues());
-            vCard.removeProperties(Nickname.class);
-        }
+        c.nickName = vCard.getNickname();
+        vCard.removeProperties(Nickname.class);
 
         // ADR
         c.addresses = vCard.getAddresses();
@@ -228,7 +236,7 @@ public class Contact {
         for (Note note : vCard.getNotes())
             notes.add(note.getValue());
         if (!notes.isEmpty())
-            c.notes = TextUtils.join("\n\n\n", notes);
+            c.note = TextUtils.join("\n\n\n", notes);
         vCard.removeProperties(Note.class);
 
         // CATEGORY
@@ -238,8 +246,7 @@ public class Contact {
         vCard.removeProperties(Categories.class);
 
         // URL
-        for (Url url : vCard.getUrls())
-            c.URLs.add(url.getValue());
+        c.URLs = vCard.getUrls();
         vCard.removeProperties(Url.class);
 
         // BDAY
@@ -380,23 +387,22 @@ public class Contact {
 
         // NICKNAME
         if (nickName != null)
-            // "Nick1, Nick2" → NICKNAME:Nick1,Nick2
-            vCard.setNickname(nickName.replace(" ,",","));
+            vCard.setNickname(nickName);
 
         // ADR
         for (Address address : addresses)
             vCard.addAddress(address);
 
         // NOTE
-        if (notes != null)
-            vCard.addNote(notes);
+        if (note != null)
+            vCard.addNote(note);
 
         // CATEGORIES
         if (!categories.isEmpty())
             vCard.setCategories(categories.toArray(new String[categories.size()]));
 
         // URL
-        for (String url : URLs)
+        for (Url url : URLs)
             vCard.addUrl(url);
 
         // ANNIVERSARY

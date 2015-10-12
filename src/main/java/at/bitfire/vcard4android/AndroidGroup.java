@@ -50,7 +50,7 @@ public class AndroidGroup {
 
 			contact = new Contact();
 			contact.displayName = cursor.getString(0);
-			contact.notes = cursor.getString(1);
+			contact.note = cursor.getString(1);
 
 			return contact;
 		} catch (RemoteException e) {
@@ -64,7 +64,7 @@ public class AndroidGroup {
 		values.put(Groups.ACCOUNT_TYPE, addressBook.account.type);
 		values.put(Groups.ACCOUNT_NAME, addressBook.account.name);
 		values.put(Groups.TITLE, contact.displayName);
-		values.put(Groups.NOTES, contact.notes);
+		values.put(Groups.NOTES, contact.note);
 		try {
 			Uri uri = addressBook.provider.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values);
 			id = ContentUris.parseId(uri);

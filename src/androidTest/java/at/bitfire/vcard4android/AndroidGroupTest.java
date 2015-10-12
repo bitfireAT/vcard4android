@@ -41,7 +41,7 @@ public class AndroidGroupTest extends InstrumentationTestCase {
 	public void testCreateReadDeleteGroup() throws FileNotFoundException, ContactsStorageException {
 		Contact contact = new Contact();
 		contact.displayName = "at.bitfire.vcard4android-AndroidGroupTest";
-		contact.notes = "(test group)";
+		contact.note = "(test group)";
 
 		// ensure we start without this group
 		assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
@@ -53,7 +53,7 @@ public class AndroidGroupTest extends InstrumentationTestCase {
 		assertEquals(1, groups.length);
 		Contact contact2 = groups[0].getContact();
 		assertEquals(contact.displayName, contact2.displayName);
-		assertEquals(contact.notes, contact2.notes);
+		assertEquals(contact.note, contact2.note);
 
 		// delete group
 		group.delete();
