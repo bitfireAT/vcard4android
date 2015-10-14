@@ -31,6 +31,8 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
 import android.provider.ContactsContract.RawContacts;
 import android.text.TextUtils;
 
+import com.google.common.base.Joiner;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,6 +69,8 @@ public class AndroidContact {
 
     @Getter
     protected String fileName;
+
+    @Getter
     public String eTag;
 
 	protected Contact contact;
@@ -959,8 +963,21 @@ public class AndroidContact {
 		 */
         String formattedAddress = address.getLabel();
         if (!TextUtils.isEmpty(formattedAddress)) {
-            String	lineStreet = TextUtils.join(" ", new String[] { address.getStreetAddress(), address.getPoBox(), address.getExtendedAddress() }),
-                    lineLocality = TextUtils.join(" ", new String[] { address.getPostalCode(), address.getLocality() });
+            List<String> components = new LinkedList<>();
+            if (!TextUtils.isEmpty(address.getStreetAddress()))
+                components.add(address.getStreetAddress());
+            if (!TextUtils.isEmpty(address.getPoBox()))
+                components.add(address.getPoBox());
+            if (!TextUtils.isEmpty(address.getExtendedAddress()))
+                components.add(address.getExtendedAddress());
+            String lineStreet = Joiner.on(" ").join(components);
+
+            components.clear();
+            if (!TextUtils.isEmpty(address.getPostalCode()))
+                components.add(address.getPostalCode());
+            if (!TextUtils.isEmpty(address.getLocality()))
+                components.add(address.getLocality());
+            String lineLocality = Joiner.on(" ").join(components);
 
             List<String> lines = new LinkedList<>();
             if (!TextUtils.isEmpty(lineStreet))
@@ -972,7 +989,7 @@ public class AndroidContact {
             if (!TextUtils.isEmpty(address.getCountry()))
                 lines.add(address.getCountry().toUpperCase());
 
-            formattedAddress = TextUtils.join("\n", lines);
+            formattedAddress = Joiner.on("\n").join(lines);
         }
 
         int typeCode = StructuredPostal.TYPE_OTHER;
@@ -1104,7 +1121,7 @@ public class AndroidContact {
         builder .withValue(Relation.MIMETYPE, Relation.CONTENT_ITEM_TYPE)
                 .withValue(Relation.NAME, related.getText())
                 .withValue(Relation.TYPE, typeCode)
-                .withValue(Relation.LABEL, TextUtils.join("/", labels));
+                .withValue(Relation.LABEL, Joiner.on("/").join(labels));
         batch.enqueue(builder.build());
     }
 
@@ -1179,7 +1196,7 @@ public class AndroidContact {
                 words.add(String.valueOf(chars));
             }
         }
-        return TextUtils.join(" ", words);
+        return Joiner.on(" ").join(words);
 	}
 
 }

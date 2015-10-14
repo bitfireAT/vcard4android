@@ -15,11 +15,14 @@ import android.util.Log;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
+import ezvcard.VCard;
 import ezvcard.VCardVersion;
+import ezvcard.io.text.VCardWriter;
 import ezvcard.parameter.AddressType;
 import ezvcard.parameter.EmailType;
 import ezvcard.parameter.ImppType;
@@ -30,6 +33,7 @@ import ezvcard.property.Email;
 import ezvcard.property.Impp;
 import ezvcard.property.Related;
 import ezvcard.property.Telephone;
+import ezvcard.property.Url;
 import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 
@@ -111,7 +115,7 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("mysip@example.com", impp.getHandle());
 
         // NICKNAME
-        assertEquals("Nick1, Nick2", c.nickName);
+        assertTrue(Arrays.equals(new String[] { "Nick1", "Nick2" }, c.nickName.getValues().toArray()));
 
         // ADR
         assertEquals(2, c.getAddresses().size());
@@ -149,8 +153,14 @@ public class ContactTest extends InstrumentationTestCase {
 
         // URL
         assertEquals(2, c.getURLs().size());
-        assertTrue(c.getURLs().contains("https://davdroid.bitfire.at/"));
-        assertTrue(c.getURLs().contains("http://www.swbyps.restaurant.french/~chezchic.html"));
+        boolean url1 = false, url2 = false;
+        for (Url url : c.getURLs()) {
+            if ("https://davdroid.bitfire.at/".equals(url.getValue()) && url.getType() == null)
+                url1 = true;
+            if ("http://www.swbyps.restaurant.french/~chezchic.html".equals(url.getValue()) && "x-blog".equals(url.getType()))
+                url2 = true;
+        }
+        assertTrue(url1 && url2);
 
         // BDAY
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -185,22 +195,32 @@ public class ContactTest extends InstrumentationTestCase {
         assertFalse(email.getTypes().contains(EmailType.PREF));
         assertNotNull(email.getPref());
 
-        /*Impp impp = c.getImpps().get(0);
-        assertFalse(impp.getTypes().contains(ImppType.PREF));
-        assertNotNull(impp.getPref());*/
+        //Impp impp = c.getImpps().get(0);
+        //assertFalse(impp.getTypes().contains(ImppType.PREF));
+        //assertNotNull(impp.getPref());
 
         Address addr = c.getAddresses().get(0);
         assertFalse(addr.getTypes().contains(AddressType.PREF));
         assertNotNull(addr.getPref());
     }
 
-    public void testDownloadPhoto() {
-        // TODO
-    }
+    /*public void testEzvcardPref() throws IOException {
+        Impp property = new Impp("xmpp", "test@example.com");
+        //Email property = new Email("test@example.com");
+        property.setPref(1);
 
+        VCard vCard = new VCard();
+        vCard.addImpp(property);
+        //vCard.addEmail(property);
+
+        StringWriter writer = new StringWriter();
+        new VCardWriter(writer, VCardVersion.V3_0).write(vCard);
+        new VCardWriter(writer, VCardVersion.V4_0).write(vCard);
+
+        Constants.log.info(writer.toString());
+    }*/
 
 	private Contact parseContact(String fname, Charset charset) throws IOException {
-		Log.d(TAG, "Loading VCard file " + fname);
 		@Cleanup InputStream is = assetMgr.open(fname, AssetManager.ACCESS_STREAMING);
 		return Contact.fromStream(is, charset, null)[0];
 	}

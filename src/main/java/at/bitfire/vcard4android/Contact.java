@@ -18,11 +18,14 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import ezvcard.Ezvcard;
 import ezvcard.VCard;
 import ezvcard.VCardVersion;
+import ezvcard.ValidationWarnings;
+import ezvcard.Warning;
 import ezvcard.parameter.EmailType;
 import ezvcard.parameter.ImageType;
 import ezvcard.parameter.TelephoneType;
@@ -50,6 +53,7 @@ import ezvcard.property.Telephone;
 import ezvcard.property.Title;
 import ezvcard.property.Uid;
 import ezvcard.property.Url;
+import ezvcard.property.VCardProperty;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.NonNull;
@@ -423,6 +427,16 @@ public class Contact {
         // REV
         vCard.setRevision(Revision.now());
 
+        // validate VCard and log results
+        ValidationWarnings validation = vCard.validate(vCardVersion);
+        if (!validation.isEmpty()) {
+            Constants.log.warn("Generating possibly invalid VCard:");
+            for (Map.Entry<VCardProperty, List<Warning>> entry : validation)
+                for (Warning warning : entry.getValue())
+                    Constants.log.warn("  * " + entry.getKey().getClass().getSimpleName() + " - " + warning.getMessage());
+        }
+
+        // generate VCARD
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         Ezvcard .write(vCard)
                 .version(vCardVersion)

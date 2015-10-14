@@ -26,7 +26,7 @@ NOTE:This fax number is operational 0800 to 1715
 NOTE:Second note
 CATEGORIES:A,B\'C
 URL:https://davdroid.bitfire.at/
-URL:http://www.swbyps.restaurant.french/~chezchic.html
+URL;TYPE=x-blog:http://www.swbyps.restaurant.french/~chezchic.html
 BDAY:1996-04-15
 ANNIVERSARY:2014-08-12
 RELATED;CHARSET=UTF-8;TYPE=co-worker,crush;VALUE=text:Ägidius
