@@ -18,20 +18,24 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
-import android.provider.ContactsContract.CommonDataKinds.*;
 import android.provider.ContactsContract.CommonDataKinds.Email;
+import android.provider.ContactsContract.CommonDataKinds.Event;
+import android.provider.ContactsContract.CommonDataKinds.Im;
 import android.provider.ContactsContract.CommonDataKinds.Nickname;
 import android.provider.ContactsContract.CommonDataKinds.Note;
 import android.provider.ContactsContract.CommonDataKinds.Organization;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.Photo;
 import android.provider.ContactsContract.CommonDataKinds.Relation;
 import android.provider.ContactsContract.CommonDataKinds.SipAddress;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.CommonDataKinds.StructuredPostal;
+import android.provider.ContactsContract.CommonDataKinds.Website;
 import android.provider.ContactsContract.RawContacts;
 import android.text.TextUtils;
 
-import com.google.common.base.Joiner;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -50,7 +54,14 @@ import ezvcard.parameter.EmailType;
 import ezvcard.parameter.ImppType;
 import ezvcard.parameter.RelatedType;
 import ezvcard.parameter.TelephoneType;
-import ezvcard.property.*;
+import ezvcard.property.Address;
+import ezvcard.property.Anniversary;
+import ezvcard.property.Birthday;
+import ezvcard.property.DateOrTimeProperty;
+import ezvcard.property.Impp;
+import ezvcard.property.Related;
+import ezvcard.property.Telephone;
+import ezvcard.property.Url;
 import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 import lombok.Getter;
@@ -963,21 +974,8 @@ public class AndroidContact {
 		 */
         String formattedAddress = address.getLabel();
         if (!TextUtils.isEmpty(formattedAddress)) {
-            List<String> components = new LinkedList<>();
-            if (!TextUtils.isEmpty(address.getStreetAddress()))
-                components.add(address.getStreetAddress());
-            if (!TextUtils.isEmpty(address.getPoBox()))
-                components.add(address.getPoBox());
-            if (!TextUtils.isEmpty(address.getExtendedAddress()))
-                components.add(address.getExtendedAddress());
-            String lineStreet = Joiner.on(" ").join(components);
-
-            components.clear();
-            if (!TextUtils.isEmpty(address.getPostalCode()))
-                components.add(address.getPostalCode());
-            if (!TextUtils.isEmpty(address.getLocality()))
-                components.add(address.getLocality());
-            String lineLocality = Joiner.on(" ").join(components);
+            String  lineStreet = StringUtils.join(new String[] { address.getStreetAddress(), address.getPoBox(), address.getExtendedAddress() }, " "),
+                    lineLocality = StringUtils.join(new String[]{address.getPostalCode(), address.getLocality()}, " ");
 
             List<String> lines = new LinkedList<>();
             if (!TextUtils.isEmpty(lineStreet))
@@ -989,7 +987,7 @@ public class AndroidContact {
             if (!TextUtils.isEmpty(address.getCountry()))
                 lines.add(address.getCountry().toUpperCase());
 
-            formattedAddress = Joiner.on("\n").join(lines);
+            formattedAddress = StringUtils.join(lines, "\n");
         }
 
         int typeCode = StructuredPostal.TYPE_OTHER;
@@ -1121,7 +1119,7 @@ public class AndroidContact {
         builder .withValue(Relation.MIMETYPE, Relation.CONTENT_ITEM_TYPE)
                 .withValue(Relation.NAME, related.getText())
                 .withValue(Relation.TYPE, typeCode)
-                .withValue(Relation.LABEL, Joiner.on("/").join(labels));
+                .withValue(Relation.LABEL, StringUtils.join(labels, "/"));
         batch.enqueue(builder.build());
     }
 
@@ -1176,27 +1174,11 @@ public class AndroidContact {
 
 	protected static String xNameToLabel(String xname) {
 		// "X-MY_PROPERTY"
-
-		// 1. ensure lower case -> "x-my_property"
-        String s = xname.toLowerCase();
-
-        // 2. remove x- from beginning -> "my_property"
-        if (s.startsWith("x-"))
+        String s = xname.toLowerCase();     // 1. ensure lower case -> "x-my_property"
+        if (s.startsWith("x-"))             // 2. remove x- from beginning -> "my_property"
             s = s.substring(2);
-
-        // 3. replace "_" by " " -> "my property"
-        s = s.replace('_', ' ');
-
-        // 4. capitalize -> "My Property"
-        List<String> words = new LinkedList<>();
-        for (String word : s.split(" ")) {
-            if (word.length() >= 1) {
-                char[] chars = word.toCharArray();
-                chars[0] = Character.toUpperCase(chars[0]);
-                words.add(String.valueOf(chars));
-            }
-        }
-        return Joiner.on(" ").join(words);
+        s = s.replace('_', ' ');            // 3. replace "_" by " " -> "my property"
+        return WordUtils.capitalize(s);     // 4. capitalize -> "My Property"
 	}
 
 }
