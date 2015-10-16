@@ -13,16 +13,19 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.provider.ContactsContract;
 import android.provider.ContactsContract.Groups;
 
 import java.io.FileNotFoundException;
 
 import lombok.Cleanup;
+import lombok.Getter;
 
 public class AndroidGroup {
 
 	protected final AndroidAddressBook addressBook;
 
+    @Getter
 	protected Long id;
 	protected Contact contact;
 
@@ -43,6 +46,7 @@ public class AndroidGroup {
 			return contact;
 
 		try {
+            Constants.log.info("Querying " + ContentUris.withAppendedId(Groups.CONTENT_URI, id));
 			@Cleanup Cursor cursor = addressBook.provider.query(addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id)),
 					new String[] { Groups.TITLE, Groups.NOTES }, null, null, null);
 			if (cursor == null || !cursor.moveToNext())
@@ -65,6 +69,7 @@ public class AndroidGroup {
 		values.put(Groups.ACCOUNT_NAME, addressBook.account.name);
 		values.put(Groups.TITLE, contact.displayName);
 		values.put(Groups.NOTES, contact.note);
+        values.put(Groups.SHOULD_SYNC, true);
 		try {
 			Uri uri = addressBook.provider.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values);
 			id = ContentUris.parseId(uri);
@@ -76,10 +81,27 @@ public class AndroidGroup {
 
 	public int delete() throws ContactsStorageException {
 		try {
-			return addressBook.provider.delete(addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id)), null, null);
+			return addressBook.provider.delete(groupSyncURI(), null, null);
 		} catch (RemoteException e) {
 			throw new ContactsStorageException("Couldn't delete contact group", e);
 		}
 	}
+
+    public int update(ContentValues values) throws ContactsStorageException {
+        try {
+            return addressBook.provider.update(groupSyncURI(), values, null, null);
+        } catch (RemoteException e) {
+            throw new ContactsStorageException("Couldn't delete contact group", e);
+        }
+    }
+
+
+    // helpers
+
+    protected Uri groupSyncURI() {
+        if (id == null)
+            throw new IllegalStateException("Group hasn't been saved yet");
+        return addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.Groups.CONTENT_URI, id));
+    }
 
 }

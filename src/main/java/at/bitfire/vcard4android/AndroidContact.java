@@ -20,6 +20,7 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.CommonDataKinds.Event;
+import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.CommonDataKinds.Im;
 import android.provider.ContactsContract.CommonDataKinds.Nickname;
 import android.provider.ContactsContract.CommonDataKinds.Note;
@@ -147,9 +148,9 @@ public class AndroidContact {
 						case StructuredPostal.CONTENT_ITEM_TYPE:
 							populateStructuredPostal(values);
 							break;
-						/*case GroupMembership.CONTENT_ITEM_TYPE:
+						case GroupMembership.CONTENT_ITEM_TYPE:
 							populateGroupMembership(values);
-							break;*/
+							break;
 						case Website.CONTENT_ITEM_TYPE:
 							populateWebsite(values);
 							break;
@@ -458,6 +459,11 @@ public class AndroidContact {
         contact.getAddresses().add(address);
     }
 
+    protected void populateGroupMembership(ContentValues row) {
+        // vcard4android doesn't have group support by default.
+        // Override this method to read local group memberships.
+    }
+
     protected void populateWebsite(ContentValues row) {
         Url url = new Url(row.getAsString(Website.URL));
         if (row.containsKey(Website.TYPE))
@@ -637,7 +643,7 @@ public class AndroidContact {
 	}
 
 
-	protected void insertDataRows(BatchOperation batch) {
+	protected void insertDataRows(BatchOperation batch) throws ContactsStorageException {
 		insertStructuredName(batch);
 
 		for (Telephone number : contact.getPhoneNumbers())
@@ -657,6 +663,8 @@ public class AndroidContact {
 
         for (Address address : contact.getAddresses())
             insertStructuredPostal(batch, address);
+
+        insertGroupMemberships(batch);
 
         for (Url url : contact.getURLs())
             insertWebsite(batch, url);
@@ -1025,6 +1033,11 @@ public class AndroidContact {
                 .withValue(StructuredPostal.POSTCODE, address.getPostalCode())
                 .withValue(StructuredPostal.COUNTRY, address.getCountry());
         batch.enqueue(builder.build());
+    }
+
+    protected void insertGroupMemberships(BatchOperation batch) throws ContactsStorageException {
+        // vcard4android doesn't have group support by default.
+        // Override this method to add/update local group memberships.
     }
 
     protected void insertWebsite(BatchOperation batch, Url url) {
