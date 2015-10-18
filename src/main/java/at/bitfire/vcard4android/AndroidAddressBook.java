@@ -42,6 +42,7 @@ public class AndroidAddressBook {
 
 	// account-specific address book settings
 
+    @SuppressWarnings("Recycle")
 	public ContentValues getSettings() throws ContactsStorageException {
 		try {
 			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), null, null, null, null);
@@ -88,6 +89,7 @@ public class AndroidAddressBook {
 
 	// groups
 
+    @SuppressWarnings("Recycle")
 	protected AndroidGroup[] queryGroups(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
 			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.Groups.CONTENT_URI),
@@ -102,6 +104,7 @@ public class AndroidAddressBook {
 		}
 	}
 
+    @SuppressWarnings("Recycle")
     protected AndroidContact[] queryContacts(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
 			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.RawContacts.CONTENT_URI),

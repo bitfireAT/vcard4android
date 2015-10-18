@@ -41,6 +41,7 @@ public class AndroidGroup {
 	}
 
 
+    @SuppressWarnings("Recycle")
 	public Contact getContact() throws FileNotFoundException, ContactsStorageException {
 		if (contact != null)
 			return contact;

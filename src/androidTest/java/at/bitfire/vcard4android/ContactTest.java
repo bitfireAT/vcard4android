@@ -19,6 +19,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Locale;
 
 import ezvcard.VCard;
 import ezvcard.VCardVersion;
@@ -163,7 +164,7 @@ public class ContactTest extends InstrumentationTestCase {
         assertTrue(url1 && url2);
 
         // BDAY
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         assertEquals("1996-04-15", dateFormat.format(c.birthDay.getDate()));
         // ANNIVERSARY
         assertEquals("2014-08-12", dateFormat.format(c.anniversary.getDate()));

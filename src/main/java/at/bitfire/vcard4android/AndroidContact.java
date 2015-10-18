@@ -993,7 +993,7 @@ public class AndroidContact {
             if (!TextUtils.isEmpty(address.getRegion()))
                 lines.add(address.getRegion());
             if (!TextUtils.isEmpty(address.getCountry()))
-                lines.add(address.getCountry().toUpperCase());
+                lines.add(address.getCountry().toUpperCase(Locale.getDefault()));
 
             formattedAddress = StringUtils.join(lines, "\n");
         }
@@ -1187,11 +1187,11 @@ public class AndroidContact {
 
 	protected static String xNameToLabel(String xname) {
 		// "X-MY_PROPERTY"
-        String s = xname.toLowerCase();     // 1. ensure lower case -> "x-my_property"
-        if (s.startsWith("x-"))             // 2. remove x- from beginning -> "my_property"
+        String s = xname.toLowerCase(Locale.US);    // 1. ensure lower case -> "x-my_property"
+        if (s.startsWith("x-"))                     // 2. remove x- from beginning -> "my_property"
             s = s.substring(2);
-        s = s.replace('_', ' ');            // 3. replace "_" by " " -> "my property"
-        return WordUtils.capitalize(s);     // 4. capitalize -> "My Property"
+        s = s.replace('_', ' ');                    // 3. replace "_" by " " -> "my property"
+        return WordUtils.capitalize(s);             // 4. capitalize -> "My Property"
 	}
 
 }
