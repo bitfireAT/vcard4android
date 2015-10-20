@@ -328,6 +328,8 @@ public class Contact {
             fn = displayName;
         else if (organization != null && organization.getValues() != null && organization.getValues().get(0) != null)
             fn = organization.getValues().get(0);
+        else if (nickName != null)
+            fn = nickName.getValues().get(0);
         else {
             if (!phoneNumbers.isEmpty())
                 fn = phoneNumbers.get(0).getText();
@@ -356,8 +358,8 @@ public class Contact {
                 for (String s : TextUtils.split(suffix, " "))
                     n.addSuffix(s);
         } else {
-            n.setFamily("-");
-            Constants.log.warn("No N (structured name) available, using family name \"-\"");
+            n.setGiven(fn);
+            Constants.log.warn("No N (structured name) available, using first name \"" + fn + "\"");
         }
         vCard.setStructuredName(n);
 
