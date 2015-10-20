@@ -375,7 +375,11 @@ public class AndroidContact {
                     impp = new Impp("netmeeting", handle);
                     break;
                 case Im.PROTOCOL_CUSTOM:
-                    impp = new Impp(row.getAsString(Im.CUSTOM_PROTOCOL), handle);
+                    try {
+                        impp = new Impp(toURIScheme(row.getAsString(Im.CUSTOM_PROTOCOL)), handle);
+                    } catch(IllegalArgumentException e) {
+                        Constants.log.error("Messenger type/value can't be expressed as URI; ignoring");
+                    }
             }
 
         if (impp != null) {
@@ -1175,6 +1179,24 @@ public class AndroidContact {
 		return "X-" + label.replaceAll(" ","_").replaceAll("[^\\p{L}\\p{Nd}\\-_]", "").toUpperCase(Locale.US);
 	}
 
+    protected static String xNameToLabel(String xname) {
+        // "X-MY_PROPERTY"
+        String s = xname.toLowerCase(Locale.US);    // 1. ensure lower case -> "x-my_property"
+        if (s.startsWith("x-"))                     // 2. remove x- from beginning -> "my_property"
+            s = s.substring(2);
+        s = s.replace('_', ' ');                    // 3. replace "_" by " " -> "my property"
+        return WordUtils.capitalize(s);             // 4. capitalize -> "My Property"
+    }
+
+    protected static String toURIScheme(String s) {
+        // RFC 3986 3.1
+        // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+        // ALPH        =  %x41-5A / %x61-7A   ; A-Z / a-z
+        // DIGIT       =  %x30-39             ; 0-9
+        return s.replaceAll("^[^a-zA-Z]]", "").replaceAll("[^\\da-zA-Z+-.]", "");
+    }
+
+
     protected Uri rawContactSyncURI() {
         if (id == null)
             throw new IllegalStateException("Contact hasn't been saved yet");
@@ -1184,14 +1206,5 @@ public class AndroidContact {
     protected Uri dataSyncURI() {
         return addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI);
     }
-
-	protected static String xNameToLabel(String xname) {
-		// "X-MY_PROPERTY"
-        String s = xname.toLowerCase(Locale.US);    // 1. ensure lower case -> "x-my_property"
-        if (s.startsWith("x-"))                     // 2. remove x- from beginning -> "my_property"
-            s = s.substring(2);
-        s = s.replace('_', ' ');                    // 3. replace "_" by " " -> "my property"
-        return WordUtils.capitalize(s);             // 4. capitalize -> "My Property"
-	}
 
 }

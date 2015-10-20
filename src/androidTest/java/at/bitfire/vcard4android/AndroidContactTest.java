@@ -15,6 +15,8 @@ import android.provider.ContactsContract;
 import android.test.InstrumentationTestCase;
 
 import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import lombok.Cleanup;
 
@@ -56,9 +58,16 @@ public class AndroidContactTest extends InstrumentationTestCase {
 		assertEquals(vcard2.familyName, vcard.familyName);
 	}
 
+
 	public void testLabelToXName() {
 		assertEquals("X-AUNTIES_HOME", AndroidContact.labelToXName("auntie's home"));
 	}
+
+    public void testToURIScheme() {
+        assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"));
+        assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod Forum"));
+        assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"));
+    }
 
 	public void testXNameToLabel() {
 		assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES_HOME"));
