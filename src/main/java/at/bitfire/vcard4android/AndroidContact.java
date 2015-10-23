@@ -120,6 +120,12 @@ public class AndroidContact {
 				for (Entity.NamedContentValues subValue : subValues) {
 					ContentValues values = subValue.values;
 					String mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE);
+
+                    if (mimeType == null) {
+                        Constants.log.error("Ignoring raw contact data row without " + ContactsContract.RawContactsEntity.MIMETYPE);
+                        continue;
+                    }
+
 					switch (mimeType) {
 						case StructuredName.CONTENT_ITEM_TYPE:
 							populateStructuredName(values);
@@ -1162,6 +1168,8 @@ public class AndroidContact {
 
             // So we have to write the photo directly into the PHOTO BLOB, which causes
             // a TransactionTooLargeException for photos > 1 MB
+            Constants.log.debug("Inserting photo for raw contact {}", id);
+
             ContentValues values = new ContentValues(2);
             values.put(RawContacts.Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
             values.put(Photo.RAW_CONTACT_ID, id);
