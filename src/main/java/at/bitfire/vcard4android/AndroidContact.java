@@ -205,7 +205,7 @@ public class AndroidContact {
 		Telephone number = new Telephone(row.getAsString(Phone.NUMBER));
         Integer type = row.getAsInteger(Phone.TYPE);
 		if (type != null)
-			switch (row.getAsInteger(Phone.TYPE)) {
+			switch (type) {
 				case Phone.TYPE_HOME:
 					number.addType(TelephoneType.HOME);
 					break;
@@ -389,8 +389,9 @@ public class AndroidContact {
             }
 
         if (impp != null) {
-            if (row.containsKey(Im.TYPE))
-                switch (row.getAsInteger(Im.TYPE)) {
+            Integer type = row.getAsInteger(Im.TYPE);
+            if (type != null)
+                switch (type) {
                     case Im.TYPE_HOME:
                         impp.addType(ImppType.HOME);
                         break;
@@ -413,8 +414,9 @@ public class AndroidContact {
 
             nick.addValue(row.getAsString(Nickname.NAME));
 
-            if (row.containsKey(Nickname.TYPE))
-                switch (row.getAsInteger(Nickname.TYPE)) {
+            Integer type = row.getAsInteger(Nickname.TYPE);
+            if (type != null)
+                switch (type) {
                     case Nickname.TYPE_MAIDEN_NAME:
                         nick.setType(Contact.NICKNAME_TYPE_MAIDEN_NAME);
                         break;
@@ -431,7 +433,6 @@ public class AndroidContact {
                         String label = row.getAsString(Nickname.LABEL);
                         if (!TextUtils.isEmpty(label))
                             nick.setType(labelToXName(label));
-                        break;
                 }
 
             contact.nickName = nick;
