@@ -1199,9 +1199,9 @@ public class AndroidContact {
     protected static String toURIScheme(String s) {
         // RFC 3986 3.1
         // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-        // ALPH        =  %x41-5A / %x61-7A   ; A-Z / a-z
+        // ALPHA       =  %x41-5A / %x61-7A   ; A-Z / a-z
         // DIGIT       =  %x30-39             ; 0-9
-        return s.replaceAll("^[^a-zA-Z]]", "").replaceAll("[^\\da-zA-Z+-.]", "");
+        return s.replaceAll("^[^a-zA-Z]+", "").replaceAll("[^\\da-zA-Z+-.]", "");
     }
 
 

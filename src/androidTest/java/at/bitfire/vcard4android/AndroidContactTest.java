@@ -45,8 +45,13 @@ public class AndroidContactTest extends InstrumentationTestCase {
 	public void testAddAndReadContact() throws FileNotFoundException, ContactsStorageException {
 		Contact vcard = new Contact();
 		vcard.displayName = "Mya Contact";
+        vcard.prefix = "Magª";
 		vcard.givenName = "Mya";
 		vcard.familyName = "Contact";
+        vcard.suffix = "BSc";
+        vcard.phoneticGivenName = "Först";
+        vcard.phoneticMiddleName = "Mittelerde";
+        vcard.phoneticFamilyName = "Fämilie";
 
 		@Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
 		contact.add();
@@ -54,8 +59,13 @@ public class AndroidContactTest extends InstrumentationTestCase {
 		AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
 		Contact vcard2 = contact2.getContact();
 		assertEquals(vcard2.displayName, vcard.displayName);
+        assertEquals(vcard2.prefix, vcard.prefix);
 		assertEquals(vcard2.givenName, vcard.givenName);
 		assertEquals(vcard2.familyName, vcard.familyName);
+        assertEquals(vcard2.suffix, vcard.suffix);
+        assertEquals(vcard2.phoneticGivenName, vcard.phoneticGivenName);
+        assertEquals(vcard2.phoneticMiddleName, vcard.phoneticMiddleName);
+        assertEquals(vcard2.phoneticFamilyName, vcard.phoneticFamilyName);
 	}
 
 
