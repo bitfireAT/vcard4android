@@ -145,7 +145,7 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("Klöster-Reich", addr.getCountry());
 
         // NOTE
-        assertEquals("This fax number is operational 0800 to 1715EST, Mon-Fri.\n\n\nSecond note", c.note);
+        assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.note);
 
         // CATEGORIES
         assertTrue(Arrays.equals(
@@ -197,30 +197,14 @@ public class ContactTest extends InstrumentationTestCase {
         assertFalse(email.getTypes().contains(EmailType.PREF));
         assertNotNull(email.getPref());
 
-        //Impp impp = c.getImpps().get(0);
-        //assertFalse(impp.getTypes().contains(ImppType.PREF));
-        //assertNotNull(impp.getPref());
+        Impp impp = c.getImpps().get(0);
+        assertFalse(impp.getTypes().contains(ImppType.PREF));
+        assertNotNull(impp.getPref());
 
         Address addr = c.getAddresses().get(0);
         assertFalse(addr.getTypes().contains(AddressType.PREF));
         assertNotNull(addr.getPref());
     }
-
-    /*public void testEzvcardPref() throws IOException {
-        Impp property = new Impp("xmpp", "test@example.com");
-        //Email property = new Email("test@example.com");
-        property.setPref(1);
-
-        VCard vCard = new VCard();
-        vCard.addImpp(property);
-        //vCard.addEmail(property);
-
-        StringWriter writer = new StringWriter();
-        new VCardWriter(writer, VCardVersion.V3_0).write(vCard);
-        new VCardWriter(writer, VCardVersion.V4_0).write(vCard);
-
-        Constants.log.info(writer.toString());
-    }*/
 
 	private Contact parseContact(String fname, Charset charset) throws IOException {
 		@Cleanup InputStream is = assetMgr.open(fname, AssetManager.ACCESS_STREAMING);
