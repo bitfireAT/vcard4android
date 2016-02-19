@@ -36,10 +36,10 @@ android {
 dependencies {
     compile 'org.apache.commons:commons-lang3:3.4'
     provided 'org.projectlombok:lombok:1.16.6'
-    compile 'org.slf4j:slf4j-android:1.7.13'
+    compile 'org.slf4j:slf4j-android:1.7.14'
 
     // ez-vcard to parse/generate VCards
-    compile('com.googlecode.ez-vcard:ez-vcard:0.9.8') {
+    compile('com.googlecode.ez-vcard:ez-vcard:0.9.9') {
         // hCard functionality not needed
         exclude group: 'org.jsoup', module: 'jsoup'
         exclude group: 'org.freemarker', module: 'freemarker'
