@@ -49,6 +49,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.logging.Level;
 
 import ezvcard.parameter.AddressType;
 import ezvcard.parameter.EmailType;
@@ -122,7 +123,7 @@ public class AndroidContact {
 					String mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE);
 
                     if (mimeType == null) {
-                        Constants.log.error("Ignoring raw contact data row without " + ContactsContract.RawContactsEntity.MIMETYPE);
+                        Constants.log.warning("Ignoring raw contact data row without " + ContactsContract.RawContactsEntity.MIMETYPE);
                         continue;
                     }
 
@@ -313,9 +314,9 @@ public class AndroidContact {
                 if (stream != null)
                     contact.photo = IOUtils.toByteArray(stream);
                 else
-                    Constants.log.warn("Ignoring inaccessible local contact photo file");
+                    Constants.log.warning("Ignoring inaccessible local contact photo file");
             } catch(IOException e) {
-                Constants.log.warn("Couldn't read local contact photo file", e);
+                Constants.log.log(Level.WARNING, "Couldn't read local contact photo file", e);
             }
         } else
             contact.photo = row.getAsByteArray(Photo.PHOTO);
@@ -346,7 +347,7 @@ public class AndroidContact {
         String handle = row.getAsString(Im.DATA);
 
         if (TextUtils.isEmpty(handle)) {
-            Constants.log.warn("Ignoring instant messenger record without handle");
+            Constants.log.warning("Ignoring instant messenger record without handle");
             return;
         }
 
@@ -384,7 +385,7 @@ public class AndroidContact {
                     try {
                         impp = new Impp(toURIScheme(row.getAsString(Im.CUSTOM_PROTOCOL)), handle);
                     } catch(IllegalArgumentException e) {
-                        Constants.log.error("Messenger type/value can't be expressed as URI; ignoring");
+                        Constants.log.warning("Messenger type/value can't be expressed as URI; ignoring");
                     }
             }
 
@@ -520,7 +521,7 @@ public class AndroidContact {
                     break;
             }
         } catch (ParseException e) {
-            Constants.log.warn("Couldn't parse birthday/anniversary date from database", e);
+            Constants.log.log(Level.WARNING, "Couldn't parse birthday/anniversary date from database", e);
         }
     }
 
@@ -587,7 +588,7 @@ public class AndroidContact {
                 }
             contact.getImpps().add(impp);
         } catch(IllegalArgumentException e) {
-            Constants.log.warn("Ignoring invalid locally stored SIP address");
+            Constants.log.warning("Ignoring invalid locally stored SIP address");
         }
     }
 
@@ -875,7 +876,7 @@ public class AndroidContact {
 
         String protocol = impp.getProtocol();
         if (protocol == null) {
-            Constants.log.warn("Ignoring IMPP address without protocol");
+            Constants.log.warning("Ignoring IMPP address without protocol");
             return;
         }
 
@@ -1096,7 +1097,7 @@ public class AndroidContact {
     protected void insertEvent(BatchOperation batch, int type, DateOrTimeProperty dateOrTime) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         if (dateOrTime.getDate() == null) {
-            Constants.log.warn("Ignoring contact event (birthday/anniversary) without date");
+            Constants.log.warning("Ignoring contact event (birthday/anniversary) without date");
             return;
         }
 
@@ -1169,7 +1170,7 @@ public class AndroidContact {
 
             // So we have to write the photo directly into the PHOTO BLOB, which causes
             // a TransactionTooLargeException for photos > 1 MB
-            Constants.log.debug("Inserting photo for raw contact {}", id);
+            Constants.log.fine("Inserting photo for raw contact " + id);
 
             ContentValues values = new ContentValues(2);
             values.put(RawContacts.Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
@@ -1178,7 +1179,7 @@ public class AndroidContact {
             try {
                 addressBook.provider.insert(dataSyncURI(), values);
             } catch (RemoteException e) {
-                Constants.log.warn("Couldn't set local contact photo, ignoring", e);
+                Constants.log.log(Level.WARNING, "Couldn't set local contact photo, ignoring", e);
             }
         }
     }

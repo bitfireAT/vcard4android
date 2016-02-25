@@ -9,7 +9,6 @@
 package at.bitfire.vcard4android;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -59,8 +58,6 @@ import lombok.Getter;
 import lombok.NonNull;
 
 public class Contact {
-	private static final String TAG = "vcard4android.Contact";
-
     // productID (if set) will be used to generate a PRODID property.
     // You may set this statically from the calling application.
     public static String productID = null;
@@ -154,7 +151,7 @@ public class Contact {
 			c.uid = uid.getValue();
 			vCard.removeProperties(Uid.class);
 		} else {
-			Constants.log.warn("Received VCard without UID, generating new one");
+			Constants.log.warning("Received VCard without UID, generating new one");
 			c.generateUID();
 		}
 
@@ -164,7 +161,7 @@ public class Contact {
 			c.displayName = fn.getValue();
 			vCard.removeProperties(FormattedName.class);
 		} else
-            Constants.log.warn("Received VCard without FN (formatted name)");
+            Constants.log.warning("Received VCard without FN (formatted name)");
 
 		// N
 		StructuredName n = vCard.getStructuredName();
@@ -176,7 +173,7 @@ public class Contact {
 			c.suffix = TextUtils.join(" ", n.getSuffixes());
 			vCard.removeProperties(StructuredName.class);
 		} else
-            Constants.log.warn("Received VCard without N (structured name)");
+            Constants.log.warning("Received VCard without N (structured name)");
 
 		// phonetic names
 		RawProperty phoneticFirstName = vCard.getExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME),
@@ -295,7 +292,7 @@ public class Contact {
             try {
                 c.unknownProperties = vCard.write();
             } catch(Exception e) {
-                Log.w(TAG, "Couldn't serialize unknown properties, dropping them");
+                Constants.log.warning("Couldn't serialize unknown properties, dropping them");
             }
 
         return c;
@@ -307,7 +304,7 @@ public class Contact {
             if (unknownProperties != null)
                 vCard = Ezvcard.parse(unknownProperties).first();
         } catch (Exception e) {
-            Log.e(TAG, "Couldn't parse unknown original properties, creating from scratch");
+            Constants.log.warning("Couldn't parse unknown original properties, creating from scratch");
         }
         if (vCard == null)
             vCard = new VCard();
@@ -316,7 +313,7 @@ public class Contact {
         if (uid != null)
             vCard.setUid(new Uid(uid));
         else
-            Log.wtf(TAG, "Generating VCard without UID");
+            Constants.log.severe("Generating VCard without UID");
 
         // PRODID
         if (productID != null)
@@ -335,11 +332,11 @@ public class Contact {
                 fn = phoneNumbers.get(0).getText();
             else if (!emails.isEmpty())
                 fn = emails.get(0).getValue();
-            Constants.log.warn("No FN (formatted name) available, using " + fn);
+            Constants.log.warning("No FN (formatted name) available, using " + fn);
         }
         if (TextUtils.isEmpty(fn)) {
             fn = "-";
-            Constants.log.warn("No FN (formatted name) available, using \"-\"");
+            Constants.log.warning("No FN (formatted name) available, using \"-\"");
         }
         vCard.setFormattedName(fn);
 
@@ -359,7 +356,7 @@ public class Contact {
                     n.addSuffix(s);
         } else {
             n.setGiven(fn);
-            Constants.log.warn("No N (structured name) available, using first name \"" + fn + "\"");
+            Constants.log.warning("No N (structured name) available, using first name \"" + fn + "\"");
         }
         vCard.setStructuredName(n);
 
@@ -432,10 +429,10 @@ public class Contact {
         // validate VCard and log results
         ValidationWarnings validation = vCard.validate(vCardVersion);
         if (!validation.isEmpty()) {
-            Constants.log.warn("Generating possibly invalid VCard:");
+            Constants.log.warning("Generating possibly invalid VCard:");
             for (Map.Entry<VCardProperty, List<Warning>> entry : validation)
                 for (Warning warning : entry.getValue())
-                    Constants.log.warn("  * " + entry.getKey().getClass().getSimpleName() + " - " + warning.getMessage());
+                    Constants.log.warning("  * " + entry.getKey().getClass().getSimpleName() + " - " + warning.getMessage());
         }
 
         // generate VCARD

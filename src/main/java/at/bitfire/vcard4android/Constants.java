@@ -8,11 +8,10 @@
 
 package at.bitfire.vcard4android;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 public class Constants {
 
-    static final Logger log = LoggerFactory.getLogger("vcard4android");
+    static final Logger log = Logger.getLogger("davdroid.vcard4android");
 
 }

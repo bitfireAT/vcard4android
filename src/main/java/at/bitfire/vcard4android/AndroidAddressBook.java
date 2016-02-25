@@ -22,11 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import lombok.Cleanup;
-import lombok.Getter;
 
 public class AndroidAddressBook {
-	private static final String TAG = "vcard4android.AddrBook";
-
 	final public Account account;
 	final public ContentProviderClient provider;
 	final AndroidGroupFactory groupFactory;
