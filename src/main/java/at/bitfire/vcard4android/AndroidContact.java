@@ -276,7 +276,7 @@ public class AndroidContact {
 		if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
 			number.setPref(1);
 
-		contact.getPhoneNumbers().add(number);
+		contact.phoneNumbers.add(number);
 	}
 
 	protected void populateEmail(ContentValues row) {
@@ -300,7 +300,7 @@ public class AndroidContact {
 			}
 		if (row.getAsInteger(Email.IS_PRIMARY) != 0)
 			email.setPref(1);
-		contact.getEmails().add(email);
+		contact.emails.add(email);
 	}
 
     protected void populatePhoto(ContentValues row) throws RemoteException {
@@ -405,7 +405,7 @@ public class AndroidContact {
                             impp.addType(ImppType.get(labelToXName(customType)));
                 }
 
-            contact.getImpps().add(impp);
+            contact.impps.add(impp);
         }
     }
 
@@ -468,7 +468,7 @@ public class AndroidContact {
         address.setRegion(row.getAsString(StructuredPostal.REGION));
         address.setPostalCode(row.getAsString(StructuredPostal.POSTCODE));
         address.setCountry(row.getAsString(StructuredPostal.COUNTRY));
-        contact.getAddresses().add(address);
+        contact.addresses.add(address);
     }
 
     protected void populateGroupMembership(ContentValues row) {
@@ -504,7 +504,7 @@ public class AndroidContact {
                         url.setType(labelToXName(label));
                     break;
             }
-        contact.getURLs().add(url);
+        contact.urls.add(url);
     }
 
     protected void populateEvent(ContentValues row) {
@@ -567,7 +567,7 @@ public class AndroidContact {
                     break;
             }
 
-        contact.getRelations().add(related);
+        contact.relations.add(related);
     }
 
     protected void populateSipAddress(ContentValues row) {
@@ -586,7 +586,7 @@ public class AndroidContact {
                         if (!TextUtils.isEmpty(customType))
                             impp.addType(ImppType.get(labelToXName(customType)));
                 }
-            contact.getImpps().add(impp);
+            contact.impps.add(impp);
         } catch(IllegalArgumentException e) {
             Constants.log.warning("Ignoring invalid locally stored SIP address");
         }
@@ -658,27 +658,27 @@ public class AndroidContact {
 	protected void insertDataRows(BatchOperation batch) throws ContactsStorageException {
 		insertStructuredName(batch);
 
-		for (Telephone number : contact.getPhoneNumbers())
+		for (Telephone number : contact.phoneNumbers)
 			insertPhoneNumber(batch, number);
 
-		for (ezvcard.property.Email email : contact.getEmails())
+		for (ezvcard.property.Email email : contact.emails)
 			insertEmail(batch, email);
 
         insertOrganization(batch);
 
-        for (Impp impp : contact.getImpps())        // handles SIP addresses, too
+        for (Impp impp : contact.impps)        // handles SIP addresses, too
             insertIMPP(batch, impp);
 
         insertNickname(batch);
 
         insertNote(batch);
 
-        for (Address address : contact.getAddresses())
+        for (Address address : contact.addresses)
             insertStructuredPostal(batch, address);
 
         insertGroupMemberships(batch);
 
-        for (Url url : contact.getURLs())
+        for (Url url : contact.urls)
             insertWebsite(batch, url);
 
         if (contact.anniversary != null)
@@ -686,7 +686,7 @@ public class AndroidContact {
         if (contact.birthDay != null)
             insertEvent(batch, Event.TYPE_BIRTHDAY, contact.birthDay);
 
-        for (Related related : contact.getRelations())
+        for (Related related : contact.relations)
             insertRelation(batch, related);
 	}
 

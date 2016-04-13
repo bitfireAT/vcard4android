@@ -54,7 +54,6 @@ import ezvcard.property.Uid;
 import ezvcard.property.Url;
 import ezvcard.property.VCardProperty;
 import lombok.Cleanup;
-import lombok.Getter;
 import lombok.NonNull;
 
 public class Contact {
@@ -62,20 +61,20 @@ public class Contact {
     // You may set this statically from the calling application.
     public static String productID = null;
 
-	public static final String
-			PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME",
-			PROPERTY_PHONETIC_MIDDLE_NAME = "X-PHONETIC-MIDDLE-NAME",
-			PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME",
-			PROPERTY_SIP = "X-SIP";
+    public static final String
+            PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME",
+            PROPERTY_PHONETIC_MIDDLE_NAME = "X-PHONETIC-MIDDLE-NAME",
+            PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME",
+            PROPERTY_SIP = "X-SIP";
 
-	public static final TelephoneType
-			PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback"),
-			PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main"),
-			PHONE_TYPE_RADIO = TelephoneType.get("x-radio"),
-			PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant"),
-			PHONE_TYPE_MMS = TelephoneType.get("x-mms");
+    public static final TelephoneType
+            PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback"),
+            PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main"),
+            PHONE_TYPE_RADIO = TelephoneType.get("x-radio"),
+            PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant"),
+            PHONE_TYPE_MMS = TelephoneType.get("x-mms");
 
-	public static final EmailType EMAIL_TYPE_MOBILE = EmailType.get("x-mobile");
+    public static final EmailType EMAIL_TYPE_MOBILE = EmailType.get("x-mobile");
 
     public static final String
             NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name",
@@ -90,22 +89,22 @@ public class Contact {
             URL_TYPE_FTP = "x-ftp";
 
     public String uid;
-	public String displayName;
-	public String prefix, givenName, middleName, familyName, suffix;
-	public String phoneticGivenName, phoneticMiddleName, phoneticFamilyName;
+    public String displayName;
+    public String prefix, givenName, middleName, familyName, suffix;
+    public String phoneticGivenName, phoneticMiddleName, phoneticFamilyName;
     public Nickname nickName;
 
     public Organization organization;
     public String   jobTitle,           // VCard TITLE
                     jobDescription;     // VCard ROLE
 
-	@Getter private List<Telephone> phoneNumbers = new LinkedList<>();
-	@Getter private List<Email> emails = new LinkedList<>();
-    @Getter private List<Impp> impps = new LinkedList<>();
-    @Getter private List<Address> addresses = new LinkedList<>();
-    @Getter private List<String> categories = new LinkedList<>();
-    @Getter private List<Url> URLs = new LinkedList<>();
-    @Getter private List<Related> relations = new LinkedList<>();
+    public final List<Telephone> phoneNumbers = new LinkedList<>();
+    public final List<Email> emails = new LinkedList<>();
+    public final List<Impp> impps = new LinkedList<>();
+    public final List<Address> addresses = new LinkedList<>();
+    public final List<String> categories = new LinkedList<>();
+    public final List<Url> urls = new LinkedList<>();
+    public final List<Related> relations = new LinkedList<>();
 
     public String note;
 
@@ -120,85 +119,86 @@ public class Contact {
 
 
     /**
-	 * Parses an InputStream that contains a VCard.
-	 *
-	 * @param stream     input stream containing the VCard (any parsable version, i.e. 3 or 4)
-	 * @param charset    charset of the input stream or null (will assume UTF-8)
+     * Parses an InputStream that contains a VCard.
+     *
+     * @param stream     input stream containing the VCard (any parsable version, i.e. 3 or 4)
+     * @param charset    charset of the input stream or null (will assume UTF-8)
      * @param downloader will be used to download external resources like contact photos (may be null)
-	 * @return array of filled Event data objects (may have size 0) – doesn't return null
-	 */
-	public static Contact[] fromStream(@NonNull InputStream stream, Charset charset, Downloader downloader) throws IOException {
-		final List<VCard> vcards;
-		if (charset != null) {
-			@Cleanup InputStreamReader reader = new InputStreamReader(stream, charset);
-			vcards = Ezvcard.parse(reader).all();
-		} else
-			vcards = Ezvcard.parse(stream).all();
+     * @return array of filled Event data objects (may have size 0) – doesn't return null
+     */
+    public static Contact[] fromStream(@NonNull InputStream stream, Charset charset, Downloader downloader) throws IOException {
+        final List<VCard> vcards;
+        if (charset != null) {
+            @Cleanup InputStreamReader reader = new InputStreamReader(stream, charset);
+            vcards = Ezvcard.parse(reader).all();
+        } else
+            vcards = Ezvcard.parse(stream).all();
 
-		List<Contact> contacts = new LinkedList<>();
-		for (VCard vcard : vcards)
-			contacts.add(fromVCard(vcard, downloader));
-		return contacts.toArray(new Contact[contacts.size()]);
-	}
+        List<Contact> contacts = new LinkedList<>();
+        for (VCard vcard : vcards)
+            contacts.add(fromVCard(vcard, downloader));
+        return contacts.toArray(new Contact[contacts.size()]);
+    }
 
 
-	protected static Contact fromVCard(VCard vCard, Downloader downloader) {
-		Contact c = new Contact();
+    @SuppressWarnings("LoopStatementThatDoesntLoop")
+    protected static Contact fromVCard(VCard vCard, Downloader downloader) {
+        Contact c = new Contact();
 
-		// UID
-		Uid uid = vCard.getUid();
-		if (uid != null) {
-			c.uid = uid.getValue();
-			vCard.removeProperties(Uid.class);
-		} else {
-			Constants.log.warning("Received VCard without UID, generating new one");
-			c.generateUID();
-		}
+        // UID
+        Uid uid = vCard.getUid();
+        if (uid != null) {
+            c.uid = uid.getValue();
+            vCard.removeProperties(Uid.class);
+        } else {
+            Constants.log.warning("Received VCard without UID, generating new one");
+            c.generateUID();
+        }
 
-		// FN
-		FormattedName fn = vCard.getFormattedName();
-		if (fn != null) {
-			c.displayName = fn.getValue();
-			vCard.removeProperties(FormattedName.class);
-		} else
+        // FN
+        FormattedName fn = vCard.getFormattedName();
+        if (fn != null) {
+            c.displayName = fn.getValue();
+            vCard.removeProperties(FormattedName.class);
+        } else
             Constants.log.warning("Received VCard without FN (formatted name)");
 
-		// N
-		StructuredName n = vCard.getStructuredName();
-		if (n != null) {
-			c.prefix = TextUtils.join(" ", n.getPrefixes());
-			c.givenName = n.getGiven();
-			c.middleName = TextUtils.join(" ", n.getAdditional());
-			c.familyName = n.getFamily();
-			c.suffix = TextUtils.join(" ", n.getSuffixes());
-			vCard.removeProperties(StructuredName.class);
-		} else
+        // N
+        StructuredName n = vCard.getStructuredName();
+        if (n != null) {
+            c.prefix = TextUtils.join(" ", n.getPrefixes());
+            c.givenName = n.getGiven();
+            c.middleName = TextUtils.join(" ", n.getAdditional());
+            c.familyName = n.getFamily();
+            c.suffix = TextUtils.join(" ", n.getSuffixes());
+            vCard.removeProperties(StructuredName.class);
+        } else
             Constants.log.warning("Received VCard without N (structured name)");
 
-		// phonetic names
-		RawProperty phoneticFirstName = vCard.getExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME),
-					phoneticMiddleName = vCard.getExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME),
-					phoneticLastName = vCard.getExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
-		if (phoneticFirstName != null) {
-			c.phoneticGivenName = phoneticFirstName.getValue();
-			vCard.removeExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME);
-		}
-		if (phoneticMiddleName != null) {
-			c.phoneticMiddleName = phoneticMiddleName.getValue();
-			vCard.removeExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME);
-		}
-		if (phoneticLastName != null) {
-			c.phoneticFamilyName = phoneticLastName.getValue();
-			vCard.removeExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
-		}
+        // phonetic names
+        RawProperty phoneticFirstName = vCard.getExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME),
+                    phoneticMiddleName = vCard.getExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME),
+                    phoneticLastName = vCard.getExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
+        if (phoneticFirstName != null) {
+            c.phoneticGivenName = phoneticFirstName.getValue();
+            vCard.removeExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME);
+        }
+        if (phoneticMiddleName != null) {
+            c.phoneticMiddleName = phoneticMiddleName.getValue();
+            vCard.removeExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME);
+        }
+        if (phoneticLastName != null) {
+            c.phoneticFamilyName = phoneticLastName.getValue();
+            vCard.removeExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
+        }
 
-		// TEL
-		c.phoneNumbers = vCard.getTelephoneNumbers();
-		vCard.removeProperties(Telephone.class);
+        // TEL
+        c.phoneNumbers.addAll(vCard.getTelephoneNumbers());
+        vCard.removeProperties(Telephone.class);
 
-		// EMAIL
-		c.emails = vCard.getEmails();
-		vCard.removeProperties(Email.class);
+        // EMAIL
+        c.emails.addAll(vCard.getEmails());
+        vCard.removeProperties(Email.class);
 
         // ORG
         c.organization = vCard.getOrganization();
@@ -217,7 +217,7 @@ public class Contact {
         }
 
         // IMPP
-        c.impps = vCard.getImpps();
+        c.impps.addAll(vCard.getImpps());
         vCard.removeProperties(Impp.class);
         // add X-SIP properties as IMPP, too
         for (RawProperty sip : vCard.getExtendedProperties(PROPERTY_SIP))
@@ -229,7 +229,7 @@ public class Contact {
         vCard.removeProperties(Nickname.class);
 
         // ADR
-        c.addresses = vCard.getAddresses();
+        c.addresses.addAll(vCard.getAddresses());
         vCard.removeProperties(Address.class);
 
         // NOTE
@@ -243,11 +243,11 @@ public class Contact {
         // CATEGORY
         Categories categories = vCard.getCategories();
         if (categories != null)
-            c.categories = categories.getValues();
+            c.categories.addAll(categories.getValues());
         vCard.removeProperties(Categories.class);
 
         // URL
-        c.URLs = vCard.getUrls();
+        c.urls.addAll(vCard.getUrls());
         vCard.removeProperties(Url.class);
 
         // BDAY
@@ -296,7 +296,7 @@ public class Contact {
             }
 
         return c;
-	}
+    }
 
     public ByteArrayOutputStream toStream(VCardVersion vCardVersion) throws IOException {
         VCard vCard = null;
@@ -405,7 +405,7 @@ public class Contact {
             vCard.setCategories(categories.toArray(new String[categories.size()]));
 
         // URL
-        for (Url url : URLs)
+        for (Url url : urls)
             vCard.addUrl(url);
 
         // ANNIVERSARY
@@ -446,9 +446,9 @@ public class Contact {
     }
 
 
-	protected void generateUID() {
-		uid = UUID.randomUUID().toString();
-	}
+    protected void generateUID() {
+        uid = UUID.randomUUID().toString();
+    }
 
 
     public interface Downloader {
