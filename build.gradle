@@ -46,3 +46,22 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
     }
 }
+
+// grant permissions for unit tests
+task grantPermissions(dependsOn: 'installDebugAndroidTest') {
+    doLast {
+        def adb = android.getAdbExe().toString()
+        [
+                'android.permission.READ_CONTACTS',
+                'android.permission.WRITE_CONTACTS'
+        ].each {
+            "${adb} shell pm grant at.bitfire.vcard4android.test ${it}".execute()
+        }
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.startsWith('connectedDebugAndroidTest')) {
+        task.dependsOn grantPermissions
+    }
+}
