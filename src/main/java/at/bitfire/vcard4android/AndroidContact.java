@@ -48,7 +48,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.logging.Level;
 
 import ezvcard.parameter.AddressType;
@@ -208,70 +207,70 @@ public class AndroidContact {
 		if (type != null)
 			switch (type) {
 				case Phone.TYPE_HOME:
-					number.addType(TelephoneType.HOME);
+					number.getTypes().add(TelephoneType.HOME);
 					break;
 				case Phone.TYPE_MOBILE:
-					number.addType(TelephoneType.CELL);
+					number.getTypes().add(TelephoneType.CELL);
 					break;
 				case Phone.TYPE_WORK:
-					number.addType(TelephoneType.WORK);
+					number.getTypes().add(TelephoneType.WORK);
 					break;
 				case Phone.TYPE_FAX_WORK:
-					number.addType(TelephoneType.FAX);
-					number.addType(TelephoneType.WORK);
+					number.getTypes().add(TelephoneType.FAX);
+					number.getTypes().add(TelephoneType.WORK);
 					break;
 				case Phone.TYPE_FAX_HOME:
-					number.addType(TelephoneType.FAX);
-					number.addType(TelephoneType.HOME);
+					number.getTypes().add(TelephoneType.FAX);
+					number.getTypes().add(TelephoneType.HOME);
 					break;
 				case Phone.TYPE_PAGER:
-					number.addType(TelephoneType.PAGER);
+					number.getTypes().add(TelephoneType.PAGER);
 					break;
 				case Phone.TYPE_CALLBACK:
-					number.addType(Contact.PHONE_TYPE_CALLBACK);
+					number.getTypes().add(Contact.PHONE_TYPE_CALLBACK);
 					break;
 				case Phone.TYPE_CAR:
-					number.addType(TelephoneType.CAR);
+					number.getTypes().add(TelephoneType.CAR);
 					break;
 				case Phone.TYPE_COMPANY_MAIN:
-					number.addType(Contact.PHONE_TYPE_COMPANY_MAIN);
+					number.getTypes().add(Contact.PHONE_TYPE_COMPANY_MAIN);
 					break;
 				case Phone.TYPE_ISDN:
-					number.addType(TelephoneType.ISDN);
+					number.getTypes().add(TelephoneType.ISDN);
 					break;
 				case Phone.TYPE_MAIN:
-					number.addType(TelephoneType.VOICE);
+					number.getTypes().add(TelephoneType.VOICE);
 					break;
 				case Phone.TYPE_OTHER_FAX:
-					number.addType(TelephoneType.FAX);
+					number.getTypes().add(TelephoneType.FAX);
 					break;
 				case Phone.TYPE_RADIO:
-					number.addType(Contact.PHONE_TYPE_RADIO);
+					number.getTypes().add(Contact.PHONE_TYPE_RADIO);
 					break;
 				case Phone.TYPE_TELEX:
-					number.addType(TelephoneType.TEXTPHONE);
+					number.getTypes().add(TelephoneType.TEXTPHONE);
 					break;
 				case Phone.TYPE_TTY_TDD:
-					number.addType(TelephoneType.TEXT);
+					number.getTypes().add(TelephoneType.TEXT);
 					break;
 				case Phone.TYPE_WORK_MOBILE:
-					number.addType(TelephoneType.CELL);
-					number.addType(TelephoneType.WORK);
+					number.getTypes().add(TelephoneType.CELL);
+					number.getTypes().add(TelephoneType.WORK);
 					break;
 				case Phone.TYPE_WORK_PAGER:
-					number.addType(TelephoneType.PAGER);
-					number.addType(TelephoneType.WORK);
+					number.getTypes().add(TelephoneType.PAGER);
+					number.getTypes().add(TelephoneType.WORK);
 					break;
 				case Phone.TYPE_ASSISTANT:
-					number.addType(Contact.PHONE_TYPE_ASSISTANT);
+					number.getTypes().add(Contact.PHONE_TYPE_ASSISTANT);
 					break;
 				case Phone.TYPE_MMS:
-					number.addType(Contact.PHONE_TYPE_MMS);
+					number.getTypes().add(Contact.PHONE_TYPE_MMS);
 					break;
 				case Phone.TYPE_CUSTOM:
 					String customType = row.getAsString(CommonDataKinds.Phone.LABEL);
 					if (!TextUtils.isEmpty(customType))
-						number.addType(TelephoneType.get(labelToXName(customType)));
+						number.getTypes().add(TelephoneType.get(labelToXName(customType)));
 			}
 		if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
 			number.setPref(1);
@@ -285,18 +284,18 @@ public class AndroidContact {
         if (type != null)
 			switch (type) {
 				case Email.TYPE_HOME:
-					email.addType(EmailType.HOME);
+					email.getTypes().add(EmailType.HOME);
 					break;
 				case Email.TYPE_WORK:
-					email.addType(EmailType.WORK);
+					email.getTypes().add(EmailType.WORK);
 					break;
 				case Email.TYPE_MOBILE:
-					email.addType(Contact.EMAIL_TYPE_MOBILE);
+					email.getTypes().add(Contact.EMAIL_TYPE_MOBILE);
 					break;
 				case Email.TYPE_CUSTOM:
 					String customType = row.getAsString(Email.LABEL);
 					if (!TextUtils.isEmpty(customType))
-						email.addType(EmailType.get(labelToXName(customType)));
+						email.getTypes().add(EmailType.get(labelToXName(customType)));
 			}
 		if (row.getAsInteger(Email.IS_PRIMARY) != 0)
 			email.setPref(1);
@@ -310,11 +309,14 @@ public class AndroidContact {
                     RawContacts.DisplayPhoto.CONTENT_DIRECTORY);
             try {
                 @Cleanup AssetFileDescriptor fd = addressBook.provider.openAssetFile(photoUri, "r");
-                @Cleanup InputStream stream = fd.createInputStream();
-                if (stream != null)
-                    contact.photo = IOUtils.toByteArray(stream);
-                else
-                    Constants.log.warning("Ignoring inaccessible local contact photo file");
+                if (fd != null) {
+                    @Cleanup InputStream stream = fd.createInputStream();
+                    if (stream != null)
+                        contact.photo = IOUtils.toByteArray(stream);
+                    else
+                        Constants.log.warning("Ignoring inaccessible local contact photo file");
+                } else
+                    Constants.log.warning("Ignoring non-existent local photo");
             } catch(IOException e) {
                 Constants.log.log(Level.WARNING, "Couldn't read local contact photo file", e);
             }
@@ -331,9 +333,9 @@ public class AndroidContact {
         if (!TextUtils.isEmpty(company) || !TextUtils.isEmpty(department)) {
             ezvcard.property.Organization org = new ezvcard.property.Organization();
             if (!TextUtils.isEmpty(company))
-                org.addValue(company);
+                org.getValues().add(company);
             if (!TextUtils.isEmpty(department))
-                org.addValue(department);
+                org.getValues().add(department);
             contact.organization = org;
         }
 
@@ -394,15 +396,15 @@ public class AndroidContact {
             if (type != null)
                 switch (type) {
                     case Im.TYPE_HOME:
-                        impp.addType(ImppType.HOME);
+                        impp.getTypes().add(ImppType.HOME);
                         break;
                     case Im.TYPE_WORK:
-                        impp.addType(ImppType.WORK);
+                        impp.getTypes().add(ImppType.WORK);
                         break;
                     case Im.TYPE_CUSTOM:
                         String customType = row.getAsString(Im.LABEL);
                         if (!TextUtils.isEmpty(customType))
-                            impp.addType(ImppType.get(labelToXName(customType)));
+                            impp.getTypes().add(ImppType.get(labelToXName(customType)));
                 }
 
             contact.impps.add(impp);
@@ -413,7 +415,7 @@ public class AndroidContact {
         if (row.containsKey(Nickname.NAME)) {
             ezvcard.property.Nickname nick = new ezvcard.property.Nickname();
 
-            nick.addValue(row.getAsString(Nickname.NAME));
+            nick.getValues().add(row.getAsString(Nickname.NAME));
 
             Integer type = row.getAsInteger(Nickname.TYPE);
             if (type != null)
@@ -450,15 +452,15 @@ public class AndroidContact {
         if (row.containsKey(StructuredPostal.TYPE))
             switch (row.getAsInteger(StructuredPostal.TYPE)) {
                 case StructuredPostal.TYPE_HOME:
-                    address.addType(AddressType.HOME);
+                    address.getTypes().add(AddressType.HOME);
                     break;
                 case StructuredPostal.TYPE_WORK:
-                    address.addType(AddressType.WORK);
+                    address.getTypes().add(AddressType.WORK);
                     break;
                 case StructuredPostal.TYPE_CUSTOM:
                     String customType = row.getAsString(StructuredPostal.LABEL);
                     if (!TextUtils.isEmpty(customType))
-                        address.addType(AddressType.get(labelToXName(customType)));
+                        address.getTypes().add(AddressType.get(labelToXName(customType)));
                     break;
             }
         address.setStreetAddress(row.getAsString(StructuredPostal.STREET));
@@ -538,32 +540,32 @@ public class AndroidContact {
             switch (row.getAsInteger(Relation.TYPE)) {
                 case Relation.TYPE_ASSISTANT:
                 case Relation.TYPE_MANAGER:
-                    related.addType(RelatedType.CO_WORKER);
+                    related.getTypes().add(RelatedType.CO_WORKER);
                     break;
                 case Relation.TYPE_BROTHER:
                 case Relation.TYPE_SISTER:
-                    related.addType(RelatedType.SIBLING);
+                    related.getTypes().add(RelatedType.SIBLING);
                     break;
                 case Relation.TYPE_CHILD:
-                    related.addType(RelatedType.CHILD);
+                    related.getTypes().add(RelatedType.CHILD);
                     break;
                 case Relation.TYPE_DOMESTIC_PARTNER:
-                    related.addType(RelatedType.CO_RESIDENT);
+                    related.getTypes().add(RelatedType.CO_RESIDENT);
                     break;
                 case Relation.TYPE_FRIEND:
-                    related.addType(RelatedType.FRIEND);
+                    related.getTypes().add(RelatedType.FRIEND);
                     break;
                 case Relation.TYPE_FATHER:
                 case Relation.TYPE_MOTHER:
                 case Relation.TYPE_PARENT:
-                    related.addType(RelatedType.PARENT);
+                    related.getTypes().add(RelatedType.PARENT);
                     break;
                 case Relation.TYPE_PARTNER:
                 case Relation.TYPE_SPOUSE:
-                    related.addType(RelatedType.SWEETHEART);
+                    related.getTypes().add(RelatedType.SWEETHEART);
                     break;
                 case Relation.TYPE_RELATIVE:
-                    related.addType(RelatedType.KIN);
+                    related.getTypes().add(RelatedType.KIN);
                     break;
             }
 
@@ -576,15 +578,15 @@ public class AndroidContact {
             if (row.containsKey(SipAddress.TYPE))
                 switch (row.getAsInteger(SipAddress.TYPE)) {
                     case SipAddress.TYPE_HOME:
-                        impp.addType(ImppType.HOME);
+                        impp.getTypes().add(ImppType.HOME);
                         break;
                     case SipAddress.TYPE_WORK:
-                        impp.addType(ImppType.WORK);
+                        impp.getTypes().add(ImppType.WORK);
                         break;
                     case SipAddress.TYPE_CUSTOM:
                         String customType = row.getAsString(SipAddress.LABEL);
                         if (!TextUtils.isEmpty(customType))
-                            impp.addType(ImppType.get(labelToXName(customType)));
+                            impp.getTypes().add(ImppType.get(labelToXName(customType)));
                 }
             contact.impps.add(impp);
         } catch(IllegalArgumentException e) {
@@ -713,7 +715,7 @@ public class AndroidContact {
 		int typeCode = Phone.TYPE_OTHER;
 		String typeLabel = null;
 
-		Set<TelephoneType> types = number.getTypes();
+		List<TelephoneType> types = number.getTypes();
 
 		// preferred number?
 		boolean is_primary = number.getPref() != null;
@@ -789,7 +791,7 @@ public class AndroidContact {
 		int typeCode = 0;
 		String typeLabel = null;
 
-		Set<EmailType> types = email.getTypes();
+		List<EmailType> types = email.getTypes();
 
 		// preferred email address?
 		boolean is_primary = email.getPref() != null;

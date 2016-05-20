@@ -168,7 +168,7 @@ public class Contact {
         if (n != null) {
             c.prefix = TextUtils.join(" ", n.getPrefixes());
             c.givenName = n.getGiven();
-            c.middleName = TextUtils.join(" ", n.getAdditional());
+            c.middleName = TextUtils.join(" ", n.getAdditionalNames());
             c.familyName = n.getFamily();
             c.suffix = TextUtils.join(" ", n.getSuffixes());
             vCard.removeProperties(StructuredName.class);
@@ -263,9 +263,9 @@ public class Contact {
             if (!TextUtils.isEmpty(text)) {
                 // process only free-form relations with text
                 c.relations.add(related);
-                vCard.removeProperty(related);
             }
         }
+        vCard.removeProperties(Related.class);
 
         // PHOTO
         for (Photo photo : vCard.getPhotos()) {
@@ -345,15 +345,15 @@ public class Contact {
         if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
             if (prefix != null)
                 for (String p : TextUtils.split(prefix, " "))
-                    n.addPrefix(p);
+                    n.getPrefixes().add(p);
             n.setGiven(givenName);
             if (middleName != null)
                 for (String middle : TextUtils.split(middleName, " "))
-                    n.addAdditional(middle);
+                    n.getAdditionalNames().add(middle);
             n.setFamily(familyName);
             if (suffix != null)
                 for (String s : TextUtils.split(suffix, " "))
-                    n.addSuffix(s);
+                    n.getSuffixes().add(s);
         } else {
             n.setGiven(fn);
             Constants.log.warning("No N (structured name) available, using first name \"" + fn + "\"");
