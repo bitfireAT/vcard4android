@@ -55,7 +55,9 @@ import ezvcard.property.Url;
 import ezvcard.property.VCardProperty;
 import lombok.Cleanup;
 import lombok.NonNull;
+import lombok.ToString;
 
+@ToString(of={"uid","displayName","givenName","familyName"})
 public class Contact {
     // productID (if set) will be used to generate a PRODID property.
     // You may set this statically from the calling application.
