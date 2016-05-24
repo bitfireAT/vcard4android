@@ -441,7 +441,8 @@ public class Contact {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         Ezvcard .write(vCard)
                 .version(vCardVersion)
-                .versionStrict(false)
+                .versionStrict(false)   // allow VCard4 properties in VCard3s
+                .caretEncoding(true)    // enable RFC 6868 support
                 .prodId(productID == null)
                 .go(os);
         return os;
