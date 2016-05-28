@@ -12,6 +12,7 @@ import android.content.res.AssetManager;
 import android.test.InstrumentationTestCase;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -207,7 +208,9 @@ public class ContactTest extends InstrumentationTestCase {
 	}
 
 	private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
-		return Contact.fromStream(new ByteArrayInputStream(c.toStream(vCardVersion).toByteArray()), null, null)[0];
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        c.write(vCardVersion, os);
+		return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
 	}
 
 

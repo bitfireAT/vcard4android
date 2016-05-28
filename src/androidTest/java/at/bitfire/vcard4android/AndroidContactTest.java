@@ -13,11 +13,19 @@ import android.content.ContentProviderClient;
 import android.content.Context;
 import android.provider.ContactsContract;
 import android.test.InstrumentationTestCase;
+import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Level;
 
+import ezvcard.Ezvcard;
+import ezvcard.VCardVersion;
+import ezvcard.io.text.VCardWriter;
+import ezvcard.property.Address;
 import lombok.Cleanup;
 
 public class AndroidContactTest extends InstrumentationTestCase {
@@ -67,6 +75,33 @@ public class AndroidContactTest extends InstrumentationTestCase {
         assertEquals(vcard2.phoneticMiddleName, vcard.phoneticMiddleName);
         assertEquals(vcard2.phoneticFamilyName, vcard.phoneticFamilyName);
 	}
+
+
+    public void testAddressCaretEncoding() throws IOException {
+        Address address = new Address();
+        address.setLabel("My \"Label\"");
+        address.setStreetAddress("Street \"Address\"");
+        Contact contact = new Contact();
+        contact.addresses.add(address);
+
+        /* label-param = "LABEL=" param-value
+         * param-values must not contain DQUOTE and should be encoded as defined in RFC 6868
+         *
+         * ADR-value = ADR-component-pobox ";" ADR-component-ext ";"
+         *             ADR-component-street ";" ADR-component-locality ";"
+         *             ADR-component-region ";" ADR-component-code ";"
+         *             ADR-component-country
+         * ADR-component-pobox    = list-component
+         *
+         * list-component = component *("," component)
+         * component = "\\" / "\," / "\;" / "\n" / WSP / NON-ASCII / %x21-2B / %x2D-3A / %x3C-5B / %x5D-7E
+         *
+         * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        contact.write(VCardVersion.V4_0, os);
+        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^':;;Street \"Address\";;;;"));
+    }
 
 
 	public void testLabelToXName() {

@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -300,7 +301,7 @@ public class Contact {
         return c;
     }
 
-    public ByteArrayOutputStream toStream(VCardVersion vCardVersion) throws IOException {
+    public void write(VCardVersion vCardVersion, OutputStream os) throws IOException {
         VCard vCard = null;
         try {
             if (unknownProperties != null)
@@ -438,14 +439,12 @@ public class Contact {
         }
 
         // generate VCARD
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
         Ezvcard .write(vCard)
                 .version(vCardVersion)
                 .versionStrict(false)   // allow VCard4 properties in VCard3s
                 .caretEncoding(true)    // enable RFC 6868 support
                 .prodId(productID == null)
                 .go(os);
-        return os;
     }
 
 
