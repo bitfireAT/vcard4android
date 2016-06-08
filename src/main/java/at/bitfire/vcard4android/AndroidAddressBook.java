@@ -16,10 +16,13 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.Groups;
+import android.provider.ContactsContract.RawContacts;
 
 import java.io.FileNotFoundException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import lombok.Cleanup;
 
@@ -89,12 +92,12 @@ public class AndroidAddressBook {
     @SuppressWarnings("Recycle")
 	protected AndroidGroup[] queryGroups(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
-			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.Groups.CONTENT_URI),
-					new String[] { ContactsContract.Groups._ID }, where, whereArgs, null);
+			@Cleanup Cursor cursor = provider.query(syncAdapterURI(Groups.CONTENT_URI),
+					new String[] { Groups._ID, AndroidGroup.COLUMN_FILENAME, AndroidGroup.COLUMN_ETAG }, where, whereArgs, null);
 
 			List<AndroidGroup> groups = new LinkedList<>();
 			while (cursor != null && cursor.moveToNext())
-				groups.add(groupFactory.newInstance(this, cursor.getLong(0)));
+				groups.add(groupFactory.newInstance(this, cursor.getLong(0), cursor.getString(1), cursor.getString(2)));
 			return groups.toArray(groupFactory.newArray(groups.size()));
 		} catch (RemoteException e) {
 			throw new ContactsStorageException("Couldn't query contact groups", e);
@@ -104,8 +107,8 @@ public class AndroidAddressBook {
     @SuppressWarnings("Recycle")
     protected AndroidContact[] queryContacts(String where, String[] whereArgs) throws ContactsStorageException {
 		try {
-			@Cleanup Cursor cursor = provider.query(syncAdapterURI(ContactsContract.RawContacts.CONTENT_URI),
-					new String[] { ContactsContract.RawContacts._ID, AndroidContact.COLUMN_FILENAME, AndroidContact.COLUMN_ETAG },
+			@Cleanup Cursor cursor = provider.query(syncAdapterURI(RawContacts.CONTENT_URI),
+					new String[] { RawContacts._ID, AndroidContact.COLUMN_FILENAME, AndroidContact.COLUMN_ETAG },
                     where, whereArgs, null);
 
 			List<AndroidContact> contacts = new LinkedList<>();
@@ -122,8 +125,8 @@ public class AndroidAddressBook {
 
 	public Uri syncAdapterURI(Uri uri) {
 		return uri.buildUpon()
-				.appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, account.name)
-				.appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_TYPE, account.type)
+				.appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
+				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
 				.appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
 				.build();
 	}

@@ -8,9 +8,11 @@
 
 package at.bitfire.vcard4android;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
-import java.io.ByteArrayOutputStream;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,7 +38,9 @@ import ezvcard.property.Categories;
 import ezvcard.property.Email;
 import ezvcard.property.FormattedName;
 import ezvcard.property.Impp;
+import ezvcard.property.Kind;
 import ezvcard.property.Logo;
+import ezvcard.property.Member;
 import ezvcard.property.Nickname;
 import ezvcard.property.Note;
 import ezvcard.property.Organization;
@@ -63,6 +67,10 @@ public class Contact {
     // productID (if set) will be used to generate a PRODID property.
     // You may set this statically from the calling application.
     public static String productID = null;
+
+    public static final String
+            PROPERTY_ADDRESSBOOKSERVER_KIND = "X-ADDRESSBOOKSERVER-KIND",
+            PROPERTY_ADDRESSBOOKSERVER_MEMBER = "X-ADDRESSBOOKSERVER-MEMBER";
 
     public static final String
             PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME",
@@ -92,6 +100,13 @@ public class Contact {
             URL_TYPE_FTP = "x-ftp";
 
     public String uid;
+    public boolean group;
+
+    /**
+     * List of UIDs of group members (only meaningful if {@link #group} is true).
+     */
+    public List<String> members = new LinkedList<>();
+
     public String displayName;
     public String prefix, givenName, middleName, familyName, suffix;
     public String phoneticGivenName, phoneticMiddleName, phoneticFamilyName;
@@ -118,7 +133,6 @@ public class Contact {
 
     // unknown properties in text VCARD format
     public String unknownProperties;
-
 
 
     /**
@@ -151,12 +165,40 @@ public class Contact {
         // UID
         Uid uid = vCard.getUid();
         if (uid != null) {
-            c.uid = uid.getValue();
+            c.uid = uriToUID(uid.getValue());
             vCard.removeProperties(Uid.class);
-        } else {
+        }
+        if (c.uid == null) {
             Constants.log.warning("Received VCard without UID, generating new one");
             c.generateUID();
         }
+
+        // KIND
+        Kind kind = vCard.getKind();
+        if (kind != null) {
+            c.group = kind.isGroup();
+            vCard.removeProperties(Kind.class);
+        } else {
+            // no KIND, try X-ADDRESSBOOKSERVER-KIND
+            RawProperty xKind = vCard.getExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND);
+            if (xKind != null && Kind.GROUP.equalsIgnoreCase(xKind.getValue()))
+                c.group = true;
+            vCard.removeExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND);
+        }
+
+        // MEMBER
+        for (Member member : vCard.getMembers()) {
+            String memberUID = uriToUID(member.getUri());
+            if (memberUID != null)
+                c.members.add(memberUID);
+        }
+        vCard.removeProperties(Member.class);
+        for (RawProperty xMember : vCard.getExtendedProperties(PROPERTY_ADDRESSBOOKSERVER_MEMBER)) {
+            String memberUID = uriToUID(xMember.getValue());
+            if (memberUID != null)
+                c.members.add(memberUID);
+        }
+        vCard.removeExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_MEMBER);
 
         // FN
         FormattedName fn = vCard.getFormattedName();
@@ -301,13 +343,13 @@ public class Contact {
         return c;
     }
 
-    public void write(VCardVersion vCardVersion, OutputStream os) throws IOException {
+    public void write(VCardVersion vCardVersion, GroupMethod groupMethod, OutputStream os) throws IOException {
         VCard vCard = null;
         try {
             if (unknownProperties != null)
                 vCard = Ezvcard.parse(unknownProperties).first();
         } catch (Exception e) {
-            Constants.log.warning("Couldn't parse unknown original properties, creating from scratch");
+            Constants.log.fine("Couldn't parse original VCard, creating from scratch");
         }
         if (vCard == null)
             vCard = new VCard();
@@ -321,6 +363,22 @@ public class Contact {
         // PRODID
         if (productID != null)
             vCard.setProductId(productID);
+
+        if (group) {
+            // KIND, MEMBER
+            switch (groupMethod) {
+                case VCARD4:
+                    vCard.setKind(Kind.group());
+                    for (String uid : members)
+                        vCard.addMember(new Member("urn:uuid:" + uid));
+                    break;
+                case X_ADDRESSBOOK_SERVER:
+                    vCard.setExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND, Kind.GROUP);
+                    for (String uid : members)
+                        vCard.addExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_MEMBER, "urn:uuid:" + uid);
+                    break;
+            }
+        }
 
         // FN
         String fn = null;
@@ -344,8 +402,8 @@ public class Contact {
         vCard.setFormattedName(fn);
 
         // N
-        StructuredName n = new StructuredName();
         if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
+            StructuredName n = new StructuredName();
             if (prefix != null)
                 for (String p : TextUtils.split(prefix, " "))
                     n.getPrefixes().add(p);
@@ -357,11 +415,20 @@ public class Contact {
             if (suffix != null)
                 for (String s : TextUtils.split(suffix, " "))
                     n.getSuffixes().add(s);
-        } else {
-            n.setGiven(fn);
-            Constants.log.warning("No N (structured name) available, using first name \"" + fn + "\"");
+            vCard.setStructuredName(n);
+
+        } else if (vCardVersion == VCardVersion.V3_0) {
+            // (only) VCard 3 requires N [RFC 2426 3.1.2]
+            if (group && groupMethod == GroupMethod.X_ADDRESSBOOK_SERVER) {
+                // iCloud uses the whole structured (!) name string as group name (why??)
+                vCard.addExtendedProperty("N", fn);
+            } else {
+                Constants.log.warning("No structured name available, using formatted name as first name");
+                StructuredName n = new StructuredName();
+                n.setGiven(fn);
+                vCard.setStructuredName(n);
+            }
         }
-        vCard.setStructuredName(n);
 
         // phonetic names
         if (phoneticGivenName != null)
@@ -435,7 +502,8 @@ public class Contact {
             Constants.log.warning("Generating possibly invalid VCard:");
             for (Map.Entry<VCardProperty, List<Warning>> entry : validation)
                 for (Warning warning : entry.getValue())
-                    Constants.log.warning("  * " + entry.getKey().getClass().getSimpleName() + " - " + warning.getMessage());
+                    if (entry.getKey() != null)
+                        Constants.log.warning("  * " + entry.getKey().getClass().getSimpleName() + " - " + warning.getMessage());
         }
 
         // generate VCARD
@@ -450,6 +518,17 @@ public class Contact {
 
     protected void generateUID() {
         uid = UUID.randomUUID().toString();
+    }
+
+    public static String uriToUID(String uriString) {
+        Uri uri = Uri.parse(uriString);
+        if (uri.getScheme() == null)
+            return uri.getSchemeSpecificPart();
+        else if ("urn".equalsIgnoreCase(uri.getScheme()) && StringUtils.startsWithIgnoreCase(uri.getSchemeSpecificPart(), "uuid:"))
+            return uri.getSchemeSpecificPart().substring(5);
+        else
+            return null;
+
     }
 
 

@@ -62,7 +62,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
         vcard.phoneticFamilyName = "Fämilie";
 
 		@Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
-		contact.add();
+		contact.create();
 
 		AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
 		Contact vcard2 = contact2.getContact();
@@ -99,7 +99,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
          * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        contact.write(VCardVersion.V4_0, os);
+        contact.write(VCardVersion.V4_0, GroupMethod.VCARD4, os);
         assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^':;;Street \"Address\";;;;"));
     }
 

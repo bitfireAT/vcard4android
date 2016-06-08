@@ -12,15 +12,15 @@ public class AndroidGroupFactory {
 
 	public static final AndroidGroupFactory INSTANCE = new AndroidGroupFactory();
 
-	AndroidGroup newInstance(AndroidAddressBook addressBook, long id) {
-		return new AndroidGroup(addressBook, id);
+	public AndroidGroup newInstance(AndroidAddressBook addressBook, long id, String fileName, String eTag) {
+		return new AndroidGroup(addressBook, id, fileName, eTag);
 	}
 
-	AndroidGroup newInstance(AndroidAddressBook addressBook, Contact contact) {
-		return new AndroidGroup(addressBook, contact);
+    public AndroidGroup newInstance(AndroidAddressBook addressBook, Contact contact, String fileName, String eTag) {
+		return new AndroidGroup(addressBook, contact, fileName, eTag);
 	}
 
-	AndroidGroup[] newArray(int size) {
+    public AndroidGroup[] newArray(int size) {
 		return new AndroidGroup[size];
 	}
 

@@ -209,7 +209,7 @@ public class ContactTest extends InstrumentationTestCase {
 
 	private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        c.write(vCardVersion, os);
+        c.write(vCardVersion, vCardVersion == VCardVersion.V3_0 ? GroupMethod.VCARD3_CATEGORIES : GroupMethod.VCARD4, os);
 		return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
 	}
 

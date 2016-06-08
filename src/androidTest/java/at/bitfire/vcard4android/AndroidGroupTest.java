@@ -47,7 +47,7 @@ public class AndroidGroupTest extends InstrumentationTestCase {
 		assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
 
 		// create group
-		AndroidGroup group = new AndroidGroup(addressBook, contact);
+		AndroidGroup group = new AndroidGroup(addressBook, contact, null, null);
 		group.create();
 		AndroidGroup[] groups = addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName } );
 		assertEquals(1, groups.length);

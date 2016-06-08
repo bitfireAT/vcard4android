@@ -154,9 +154,6 @@ public class AndroidContact {
 						case StructuredPostal.CONTENT_ITEM_TYPE:
 							populateStructuredPostal(values);
 							break;
-						case GroupMembership.CONTENT_ITEM_TYPE:
-							populateGroupMembership(values);
-							break;
 						case Website.CONTENT_ITEM_TYPE:
 							populateWebsite(values);
 							break;
@@ -169,6 +166,9 @@ public class AndroidContact {
 						case SipAddress.CONTENT_ITEM_TYPE:
 							populateSipAddress(values);
 							break;
+                        default:
+                            populateData(mimeType, values);
+                            break;
 					}
 				}
 
@@ -473,11 +473,6 @@ public class AndroidContact {
         contact.addresses.add(address);
     }
 
-    protected void populateGroupMembership(ContentValues row) {
-        // vcard4android doesn't have group support by default.
-        // Override this method to read local group memberships.
-    }
-
     protected void populateWebsite(ContentValues row) {
         Url url = new Url(row.getAsString(Website.URL));
         if (row.containsKey(Website.TYPE))
@@ -594,8 +589,17 @@ public class AndroidContact {
         }
     }
 
+    /**
+     * Override this to handle custom data rows, for example to add additional
+     * information to {@link #contact}.
+     * @param mimeType    MIME type of the row
+     * @param row         values of the row
+     */
+    protected void populateData(String mimeType, ContentValues row) {
+    }
 
-    public Uri add() throws ContactsStorageException {
+
+    public Uri create() throws ContactsStorageException {
 		BatchOperation batch = new BatchOperation(addressBook.provider);
 
 		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI));
@@ -623,10 +627,11 @@ public class AndroidContact {
         buildContact(builder, true);
         batch.enqueue(builder.build());
 
-        // delete old data rows before adding the new ones
+        // delete known data rows before adding the new ones; don't delete group memberships!
         Uri dataRowsUri = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI);
         batch.enqueue(ContentProviderOperation.newDelete(dataRowsUri)
-                .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=?", new String[] { String.valueOf(id) })
+                .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=? AND " + RawContacts.Data.MIMETYPE + " NOT IN (?,?)",
+                        new String[] { String.valueOf(id), GroupMembership.CONTENT_ITEM_TYPE, CachedGroupMembership.CONTENT_ITEM_TYPE })
                 .build());
         insertDataRows(batch);
         int results = batch.commit();
@@ -657,6 +662,13 @@ public class AndroidContact {
 	}
 
 
+    /**
+     * Inserts the data rows for a given raw contact.
+     * Override this (and call {code super}!) to add custom data rows,
+     * for example generated from some properties of {@link #contact}.
+     * @param batch    batch operation used to insert the data rows
+     * @throws ContactsStorageException on contact provider errors
+     */
 	protected void insertDataRows(BatchOperation batch) throws ContactsStorageException {
 		insertStructuredName(batch);
 
@@ -677,8 +689,6 @@ public class AndroidContact {
 
         for (Address address : contact.addresses)
             insertStructuredPostal(batch, address);
-
-        insertGroupMemberships(batch);
 
         for (Url url : contact.urls)
             insertWebsite(batch, url);
@@ -1049,11 +1059,6 @@ public class AndroidContact {
         batch.enqueue(builder.build());
     }
 
-    protected void insertGroupMemberships(BatchOperation batch) throws ContactsStorageException {
-        // vcard4android doesn't have group support by default.
-        // Override this method to add/update local group memberships.
-    }
-
     protected void insertWebsite(BatchOperation batch, Url url) {
         int typeCode = Website.TYPE_OTHER;
         String typeLabel = null;
@@ -1209,7 +1214,13 @@ public class AndroidContact {
     }
 
 
+    protected void assertID() {
+        if (id == null)
+            throw new IllegalStateException("Contact has not been saved yet");
+    }
+
     protected Uri rawContactSyncURI() {
+        assertID();
         if (id == null)
             throw new IllegalStateException("Contact hasn't been saved yet");
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, id));
