@@ -79,7 +79,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
 
     public void testAddressCaretEncoding() throws IOException {
         Address address = new Address();
-        address.setLabel("My \"Label\"");
+        address.setLabel("My \"Label\"\nLine 2");
         address.setStreetAddress("Street \"Address\"");
         Contact contact = new Contact();
         contact.addresses.add(address);
@@ -99,8 +99,8 @@ public class AndroidContactTest extends InstrumentationTestCase {
          * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        contact.write(VCardVersion.V4_0, os);
-        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^':;;Street \"Address\";;;;"));
+        contact.write(VCardVersion.V4_0, true, os);
+        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'^nLine 2:;;Street \"Address\";;;;"));
     }
 
 
