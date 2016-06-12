@@ -30,56 +30,56 @@ import lombok.Cleanup;
 
 public class AndroidContactTest extends InstrumentationTestCase {
 
-	final Account testAccount = new Account("AndroidContactTest", "at.bitfire.vcard4android");
-	ContentProviderClient provider;
+    final Account testAccount = new Account("AndroidContactTest", "at.bitfire.vcard4android");
+    ContentProviderClient provider;
 
-	AndroidAddressBook addressBook;
+    AndroidAddressBook addressBook;
 
-	@Override
-	protected void setUp() throws Exception {
-		Context context = getInstrumentation().getContext();
-		provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
-		assertNotNull(provider);
+    @Override
+    protected void setUp() throws Exception {
+        Context context = getInstrumentation().getContext();
+        provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
+        assertNotNull(provider);
 
-		addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
-	}
+        addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
+    }
 
-	@Override
-	public void tearDown() throws Exception {
-		provider.release();
-	}
+    @Override
+    public void tearDown() throws Exception {
+        provider.release();
+    }
 
 
-	public void testAddAndReadContact() throws FileNotFoundException, ContactsStorageException {
-		Contact vcard = new Contact();
-		vcard.displayName = "Mya Contact";
+    public void testAddAndReadContact() throws FileNotFoundException, ContactsStorageException {
+        Contact vcard = new Contact();
+        vcard.displayName = "Mya Contact";
         vcard.prefix = "Magª";
-		vcard.givenName = "Mya";
-		vcard.familyName = "Contact";
+        vcard.givenName = "Mya";
+        vcard.familyName = "Contact";
         vcard.suffix = "BSc";
         vcard.phoneticGivenName = "Först";
         vcard.phoneticMiddleName = "Mittelerde";
         vcard.phoneticFamilyName = "Fämilie";
 
-		@Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
-		contact.create();
+        @Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
+        contact.create();
 
-		AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
-		Contact vcard2 = contact2.getContact();
-		assertEquals(vcard2.displayName, vcard.displayName);
+        AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        Contact vcard2 = contact2.getContact();
+        assertEquals(vcard2.displayName, vcard.displayName);
         assertEquals(vcard2.prefix, vcard.prefix);
-		assertEquals(vcard2.givenName, vcard.givenName);
-		assertEquals(vcard2.familyName, vcard.familyName);
+        assertEquals(vcard2.givenName, vcard.givenName);
+        assertEquals(vcard2.familyName, vcard.familyName);
         assertEquals(vcard2.suffix, vcard.suffix);
         assertEquals(vcard2.phoneticGivenName, vcard.phoneticGivenName);
         assertEquals(vcard2.phoneticMiddleName, vcard.phoneticMiddleName);
         assertEquals(vcard2.phoneticFamilyName, vcard.phoneticFamilyName);
-	}
+    }
 
 
     public void testAddressCaretEncoding() throws IOException {
         Address address = new Address();
-        address.setLabel("My \"Label\"");
+        address.setLabel("My \"Label\"\nLine 2");
         address.setStreetAddress("Street \"Address\"");
         Contact contact = new Contact();
         contact.addresses.add(address);
@@ -99,14 +99,14 @@ public class AndroidContactTest extends InstrumentationTestCase {
          * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        contact.write(VCardVersion.V4_0, GroupMethod.VCARD4, os);
-        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^':;;Street \"Address\";;;;"));
+        contact.write(VCardVersion.V4_0, GroupMethod.VCARD4, true, os);
+        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'^nLine 2:;;Street \"Address\";;;;"));
     }
 
 
-	public void testLabelToXName() {
-		assertEquals("X-AUNTIES_HOME", AndroidContact.labelToXName("auntie's home"));
-	}
+    public void testLabelToXName() {
+        assertEquals("X-AUNTIES_HOME", AndroidContact.labelToXName("auntie's home"));
+    }
 
     public void testToURIScheme() {
         assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"));
@@ -114,8 +114,8 @@ public class AndroidContactTest extends InstrumentationTestCase {
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"));
     }
 
-	public void testXNameToLabel() {
-		assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES_HOME"));
-	}
+    public void testXNameToLabel() {
+        assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES_HOME"));
+    }
 
 }

@@ -343,7 +343,7 @@ public class Contact {
         return c;
     }
 
-    public void write(VCardVersion vCardVersion, GroupMethod groupMethod, OutputStream os) throws IOException {
+    public void write(VCardVersion vCardVersion, GroupMethod groupMethod, boolean rfc6868, OutputStream os) throws IOException {
         VCard vCard = null;
         try {
             if (unknownProperties != null)
@@ -509,8 +509,8 @@ public class Contact {
         // generate VCARD
         Ezvcard .write(vCard)
                 .version(vCardVersion)
-                .versionStrict(false)   // allow VCard4 properties in VCard3s
-                .caretEncoding(true)    // enable RFC 6868 support
+                .versionStrict(false)      // allow VCard4 properties in VCard3s
+                .caretEncoding(rfc6868)    // enable RFC 6868 support
                 .prodId(productID == null)
                 .go(os);
     }

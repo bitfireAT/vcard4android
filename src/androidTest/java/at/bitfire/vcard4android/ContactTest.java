@@ -36,17 +36,17 @@ import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 
 public class ContactTest extends InstrumentationTestCase {
-	private static final String TAG = "vcard4android.ContactTest";
+    private static final String TAG = "vcard4android.ContactTest";
 
-	AssetManager assetMgr;
+    AssetManager assetMgr;
 
 
-	public void setUp() throws IOException {
-		assetMgr = getInstrumentation().getContext().getResources().getAssets();
-	}
+    public void setUp() throws IOException {
+        assetMgr = getInstrumentation().getContext().getResources().getAssets();
+    }
 
-	public void testVCard3FieldsAsVCard3() throws IOException {
-		Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V3_0);
+    public void testVCard3FieldsAsVCard3() throws IOException {
+        Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V3_0);
 
         // UID
         assertEquals("mostfields1@at.bitfire.vcard4android", c.uid);
@@ -202,16 +202,16 @@ public class ContactTest extends InstrumentationTestCase {
         assertNotNull(addr.getPref());
     }
 
-	private Contact parseContact(String fname, Charset charset) throws IOException {
-		@Cleanup InputStream is = assetMgr.open(fname, AssetManager.ACCESS_STREAMING);
-		return Contact.fromStream(is, charset, null)[0];
-	}
+    private Contact parseContact(String fname, Charset charset) throws IOException {
+        @Cleanup InputStream is = assetMgr.open(fname, AssetManager.ACCESS_STREAMING);
+        return Contact.fromStream(is, charset, null)[0];
+    }
 
-	private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
+    private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        c.write(vCardVersion, vCardVersion == VCardVersion.V3_0 ? GroupMethod.VCARD3_CATEGORIES : GroupMethod.VCARD4, os);
-		return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
-	}
+        c.write(vCardVersion, vCardVersion == VCardVersion.V3_0 ? GroupMethod.VCARD3_CATEGORIES : GroupMethod.VCARD4, true, os);
+        return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
+    }
 
 
 }
