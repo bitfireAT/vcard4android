@@ -364,21 +364,21 @@ public class Contact {
         if (productID != null)
             vCard.setProductId(productID);
 
-        if (group) {
-            // KIND, MEMBER
-            switch (groupMethod) {
-                case VCARD4:
-                    vCard.setKind(Kind.group());
-                    for (String uid : members)
-                        vCard.addMember(new Member("urn:uuid:" + uid));
-                    break;
-                case X_ADDRESSBOOK_SERVER:
-                    vCard.setExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND, Kind.GROUP);
-                    for (String uid : members)
-                        vCard.addExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_MEMBER, "urn:uuid:" + uid);
-                    break;
+        // group support
+        if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
+            if (vCardVersion == VCardVersion.V4_0) {
+                vCard.setKind(Kind.group());
+                for (String uid : members)
+                    vCard.addMember(new Member("urn:uuid:" + uid));
+            } else { // "VCard4 as VCard3" (Apple-style)
+                vCard.setExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND, Kind.GROUP);
+                for (String uid : members)
+                    vCard.addExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_MEMBER, "urn:uuid:" + uid);
             }
         }
+        // CATEGORIES
+        if (!categories.isEmpty())
+            vCard.setCategories(categories.toArray(new String[categories.size()]));
 
         // FN
         String fn = null;
@@ -419,7 +419,7 @@ public class Contact {
 
         } else if (vCardVersion == VCardVersion.V3_0) {
             // (only) VCard 3 requires N [RFC 2426 3.1.2]
-            if (group && groupMethod == GroupMethod.X_ADDRESSBOOK_SERVER) {
+            if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
                 // iCloud uses the whole structured (!) name string as group name (why??)
                 vCard.addExtendedProperty("N", fn);
             } else {
@@ -469,10 +469,6 @@ public class Contact {
         // NOTE
         if (note != null)
             vCard.addNote(note);
-
-        // CATEGORIES
-        if (!categories.isEmpty())
-            vCard.setCategories(categories.toArray(new String[categories.size()]));
 
         // URL
         for (Url url : urls)

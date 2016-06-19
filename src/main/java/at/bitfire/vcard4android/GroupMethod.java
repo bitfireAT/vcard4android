@@ -9,8 +9,16 @@
 package at.bitfire.vcard4android;
 
 public enum GroupMethod {
-    AUTOMATIC,
-    VCARD3_CATEGORIES,
-    VCARD4,
-    X_ADDRESSBOOK_SERVER
+
+    /**
+     * Groups are separate VCards.
+     * If VCard4 is available, group VCards have "KIND:group".
+     * Otherwise (if only VCard3 is available), group VCards have "X-ADDRESSBOOKSERVER-KIND:group".
+     */
+    GROUP_VCARDS,
+
+    /**
+     * Groups are stored in a contact's CATEGORIES.
+     */
+    CATEGORIES
 }

@@ -18,8 +18,7 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.Groups;
 import android.provider.ContactsContract.RawContacts;
-import android.provider.ContactsContract.RawContactsEntity;
-import android.text.TextUtils;
+import android.provider.ContactsContract.RawContacts.Data;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -88,12 +87,13 @@ public class AndroidGroup {
 			contact.note = cursor.getString(2);
 
             // query UIDs of all contacts which are member of the group
-            @Cleanup Cursor c = addressBook.provider.query(addressBook.syncAdapterURI(RawContactsEntity.CONTENT_URI),
-                    new String[] { RawContactsEntity._ID },
-                    RawContactsEntity.MIMETYPE + "=? AND " + GroupMembership.GROUP_ROW_ID + "=?",
+            @Cleanup Cursor c = addressBook.provider.query(addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI),
+                    new String[] { Data.RAW_CONTACT_ID },
+                    GroupMembership.MIMETYPE + "=? AND " + GroupMembership.GROUP_ROW_ID + "=?",
                     new String[] { GroupMembership.CONTENT_ITEM_TYPE, String.valueOf(id) }, null);
             while (c != null && c.moveToNext()) {
                 long contactID = c.getLong(0);
+                Constants.log.fine("Member ID: " + contactID);
 
                 @Cleanup Cursor c2 = addressBook.provider.query(
                         addressBook.syncAdapterURI(ContentUris.withAppendedId(RawContacts.CONTENT_URI, contactID)),
@@ -137,7 +137,8 @@ public class AndroidGroup {
         ContentValues values = contentValues();
 		values.put(Groups.ACCOUNT_TYPE, addressBook.account.type);
 		values.put(Groups.ACCOUNT_NAME, addressBook.account.name);
-        values.put(Groups.SHOULD_SYNC, true);
+        values.put(Groups.SHOULD_SYNC, 1);
+        // read-only: values.put(Groups.GROUP_VISIBLE, 1);
 		try {
 			Uri uri = addressBook.provider.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values);
 			id = ContentUris.parseId(uri);

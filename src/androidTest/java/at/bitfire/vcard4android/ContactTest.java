@@ -145,7 +145,7 @@ public class ContactTest extends InstrumentationTestCase {
 
         // CATEGORIES
         assertTrue(Arrays.equals(
-                new String[]{"A", "B'C"},
+                new String[] { "A", "B'C" },
                 c.categories.toArray()
         ));
 
@@ -209,7 +209,7 @@ public class ContactTest extends InstrumentationTestCase {
 
     private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        c.write(vCardVersion, vCardVersion == VCardVersion.V3_0 ? GroupMethod.VCARD3_CATEGORIES : GroupMethod.VCARD4, true, os);
+        c.write(vCardVersion, GroupMethod.CATEGORIES, true, os);
         return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
     }
 
