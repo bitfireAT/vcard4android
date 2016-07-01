@@ -66,26 +66,30 @@ public class ContactTest extends InstrumentationTestCase {
 
         // TEL
         assertEquals(2, c.phoneNumbers.size());
-        Telephone phone = c.phoneNumbers.get(0);
-        assertTrue(phone.getTypes().contains(TelephoneType.VOICE));
-        assertTrue(phone.getTypes().contains(TelephoneType.HOME));
-        assertTrue(phone.getTypes().contains(TelephoneType.PREF));
-        assertNull(phone.getPref());
-        assertEquals("+49 1234 56788", phone.getText());
+        LabeledProperty<Telephone> phone = c.phoneNumbers.get(0);
+        assertEquals("Useless", phone.label);
+        assertTrue(phone.property.getTypes().contains(TelephoneType.VOICE));
+        assertTrue(phone.property.getTypes().contains(TelephoneType.HOME));
+        assertTrue(phone.property.getTypes().contains(TelephoneType.PREF));
+        assertNull(phone.property.getPref());
+        assertEquals("+49 1234 56788", phone.property.getText());
         phone = c.phoneNumbers.get(1);
-        assertTrue(phone.getTypes().contains(TelephoneType.FAX));
-        assertEquals("+1-800-MYFAX", phone.getText());
+        assertNull(phone.label);
+        assertTrue(phone.property.getTypes().contains(TelephoneType.FAX));
+        assertEquals("+1-800-MYFAX", phone.property.getText());
 
         // EMAIL
         assertEquals(2, c.emails.size());
-        Email email = c.emails.get(0);
-        assertTrue(email.getTypes().contains(EmailType.HOME));
-        assertTrue(email.getTypes().contains(EmailType.PREF));
-        assertNull(email.getPref());
-        assertEquals("private@example.com", email.getValue());
+        LabeledProperty<Email> email = c.emails.get(0);
+        assertNull(email.label);
+        assertTrue(email.property.getTypes().contains(EmailType.HOME));
+        assertTrue(email.property.getTypes().contains(EmailType.PREF));
+        assertNull(email.property.getPref());
+        assertEquals("private@example.com", email.property.getValue());
         email = c.emails.get(1);
-        assertTrue(email.getTypes().contains(EmailType.WORK));
-        assertEquals("work@example.com", email.getValue());
+        assertEquals("@work", email.label);
+        assertTrue(email.property.getTypes().contains(EmailType.WORK));
+        assertEquals("work@example.com", email.property.getValue());
 
         // ORG, TITLE, ROLE
         assertTrue(Arrays.equals(
@@ -97,48 +101,53 @@ public class ContactTest extends InstrumentationTestCase {
 
         // IMPP
         assertEquals(3, c.impps.size());
-        Impp impp = c.impps.get(0);
-        assertTrue(impp.getTypes().contains(ImppType.PERSONAL));
-        assertTrue(impp.getTypes().contains(ImppType.MOBILE));
-        assertTrue(impp.getTypes().contains(ImppType.PREF));
-        assertNull(impp.getPref());
-        assertEquals("myIM", impp.getProtocol());
-        assertEquals("anonymous@example.com", impp.getHandle());
+        LabeledProperty<Impp> impp = c.impps.get(0);
+        assertEquals("MyIM", impp.label);
+        assertTrue(impp.property.getTypes().contains(ImppType.PERSONAL));
+        assertTrue(impp.property.getTypes().contains(ImppType.MOBILE));
+        assertTrue(impp.property.getTypes().contains(ImppType.PREF));
+        assertNull(impp.property.getPref());
+        assertEquals("myIM", impp.property.getProtocol());
+        assertEquals("anonymous@example.com", impp.property.getHandle());
         impp = c.impps.get(1);
-        assertTrue(impp.getTypes().contains(ImppType.BUSINESS));
-        assertEquals("skype", impp.getProtocol());
-        assertEquals("echo@example.com", impp.getHandle());
+        assertNull(impp.label);
+        assertTrue(impp.property.getTypes().contains(ImppType.BUSINESS));
+        assertEquals("skype", impp.property.getProtocol());
+        assertEquals("echo@example.com", impp.property.getHandle());
         impp = c.impps.get(2);
-        assertEquals("sip", impp.getProtocol());
-        assertEquals("mysip@example.com", impp.getHandle());
+        assertNull(impp.label);
+        assertEquals("sip", impp.property.getProtocol());
+        assertEquals("mysip@example.com", impp.property.getHandle());
 
         // NICKNAME
         assertTrue(Arrays.equals(new String[] { "Nick1", "Nick2" }, c.nickName.getValues().toArray()));
 
         // ADR
         assertEquals(2, c.addresses.size());
-        Address addr = c.addresses.get(0);
-        assertTrue(addr.getTypes().contains(AddressType.WORK));
-        assertTrue(addr.getTypes().contains(AddressType.POSTAL));
-        assertTrue(addr.getTypes().contains(AddressType.PARCEL));
-        assertTrue(addr.getTypes().contains(AddressType.PREF));
-        assertNull(addr.getPref());
-        assertNull(addr.getPoBox());
-        assertNull(addr.getExtendedAddress());
-        assertEquals("6544 Battleford Drive", addr.getStreetAddress());
-        assertEquals("Raleigh", addr.getLocality());
-        assertEquals("NC", addr.getRegion());
-        assertEquals("27613-3502", addr.getPostalCode());
-        assertEquals("U.S.A.", addr.getCountry());
+        LabeledProperty<Address> addr = c.addresses.get(0);
+        assertNull(addr.label);
+        assertTrue(addr.property.getTypes().contains(AddressType.WORK));
+        assertTrue(addr.property.getTypes().contains(AddressType.POSTAL));
+        assertTrue(addr.property.getTypes().contains(AddressType.PARCEL));
+        assertTrue(addr.property.getTypes().contains(AddressType.PREF));
+        assertNull(addr.property.getPref());
+        assertNull(addr.property.getPoBox());
+        assertNull(addr.property.getExtendedAddress());
+        assertEquals("6544 Battleford Drive", addr.property.getStreetAddress());
+        assertEquals("Raleigh", addr.property.getLocality());
+        assertEquals("NC", addr.property.getRegion());
+        assertEquals("27613-3502", addr.property.getPostalCode());
+        assertEquals("U.S.A.", addr.property.getCountry());
         addr = c.addresses.get(1);
-        assertTrue(addr.getTypes().contains(AddressType.WORK));
-        assertEquals("Postfach 314", addr.getPoBox());
-        assertEquals("vorne hinten", addr.getExtendedAddress());
-        assertEquals("Teststraße 22", addr.getStreetAddress());
-        assertEquals("Mönchspfaffingen", addr.getLocality());
-        assertNull(addr.getRegion());
-        assertEquals("4043", addr.getPostalCode());
-        assertEquals("Klöster-Reich", addr.getCountry());
+        assertEquals("Monkey Tree", addr.label);
+        assertTrue(addr.property.getTypes().contains(AddressType.WORK));
+        assertEquals("Postfach 314", addr.property.getPoBox());
+        assertEquals("vorne hinten", addr.property.getExtendedAddress());
+        assertEquals("Teststraße 22", addr.property.getStreetAddress());
+        assertEquals("Mönchspfaffingen", addr.property.getLocality());
+        assertNull(addr.property.getRegion());
+        assertEquals("4043", addr.property.getPostalCode());
+        assertEquals("Klöster-Reich", addr.property.getCountry());
 
         // NOTE
         assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.note);
@@ -152,10 +161,10 @@ public class ContactTest extends InstrumentationTestCase {
         // URL
         assertEquals(2, c.urls.size());
         boolean url1 = false, url2 = false;
-        for (Url url : c.urls) {
-            if ("https://davdroid.bitfire.at/".equals(url.getValue()) && url.getType() == null)
+        for (LabeledProperty<Url> url : c.urls) {
+            if ("https://davdroid.bitfire.at/".equals(url.property.getValue()) && url.property.getType() == null && url.label == null)
                 url1 = true;
-            if ("http://www.swbyps.restaurant.french/~chezchic.html".equals(url.getValue()) && "x-blog".equals(url.getType()))
+            if ("http://www.swbyps.restaurant.french/~chezchic.html".equals(url.property.getValue()) && "x-blog".equals(url.property.getType()) && "blog".equals(url.label))
                 url2 = true;
         }
         assertTrue(url1 && url2);
@@ -185,19 +194,19 @@ public class ContactTest extends InstrumentationTestCase {
         Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V4_0);
         // let's check only things that should be different when VCard 4.0 is generated
 
-        Telephone phone = c.phoneNumbers.get(0);
+        Telephone phone = c.phoneNumbers.get(0).property;
         assertFalse(phone.getTypes().contains(TelephoneType.PREF));
         assertNotNull(phone.getPref());
 
-        Email email = c.emails.get(0);
+        Email email = c.emails.get(0).property;
         assertFalse(email.getTypes().contains(EmailType.PREF));
         assertNotNull(email.getPref());
 
-        Impp impp = c.impps.get(0);
+        Impp impp = c.impps.get(0).property;
         assertFalse(impp.getTypes().contains(ImppType.PREF));
         assertNotNull(impp.getPref());
 
-        Address addr = c.addresses.get(0);
+        Address addr = c.addresses.get(0).property;
         assertFalse(addr.getTypes().contains(AddressType.PREF));
         assertNotNull(addr.getPref());
     }

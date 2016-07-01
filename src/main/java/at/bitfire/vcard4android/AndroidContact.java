@@ -203,6 +203,8 @@ public class AndroidContact {
 
 	protected void populatePhoneNumber(ContentValues row) {
 		Telephone number = new Telephone(row.getAsString(Phone.NUMBER));
+        LabeledProperty<Telephone> labeledNumber = new LabeledProperty<>(number);
+
         Integer type = row.getAsInteger(Phone.TYPE);
 		if (type != null)
 			switch (type) {
@@ -269,17 +271,21 @@ public class AndroidContact {
 					break;
 				case Phone.TYPE_CUSTOM:
 					String customType = row.getAsString(CommonDataKinds.Phone.LABEL);
-					if (!TextUtils.isEmpty(customType))
-						number.getTypes().add(TelephoneType.get(labelToXName(customType)));
+					if (!TextUtils.isEmpty(customType)) {
+                        labeledNumber.label = customType;
+                        number.getTypes().add(TelephoneType.get(labelToXName(customType)));
+                    }
 			}
 		if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
 			number.setPref(1);
 
-		contact.phoneNumbers.add(number);
+		contact.phoneNumbers.add(labeledNumber);
 	}
 
 	protected void populateEmail(ContentValues row) {
 		ezvcard.property.Email email = new ezvcard.property.Email(row.getAsString(Email.ADDRESS));
+        LabeledProperty<ezvcard.property.Email> labeledEmail = new LabeledProperty<>(email);
+
         Integer type = row.getAsInteger(Email.TYPE);
         if (type != null)
 			switch (type) {
@@ -294,12 +300,14 @@ public class AndroidContact {
 					break;
 				case Email.TYPE_CUSTOM:
 					String customType = row.getAsString(Email.LABEL);
-					if (!TextUtils.isEmpty(customType))
-						email.getTypes().add(EmailType.get(labelToXName(customType)));
+					if (!TextUtils.isEmpty(customType)) {
+                        labeledEmail.label = customType;
+                        email.getTypes().add(EmailType.get(labelToXName(customType)));
+                    }
 			}
 		if (row.getAsInteger(Email.IS_PRIMARY) != 0)
 			email.setPref(1);
-		contact.emails.add(email);
+		contact.emails.add(labeledEmail);
 	}
 
     protected void populatePhoto(ContentValues row) throws RemoteException {
@@ -392,6 +400,8 @@ public class AndroidContact {
             }
 
         if (impp != null) {
+            LabeledProperty<Impp> labeledImpp = new LabeledProperty<>(impp);
+
             Integer type = row.getAsInteger(Im.TYPE);
             if (type != null)
                 switch (type) {
@@ -403,11 +413,13 @@ public class AndroidContact {
                         break;
                     case Im.TYPE_CUSTOM:
                         String customType = row.getAsString(Im.LABEL);
-                        if (!TextUtils.isEmpty(customType))
+                        if (!TextUtils.isEmpty(customType)) {
+                            labeledImpp.label = customType;
                             impp.getTypes().add(ImppType.get(labelToXName(customType)));
+                        }
                 }
 
-            contact.impps.add(impp);
+            contact.impps.add(labeledImpp);
         }
     }
 
@@ -448,6 +460,8 @@ public class AndroidContact {
 
     protected void populateStructuredPostal(ContentValues row) {
         Address address = new Address();
+        LabeledProperty<Address> labeledAddress = new LabeledProperty<>(address);
+
         address.setLabel(row.getAsString(StructuredPostal.FORMATTED_ADDRESS));
         if (row.containsKey(StructuredPostal.TYPE))
             switch (row.getAsInteger(StructuredPostal.TYPE)) {
@@ -459,8 +473,10 @@ public class AndroidContact {
                     break;
                 case StructuredPostal.TYPE_CUSTOM:
                     String customType = row.getAsString(StructuredPostal.LABEL);
-                    if (!TextUtils.isEmpty(customType))
+                    if (!TextUtils.isEmpty(customType)) {
+                        labeledAddress.label = customType;
                         address.getTypes().add(AddressType.get(labelToXName(customType)));
+                    }
                     break;
             }
         address.setStreetAddress(row.getAsString(StructuredPostal.STREET));
@@ -470,11 +486,13 @@ public class AndroidContact {
         address.setRegion(row.getAsString(StructuredPostal.REGION));
         address.setPostalCode(row.getAsString(StructuredPostal.POSTCODE));
         address.setCountry(row.getAsString(StructuredPostal.COUNTRY));
-        contact.addresses.add(address);
+        contact.addresses.add(labeledAddress);
     }
 
     protected void populateWebsite(ContentValues row) {
         Url url = new Url(row.getAsString(Website.URL));
+        LabeledProperty<Url> labeledUrl = new LabeledProperty<>(url);
+
         if (row.containsKey(Website.TYPE))
             switch (row.getAsInteger(Website.TYPE)) {
                 case Website.TYPE_HOMEPAGE:
@@ -497,11 +515,13 @@ public class AndroidContact {
                     break;
                 case Website.TYPE_CUSTOM:
                     String label = row.getAsString(Website.LABEL);
-                    if (!TextUtils.isEmpty(label))
+                    if (!TextUtils.isEmpty(label)) {
                         url.setType(labelToXName(label));
+                        labeledUrl.label = label;
+                    }
                     break;
             }
-        contact.urls.add(url);
+        contact.urls.add(labeledUrl);
     }
 
     protected void populateEvent(ContentValues row) {
@@ -570,6 +590,8 @@ public class AndroidContact {
     protected void populateSipAddress(ContentValues row) {
         try {
             Impp impp = new Impp("sip:" + row.getAsString(SipAddress.SIP_ADDRESS));
+            LabeledProperty<Impp> labeledImpp = new LabeledProperty<>(impp);
+
             if (row.containsKey(SipAddress.TYPE))
                 switch (row.getAsInteger(SipAddress.TYPE)) {
                     case SipAddress.TYPE_HOME:
@@ -580,10 +602,12 @@ public class AndroidContact {
                         break;
                     case SipAddress.TYPE_CUSTOM:
                         String customType = row.getAsString(SipAddress.LABEL);
-                        if (!TextUtils.isEmpty(customType))
+                        if (!TextUtils.isEmpty(customType)) {
+                            labeledImpp.label = customType;
                             impp.getTypes().add(ImppType.get(labelToXName(customType)));
+                        }
                 }
-            contact.impps.add(impp);
+            contact.impps.add(labeledImpp);
         } catch(IllegalArgumentException e) {
             Constants.log.warning("Ignoring invalid locally stored SIP address");
         }
@@ -672,25 +696,25 @@ public class AndroidContact {
 	protected void insertDataRows(BatchOperation batch) throws ContactsStorageException {
 		insertStructuredName(batch);
 
-		for (Telephone number : contact.phoneNumbers)
+		for (LabeledProperty<Telephone> number : contact.phoneNumbers)
 			insertPhoneNumber(batch, number);
 
-		for (ezvcard.property.Email email : contact.emails)
+		for (LabeledProperty<ezvcard.property.Email> email : contact.emails)
 			insertEmail(batch, email);
 
         insertOrganization(batch);
 
-        for (Impp impp : contact.impps)        // handles SIP addresses, too
+        for (LabeledProperty<Impp> impp : contact.impps)        // handles SIP addresses, too
             insertIMPP(batch, impp);
 
         insertNickname(batch);
 
         insertNote(batch);
 
-        for (Address address : contact.addresses)
+        for (LabeledProperty<Address> address : contact.addresses)
             insertStructuredPostal(batch, address);
 
-        for (Url url : contact.urls)
+        for (LabeledProperty<Url> url : contact.urls)
             insertWebsite(batch, url);
 
         if (contact.anniversary != null)
@@ -721,7 +745,9 @@ public class AndroidContact {
 		batch.enqueue(builder.build());
 	}
 
-	protected void insertPhoneNumber(BatchOperation batch, Telephone number) {
+	protected void insertPhoneNumber(BatchOperation batch, LabeledProperty<Telephone> labeledNumber) {
+        Telephone number = labeledNumber.property;
+
 		int typeCode = Phone.TYPE_OTHER;
 		String typeLabel = null;
 
@@ -734,54 +760,59 @@ public class AndroidContact {
 			types.remove(TelephoneType.PREF);
 		}
 
-		// 1 Android type <-> 2 VCard types: fax, cell, pager
-		if (types.contains(TelephoneType.FAX)) {
-			if (types.contains(TelephoneType.HOME))
-				typeCode = Phone.TYPE_FAX_HOME;
-			else if (types.contains(TelephoneType.WORK))
-				typeCode = Phone.TYPE_FAX_WORK;
-			else
-				typeCode = Phone.TYPE_OTHER_FAX;
-		} else if (types.contains(TelephoneType.CELL)) {
-			if (types.contains(TelephoneType.WORK))
-				typeCode = Phone.TYPE_WORK_MOBILE;
-			else
-				typeCode = Phone.TYPE_MOBILE;
-		} else if (types.contains(TelephoneType.PAGER)) {
-			if (types.contains(TelephoneType.WORK))
-				typeCode = Phone.TYPE_WORK_PAGER;
-			else
-				typeCode = Phone.TYPE_PAGER;
-			// types with 1:1 translation
-		} else if (types.contains(TelephoneType.HOME)) {
-			typeCode = Phone.TYPE_HOME;
-		} else if (types.contains(TelephoneType.WORK)) {
-			typeCode = Phone.TYPE_WORK;
-		} else if (types.contains(Contact.PHONE_TYPE_CALLBACK)) {
-			typeCode = Phone.TYPE_CALLBACK;
-		} else if (types.contains(TelephoneType.CAR)) {
-			typeCode = Phone.TYPE_CAR;
-		} else if (types.contains(Contact.PHONE_TYPE_COMPANY_MAIN)) {
-			typeCode = Phone.TYPE_COMPANY_MAIN;
-		} else if (types.contains(TelephoneType.ISDN)) {
-			typeCode = Phone.TYPE_ISDN;
-		} else if (types.contains(TelephoneType.VOICE)) {
-			typeCode = Phone.TYPE_MAIN;
-		} else if (types.contains(Contact.PHONE_TYPE_RADIO)) {
-			typeCode = Phone.TYPE_RADIO;
-		} else if (types.contains(TelephoneType.TEXTPHONE)) {
-			typeCode = Phone.TYPE_TELEX;
-		} else if (types.contains(TelephoneType.TEXT)) {
-			typeCode = Phone.TYPE_TTY_TDD;
-		} else if (types.contains(Contact.PHONE_TYPE_ASSISTANT)) {
-			typeCode = Phone.TYPE_ASSISTANT;
-		} else if (types.contains(Contact.PHONE_TYPE_MMS)) {
-			typeCode = Phone.TYPE_MMS;
-		} else if (!types.isEmpty()) {
-			TelephoneType type = types.iterator().next();
-			typeCode = Phone.TYPE_CUSTOM;
-			typeLabel = xNameToLabel(type.getValue());
-		}
+        if (labeledNumber.label != null) {
+            typeCode = Phone.TYPE_CUSTOM;
+            typeLabel = labeledNumber.label;
+        } else {
+            // 1 Android type <-> 2 VCard types: fax, cell, pager
+            if (types.contains(TelephoneType.FAX)) {
+                if (types.contains(TelephoneType.HOME))
+                    typeCode = Phone.TYPE_FAX_HOME;
+                else if (types.contains(TelephoneType.WORK))
+                    typeCode = Phone.TYPE_FAX_WORK;
+                else
+                    typeCode = Phone.TYPE_OTHER_FAX;
+            } else if (types.contains(TelephoneType.CELL)) {
+                if (types.contains(TelephoneType.WORK))
+                    typeCode = Phone.TYPE_WORK_MOBILE;
+                else
+                    typeCode = Phone.TYPE_MOBILE;
+            } else if (types.contains(TelephoneType.PAGER)) {
+                if (types.contains(TelephoneType.WORK))
+                    typeCode = Phone.TYPE_WORK_PAGER;
+                else
+                    typeCode = Phone.TYPE_PAGER;
+                // types with 1:1 translation
+            } else if (types.contains(TelephoneType.HOME)) {
+                typeCode = Phone.TYPE_HOME;
+            } else if (types.contains(TelephoneType.WORK)) {
+                typeCode = Phone.TYPE_WORK;
+            } else if (types.contains(Contact.PHONE_TYPE_CALLBACK)) {
+                typeCode = Phone.TYPE_CALLBACK;
+            } else if (types.contains(TelephoneType.CAR)) {
+                typeCode = Phone.TYPE_CAR;
+            } else if (types.contains(Contact.PHONE_TYPE_COMPANY_MAIN)) {
+                typeCode = Phone.TYPE_COMPANY_MAIN;
+            } else if (types.contains(TelephoneType.ISDN)) {
+                typeCode = Phone.TYPE_ISDN;
+            } else if (types.contains(TelephoneType.VOICE)) {
+                typeCode = Phone.TYPE_MAIN;
+            } else if (types.contains(Contact.PHONE_TYPE_RADIO)) {
+                typeCode = Phone.TYPE_RADIO;
+            } else if (types.contains(TelephoneType.TEXTPHONE)) {
+                typeCode = Phone.TYPE_TELEX;
+            } else if (types.contains(TelephoneType.TEXT)) {
+                typeCode = Phone.TYPE_TTY_TDD;
+            } else if (types.contains(Contact.PHONE_TYPE_ASSISTANT)) {
+                typeCode = Phone.TYPE_ASSISTANT;
+            } else if (types.contains(Contact.PHONE_TYPE_MMS)) {
+                typeCode = Phone.TYPE_MMS;
+            } else if (!types.isEmpty()) {
+                TelephoneType type = types.iterator().next();
+                typeCode = Phone.TYPE_CUSTOM;
+                typeLabel = xNameToLabel(type.getValue());
+            }
+        }
 
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
@@ -797,7 +828,9 @@ public class AndroidContact {
 		batch.enqueue(builder.build());
 	}
 
-	protected void insertEmail(BatchOperation batch, ezvcard.property.Email email) {
+	protected void insertEmail(BatchOperation batch, LabeledProperty<ezvcard.property.Email> labeledEmail) {
+        ezvcard.property.Email email = labeledEmail.property;
+
 		int typeCode = 0;
 		String typeLabel = null;
 
@@ -810,21 +843,26 @@ public class AndroidContact {
 			types.remove(EmailType.PREF);
 		}
 
-		for (EmailType type : types)
-			if (type == EmailType.HOME)
-				typeCode = Email.TYPE_HOME;
-			else if (type == EmailType.WORK)
-				typeCode = Email.TYPE_WORK;
-			else if (type == Contact.EMAIL_TYPE_MOBILE)
-				typeCode = Email.TYPE_MOBILE;
-		if (typeCode == 0) {
-			if (email.getTypes().isEmpty())
-				typeCode = Email.TYPE_OTHER;
-			else {
-				typeCode = Email.TYPE_CUSTOM;
-				typeLabel = xNameToLabel(email.getTypes().iterator().next().getValue());
-			}
-		}
+        if (labeledEmail.label != null) {
+            typeCode = Email.TYPE_CUSTOM;
+            typeLabel = labeledEmail.label;
+        } else {
+            for (EmailType type : types)
+                if (type == EmailType.HOME)
+                    typeCode = Email.TYPE_HOME;
+                else if (type == EmailType.WORK)
+                    typeCode = Email.TYPE_WORK;
+                else if (type == Contact.EMAIL_TYPE_MOBILE)
+                    typeCode = Email.TYPE_MOBILE;
+            if (typeCode == 0) {
+                if (email.getTypes().isEmpty())
+                    typeCode = Email.TYPE_OTHER;
+                else {
+                    typeCode = Email.TYPE_CUSTOM;
+                    typeLabel = xNameToLabel(email.getTypes().iterator().next().getValue());
+                }
+            }
+        }
 
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
@@ -867,24 +905,31 @@ public class AndroidContact {
         batch.enqueue(builder.build());
     }
 
-    protected void insertIMPP(BatchOperation batch, Impp impp) {
+    protected void insertIMPP(BatchOperation batch, LabeledProperty<Impp> labeledImpp) {
+        Impp impp = labeledImpp.property;
+
         int typeCode = Im.TYPE_OTHER;       // default value
         String typeLabel = null;
 
-        for (ImppType type : impp.getTypes())
-            if (type == ImppType.HOME) {
-                typeCode = Im.TYPE_HOME;
-                break;
-            } else if (type == ImppType.WORK || type == ImppType.BUSINESS) {
-                typeCode = Im.TYPE_WORK;
-                break;
-            }
+        if (labeledImpp.label != null) {
+            typeCode = Im.TYPE_CUSTOM;
+            typeLabel = labeledImpp.label;
+        } else {
+            for (ImppType type : impp.getTypes())
+                if (type == ImppType.HOME) {
+                    typeCode = Im.TYPE_HOME;
+                    break;
+                } else if (type == ImppType.WORK || type == ImppType.BUSINESS) {
+                    typeCode = Im.TYPE_WORK;
+                    break;
+                }
 
-        if (typeCode == Im.TYPE_OTHER)      // still default value?
-            if (!impp.getTypes().isEmpty()) {
-                typeCode = Im.TYPE_CUSTOM;
-                typeLabel = xNameToLabel(impp.getTypes().iterator().next().getValue());
-            }
+            if (typeCode == Im.TYPE_OTHER)      // still default value?
+                if (!impp.getTypes().isEmpty()) {
+                    typeCode = Im.TYPE_CUSTOM;
+                    typeLabel = xNameToLabel(impp.getTypes().iterator().next().getValue());
+                }
+        }
 
         String protocol = impp.getProtocol();
         if (protocol == null) {
@@ -998,7 +1043,9 @@ public class AndroidContact {
         }
     }
 
-    protected void insertStructuredPostal(BatchOperation batch, Address address) {
+    protected void insertStructuredPostal(BatchOperation batch, LabeledProperty<Address> labeledAddress) {
+        Address address = labeledAddress.property;
+
 		/*	street po.box (extended)
 		 *	postcode city
 		 *	region
@@ -1024,21 +1071,25 @@ public class AndroidContact {
 
         int typeCode = StructuredPostal.TYPE_OTHER;
         String typeLabel = null;
+        if (labeledAddress.label != null) {
+            typeCode = StructuredPostal.TYPE_CUSTOM;
+            typeLabel = labeledAddress.label;
+        } else {
+            for (AddressType type : address.getTypes())
+                if (type == AddressType.HOME) {
+                    typeCode = StructuredPostal.TYPE_HOME;
+                    break;
+                } else if (type == AddressType.WORK) {
+                    typeCode = StructuredPostal.TYPE_WORK;
+                    break;
+                }
 
-        for (AddressType type : address.getTypes())
-            if (type == AddressType.HOME) {
-                typeCode = StructuredPostal.TYPE_HOME;
-                break;
-            } else if (type == AddressType.WORK) {
-                typeCode = StructuredPostal.TYPE_WORK;
-                break;
-            }
-
-        if (typeCode == StructuredPostal.TYPE_OTHER)        // still default value?
-            if (!address.getTypes().isEmpty()) {
-                typeCode = StructuredPostal.TYPE_CUSTOM;
-                typeLabel = xNameToLabel(address.getTypes().iterator().next().getValue());
-            }
+            if (typeCode == StructuredPostal.TYPE_OTHER)        // still default value?
+                if (!address.getTypes().isEmpty()) {
+                    typeCode = StructuredPostal.TYPE_CUSTOM;
+                    typeLabel = xNameToLabel(address.getTypes().iterator().next().getValue());
+                }
+        }
 
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
@@ -1059,35 +1110,41 @@ public class AndroidContact {
         batch.enqueue(builder.build());
     }
 
-    protected void insertWebsite(BatchOperation batch, Url url) {
+    protected void insertWebsite(BatchOperation batch, LabeledProperty<Url> labeledUrl) {
+        Url url = labeledUrl.property;
+
         int typeCode = Website.TYPE_OTHER;
         String typeLabel = null;
-
-        String type = url.getType();
-        if (!TextUtils.isEmpty(type))
-            switch (type) {
-                case Contact.URL_TYPE_HOMEPAGE:
-                    typeCode = Website.TYPE_HOMEPAGE;
-                    break;
-                case Contact.URL_TYPE_BLOG:
-                    typeCode = Website.TYPE_BLOG;
-                    break;
-                case Contact.URL_TYPE_PROFILE:
-                    typeCode = Website.TYPE_PROFILE;
-                    break;
-                case "home":
-                    typeCode = Website.TYPE_HOME;
-                    break;
-                case "work":
-                    typeCode = Website.TYPE_WORK;
-                    break;
-                case Contact.URL_TYPE_FTP:
-                    typeCode = Website.TYPE_FTP;
-                    break;
-                default:
-                    typeCode = Website.TYPE_CUSTOM;
-                    typeLabel = xNameToLabel(type);
-            }
+        if (labeledUrl.label != null) {
+            typeCode = Website.TYPE_CUSTOM;
+            typeLabel = labeledUrl.label;
+        } else {
+            String type = url.getType();
+            if (!TextUtils.isEmpty(type))
+                switch (type) {
+                    case Contact.URL_TYPE_HOMEPAGE:
+                        typeCode = Website.TYPE_HOMEPAGE;
+                        break;
+                    case Contact.URL_TYPE_BLOG:
+                        typeCode = Website.TYPE_BLOG;
+                        break;
+                    case Contact.URL_TYPE_PROFILE:
+                        typeCode = Website.TYPE_PROFILE;
+                        break;
+                    case "home":
+                        typeCode = Website.TYPE_HOME;
+                        break;
+                    case "work":
+                        typeCode = Website.TYPE_WORK;
+                        break;
+                    case Contact.URL_TYPE_FTP:
+                        typeCode = Website.TYPE_FTP;
+                        break;
+                    default:
+                        typeCode = Website.TYPE_CUSTOM;
+                        typeLabel = xNameToLabel(type);
+                }
+        }
 
         ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)

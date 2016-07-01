@@ -102,6 +102,8 @@ public class Contact {
     public String uid;
     public boolean group;
 
+    int labelIterator;
+
     /**
      * List of UIDs of group members (only meaningful if {@link #group} is true).
      */
@@ -116,12 +118,12 @@ public class Contact {
     public String   jobTitle,           // VCard TITLE
                     jobDescription;     // VCard ROLE
 
-    public final List<Telephone> phoneNumbers = new LinkedList<>();
-    public final List<Email> emails = new LinkedList<>();
-    public final List<Impp> impps = new LinkedList<>();
-    public final List<Address> addresses = new LinkedList<>();
+    public final List<LabeledProperty<Telephone>> phoneNumbers = new LinkedList<>();
+    public final List<LabeledProperty<Email>> emails = new LinkedList<>();
+    public final List<LabeledProperty<Impp>> impps = new LinkedList<>();
+    public final List<LabeledProperty<Address>> addresses = new LinkedList<>();
     public final List<String> categories = new LinkedList<>();
-    public final List<Url> urls = new LinkedList<>();
+    public final List<LabeledProperty<Url>> urls = new LinkedList<>();
     public final List<Related> relations = new LinkedList<>();
 
     public String note;
@@ -237,12 +239,18 @@ public class Contact {
             vCard.removeExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
         }
 
+        // X-ABLabel (in use with other properties as property group)
+        List<RawProperty> labels = vCard.getExtendedProperties(LabeledProperty.PROPERTY_AB_LABEL);
+        vCard.removeExtendedProperty(LabeledProperty.PROPERTY_AB_LABEL);
+
         // TEL
-        c.phoneNumbers.addAll(vCard.getTelephoneNumbers());
+        for (Telephone phone : vCard.getTelephoneNumbers())
+            c.phoneNumbers.add(new LabeledProperty<>(phone, findLabel(phone.getGroup(), labels)));
         vCard.removeProperties(Telephone.class);
 
         // EMAIL
-        c.emails.addAll(vCard.getEmails());
+        for (Email email : vCard.getEmails())
+            c.emails.add(new LabeledProperty<>(email, findLabel(email.getGroup(), labels)));
         vCard.removeProperties(Email.class);
 
         // ORG
@@ -262,11 +270,12 @@ public class Contact {
         }
 
         // IMPP
-        c.impps.addAll(vCard.getImpps());
+        for (Impp impp :vCard.getImpps())
+            c.impps.add(new LabeledProperty<>(impp, findLabel(impp.getGroup(), labels)));
         vCard.removeProperties(Impp.class);
         // add X-SIP properties as IMPP, too
         for (RawProperty sip : vCard.getExtendedProperties(PROPERTY_SIP))
-            c.impps.add(new Impp("sip", sip.getValue()));
+            c.impps.add(new LabeledProperty<>(new Impp("sip", sip.getValue()), findLabel(sip.getGroup(), labels)));
         vCard.removeExtendedProperty(PROPERTY_SIP);
 
         // NICKNAME
@@ -274,7 +283,8 @@ public class Contact {
         vCard.removeProperties(Nickname.class);
 
         // ADR
-        c.addresses.addAll(vCard.getAddresses());
+        for (Address address : vCard.getAddresses())
+            c.addresses.add(new LabeledProperty<>(address, findLabel(address.getGroup(), labels)));
         vCard.removeProperties(Address.class);
 
         // NOTE
@@ -292,7 +302,8 @@ public class Contact {
         vCard.removeProperties(Categories.class);
 
         // URL
-        c.urls.addAll(vCard.getUrls());
+        for (Url url : vCard.getUrls())
+            c.urls.add(new LabeledProperty<>(url, findLabel(url.getGroup(), labels)));
         vCard.removeProperties(Url.class);
 
         // BDAY
@@ -390,9 +401,9 @@ public class Contact {
             fn = nickName.getValues().get(0);
         else {
             if (!phoneNumbers.isEmpty())
-                fn = phoneNumbers.get(0).getText();
+                fn = phoneNumbers.get(0).property.getText();
             else if (!emails.isEmpty())
-                fn = emails.get(0).getValue();
+                fn = emails.get(0).property.getValue();
             Constants.log.warning("No FN (formatted name) available, using " + fn);
         }
         if (TextUtils.isEmpty(fn)) {
@@ -439,12 +450,18 @@ public class Contact {
             vCard.addExtendedProperty(PROPERTY_PHONETIC_LAST_NAME, phoneticFamilyName);
 
         // TEL
-        for (Telephone phoneNumber : phoneNumbers)
-            vCard.addTelephoneNumber(phoneNumber);
+        for (LabeledProperty<Telephone> labeledPhone : phoneNumbers) {
+            Telephone phone = labeledPhone.property;
+            vCard.addTelephoneNumber(phone);
+            addLabel(labeledPhone, vCard);
+        }
 
         // EMAIL
-        for (Email email : emails)
+        for (LabeledProperty<Email> labeledEmail : emails) {
+            Email email = labeledEmail.property;
             vCard.addEmail(email);
+            addLabel(labeledEmail, vCard);
+        }
 
         // ORG, TITLE, ROLE
         if (organization != null)
@@ -455,24 +472,33 @@ public class Contact {
             vCard.addRole(jobDescription);
 
         // IMPP
-        for (Impp impp : impps)
+        for (LabeledProperty<Impp> labeledImpp : impps) {
+            Impp impp = labeledImpp.property;
             vCard.addImpp(impp);
+            addLabel(labeledImpp, vCard);
+        }
 
         // NICKNAME
         if (nickName != null)
             vCard.setNickname(nickName);
 
         // ADR
-        for (Address address : addresses)
+        for (LabeledProperty<Address> labeledAddress : addresses) {
+            Address address = labeledAddress.property;
             vCard.addAddress(address);
+            addLabel(labeledAddress, vCard);
+        }
 
         // NOTE
         if (note != null)
             vCard.addNote(note);
 
         // URL
-        for (Url url : urls)
+        for (LabeledProperty<Url> labeledUrl : urls) {
+            Url url = labeledUrl.property;
             vCard.addUrl(url);
+            addLabel(labeledUrl, vCard);
+        }
 
         // ANNIVERSARY
         if (anniversary != null)
@@ -525,6 +551,25 @@ public class Contact {
         else
             return null;
 
+    }
+
+    private void addLabel(LabeledProperty<? extends VCardProperty> labeledUrl, VCard vCard) {
+        if (labeledUrl.label != null) {
+            String group = "davdroid" + ++labelIterator;
+            labeledUrl.property.setGroup(group);
+
+            RawProperty label = vCard.addExtendedProperty(LabeledProperty.PROPERTY_AB_LABEL, labeledUrl.label);
+            label.setGroup(group);
+        }
+    }
+
+    private static String findLabel(String group, List<RawProperty> labels) {
+        if (labels == null || group == null)
+            return null;
+        for (RawProperty label : labels)
+            if (StringUtils.equalsIgnoreCase(label.getGroup(), group))
+                return label.getValue();
+        return null;
     }
 
 

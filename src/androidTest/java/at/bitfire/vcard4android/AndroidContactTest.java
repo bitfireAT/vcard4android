@@ -82,7 +82,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
         address.setLabel("My \"Label\"\nLine 2");
         address.setStreetAddress("Street \"Address\"");
         Contact contact = new Contact();
-        contact.addresses.add(address);
+        contact.addresses.add(new LabeledProperty<>(address));
 
         /* label-param = "LABEL=" param-value
          * param-values must not contain DQUOTE and should be encoded as defined in RFC 6868

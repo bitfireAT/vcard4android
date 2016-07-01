@@ -6,27 +6,32 @@ N:Lastname;Firstname;Middlename;DDDr.;MBA
 X-PHONETIC-FIRST-NAME;CHARSET=UTF-8:Förstnehm
 X-PHONETIC-MIDDLE-NAME:Mittelnehm
 X-PHONETIC-LAST-NAME;CHARSET=UTF-8:Laastnehm
-TEL;TYPE=voice,home,pref,x-useless:+49 1234 56788
+item1.TEL;TYPE=voice,home,pref,x-useless:+49 1234 56788
+item1.X-ABLabel:Useless
 TEL;TYPE=fax,x-aunt:+1-800-MYFAX
 EMAIL;TYPE=home,pref:private@example.com
-EMAIL;TYPE=work:work@example.com
+workEmail.EMAIL;TYPE=work:work@example.com
+workEmail.X-ABLabel:@work
 ORG:ABC\, Inc.;North American Division;Marketing
 TITLE:Director\, Research and Development
 ROLE:Programmer
 NICKNAME:Nick1,Nick2
-IMPP;TYPE=personal,mobile,pref:myIM:anonymous@example.com
+personalIM.IMPP;TYPE=personal,mobile,x-myIM,pref:myIM:anonymous@example.com
+personalIM.X-ABLabel:MyIM
 IMPP;TYPE=business,video,voice:skype:echo@example.com
 X-SIP:mysip@example.com
 ADR;TYPE=WORK,POSTAL,PARCEL,PREF:;;6544 Battleford Drive
  ;Raleigh;NC;27613-3502;U.S.A.
-ADR;CHARSET=UTF-8;TYPE=WORK:Postfach 314;vorne hinten;Teststraße 22;Mönchspfaffingen;;
+monkey.ADR;CHARSET=UTF-8;TYPE=WORK:Postfach 314;vorne hinten;Teststraße 22;Mönchspfaffingen;;
  4043;Klöster-Reich
+monkey.X-ABLabel:Monkey Tree
 NOTE:This fax number is operational 0800 to 1715
   EST\, Mon-Fri.
 NOTE:Second note
 CATEGORIES:A,B\'C
 URL:https://davdroid.bitfire.at/
-URL;TYPE=x-blog:http://www.swbyps.restaurant.french/~chezchic.html
+blog.URL;TYPE=x-blog:http://www.swbyps.restaurant.french/~chezchic.html
+blog.X-ABLabel:blog
 BDAY:1996-04-15
 ANNIVERSARY:2014-08-12
 RELATED;CHARSET=UTF-8;TYPE=co-worker,crush;VALUE=text:Ägidius
