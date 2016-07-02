@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ezvcard.Ezvcard;
 import ezvcard.VCard;
@@ -101,8 +102,6 @@ public class Contact {
 
     public String uid;
     public boolean group;
-
-    int labelIterator;
 
     /**
      * List of UIDs of group members (only meaningful if {@link #group} is true).
@@ -449,18 +448,21 @@ public class Contact {
         if (phoneticFamilyName != null)
             vCard.addExtendedProperty(PROPERTY_PHONETIC_LAST_NAME, phoneticFamilyName);
 
+        // will be used to count "davdroidXX." property groups
+        AtomicInteger labelIterator = new AtomicInteger();
+
         // TEL
         for (LabeledProperty<Telephone> labeledPhone : phoneNumbers) {
             Telephone phone = labeledPhone.property;
             vCard.addTelephoneNumber(phone);
-            addLabel(labeledPhone, vCard);
+            addLabel(labeledPhone, labelIterator, vCard);
         }
 
         // EMAIL
         for (LabeledProperty<Email> labeledEmail : emails) {
             Email email = labeledEmail.property;
             vCard.addEmail(email);
-            addLabel(labeledEmail, vCard);
+            addLabel(labeledEmail, labelIterator, vCard);
         }
 
         // ORG, TITLE, ROLE
@@ -475,7 +477,7 @@ public class Contact {
         for (LabeledProperty<Impp> labeledImpp : impps) {
             Impp impp = labeledImpp.property;
             vCard.addImpp(impp);
-            addLabel(labeledImpp, vCard);
+            addLabel(labeledImpp, labelIterator, vCard);
         }
 
         // NICKNAME
@@ -486,7 +488,7 @@ public class Contact {
         for (LabeledProperty<Address> labeledAddress : addresses) {
             Address address = labeledAddress.property;
             vCard.addAddress(address);
-            addLabel(labeledAddress, vCard);
+            addLabel(labeledAddress, labelIterator, vCard);
         }
 
         // NOTE
@@ -497,7 +499,7 @@ public class Contact {
         for (LabeledProperty<Url> labeledUrl : urls) {
             Url url = labeledUrl.property;
             vCard.addUrl(url);
-            addLabel(labeledUrl, vCard);
+            addLabel(labeledUrl, labelIterator, vCard);
         }
 
         // ANNIVERSARY
@@ -553,9 +555,9 @@ public class Contact {
 
     }
 
-    private void addLabel(LabeledProperty<? extends VCardProperty> labeledUrl, VCard vCard) {
+    private static void addLabel(LabeledProperty<? extends VCardProperty> labeledUrl, AtomicInteger labelIterator, VCard vCard) {
         if (labeledUrl.label != null) {
-            String group = "davdroid" + ++labelIterator;
+            String group = "davdroid" + labelIterator.incrementAndGet();
             labeledUrl.property.setGroup(group);
 
             RawProperty label = vCard.addExtendedProperty(LabeledProperty.PROPERTY_AB_LABEL, labeledUrl.label);

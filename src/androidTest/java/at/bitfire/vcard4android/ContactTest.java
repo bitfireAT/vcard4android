@@ -10,6 +10,7 @@ package at.bitfire.vcard4android;
 
 import android.content.res.AssetManager;
 import android.test.InstrumentationTestCase;
+import android.util.Log;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,6 +20,7 @@ import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.logging.Level;
 
 import ezvcard.VCardVersion;
 import ezvcard.parameter.AddressType;
@@ -219,6 +221,7 @@ public class ContactTest extends InstrumentationTestCase {
     private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         c.write(vCardVersion, GroupMethod.CATEGORIES, true, os);
+        Constants.log.log(Level.INFO, "Re-generated VCard", os.toString());
         return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
     }
 
