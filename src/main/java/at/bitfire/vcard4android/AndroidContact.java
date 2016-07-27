@@ -628,7 +628,7 @@ public class AndroidContact {
 
 		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI));
 		buildContact(builder, false);
-		batch.enqueue(builder.build());
+		batch.enqueue(new BatchOperation.Operation(builder));
 
 		insertDataRows(batch);
 
@@ -649,14 +649,15 @@ public class AndroidContact {
 
         ContentProviderOperation.Builder builder = ContentProviderOperation.newUpdate(rawContactSyncURI());
         buildContact(builder, true);
-        batch.enqueue(builder.build());
+        batch.enqueue(new BatchOperation.Operation(builder));
 
         // delete known data rows before adding the new ones; don't delete group memberships!
         Uri dataRowsUri = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI);
-        batch.enqueue(ContentProviderOperation.newDelete(dataRowsUri)
+        batch.enqueue(new BatchOperation.Operation(
+                ContentProviderOperation.newDelete(dataRowsUri)
                 .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=? AND " + RawContacts.Data.MIMETYPE + " NOT IN (?,?)",
                         new String[] { String.valueOf(id), GroupMembership.CONTENT_ITEM_TYPE, CachedGroupMembership.CONTENT_ITEM_TYPE })
-                .build());
+        ));
         insertDataRows(batch);
         int results = batch.commit();
 
@@ -727,11 +728,14 @@ public class AndroidContact {
 	}
 
 	protected void insertStructuredName(BatchOperation batch) {
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+		final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(StructuredName.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, StructuredName.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(StructuredName.RAW_CONTACT_ID, id);
+        }
 		builder .withValue(RawContacts.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
 				.withValue(StructuredName.PREFIX, contact.prefix)
 				.withValue(StructuredName.DISPLAY_NAME, contact.displayName)
@@ -742,7 +746,7 @@ public class AndroidContact {
 				.withValue(StructuredName.PHONETIC_GIVEN_NAME, contact.phoneticGivenName)
 				.withValue(StructuredName.PHONETIC_MIDDLE_NAME, contact.phoneticMiddleName)
 				.withValue(StructuredName.PHONETIC_FAMILY_NAME, contact.phoneticFamilyName);
-		batch.enqueue(builder.build());
+		batch.enqueue(op);
 	}
 
 	protected void insertPhoneNumber(BatchOperation batch, LabeledProperty<Telephone> labeledNumber) {
@@ -814,18 +818,21 @@ public class AndroidContact {
             }
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Phone.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Phone.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Phone.RAW_CONTACT_ID, id);
+        }
 		builder	.withValue(Phone.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
 				.withValue(Phone.NUMBER, number.getText())
 				.withValue(Phone.TYPE, typeCode)
                 .withValue(Phone.LABEL, typeLabel)
 				.withValue(Phone.IS_PRIMARY, is_primary ? 1 : 0)
 				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
-		batch.enqueue(builder.build());
+		batch.enqueue(op);
 	}
 
 	protected void insertEmail(BatchOperation batch, LabeledProperty<ezvcard.property.Email> labeledEmail) {
@@ -864,18 +871,21 @@ public class AndroidContact {
             }
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Email.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Email.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Email.RAW_CONTACT_ID, id);
+        }
 		builder	.withValue(Email.MIMETYPE, Email.CONTENT_ITEM_TYPE)
 				.withValue(Email.ADDRESS, email.getValue())
 				.withValue(Email.TYPE, typeCode)
                 .withValue(Email.LABEL, typeLabel)
 				.withValue(Email.IS_PRIMARY, is_primary ? 1 : 0)
 				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
 	}
 
     protected void insertOrganization(BatchOperation batch) {
@@ -892,17 +902,20 @@ public class AndroidContact {
                 department = org.next();
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Organization.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Organization.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Organization.RAW_CONTACT_ID, id);
+        }
         builder .withValue(Organization.MIMETYPE, Organization.CONTENT_ITEM_TYPE)
                 .withValue(Organization.COMPANY, company)
                 .withValue(Organization.DEPARTMENT, department)
                 .withValue(Organization.TITLE, contact.jobTitle)
                 .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription);
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
     }
 
     protected void insertIMPP(BatchOperation batch, LabeledProperty<Impp> labeledImpp) {
@@ -968,11 +981,14 @@ public class AndroidContact {
             protocolLabel = protocol;
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Im.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Im.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Im.RAW_CONTACT_ID, id);
+        }
         if (sipAddress)
             // save as SIP address
             builder	.withValue(SipAddress.MIMETYPE, SipAddress.CONTENT_ITEM_TYPE)
@@ -988,7 +1004,7 @@ public class AndroidContact {
                     .withValue(Im.PROTOCOL, protocolCode)
                     .withValue(Im.CUSTOM_PROTOCOL, protocolLabel);
         }
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
     }
 
     protected void insertNickname(BatchOperation batch) {
@@ -1017,29 +1033,35 @@ public class AndroidContact {
                         typeLabel = xNameToLabel(type);
                 }
 
-            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+            final BatchOperation.Operation op;
+            final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
             if (id == null)
-                builder.withValueBackReference(Nickname.RAW_CONTACT_ID, 0);
-            else
+                op = new BatchOperation.Operation(builder, Nickname.RAW_CONTACT_ID, 0);
+            else {
+                op = new BatchOperation.Operation(builder);
                 builder.withValue(Nickname.RAW_CONTACT_ID, id);
+            }
             builder .withValue(Nickname.MIMETYPE, Nickname.CONTENT_ITEM_TYPE)
                     .withValue(Nickname.NAME, nick.getValues().get(0))
                     .withValue(Nickname.TYPE, typeCode)
                     .withValue(Nickname.LABEL, typeLabel);
-            batch.enqueue(builder.build());
+            batch.enqueue(op);
         }
     }
 
     protected void insertNote(BatchOperation batch) {
         if (!TextUtils.isEmpty(contact.note)) {
-            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+            final BatchOperation.Operation op;
+            final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
             if (id == null)
-                builder.withValueBackReference(Note.RAW_CONTACT_ID, 0);
-            else
+                op = new BatchOperation.Operation(builder, Note.RAW_CONTACT_ID, 0);
+            else {
+                op = new BatchOperation.Operation(builder);
                 builder.withValue(Note.RAW_CONTACT_ID, id);
+            }
             builder .withValue(Note.MIMETYPE, Note.CONTENT_ITEM_TYPE)
                     .withValue(Note.NOTE, contact.note);
-            batch.enqueue(builder.build());
+            batch.enqueue(op);
         }
     }
 
@@ -1091,11 +1113,14 @@ public class AndroidContact {
                 }
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(StructuredPostal.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, StructuredPostal.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(StructuredPostal.RAW_CONTACT_ID, id);
+        }
         builder .withValue(StructuredPostal.MIMETYPE, StructuredPostal.CONTENT_ITEM_TYPE)
                 .withValue(StructuredPostal.FORMATTED_ADDRESS, formattedAddress)
                 .withValue(StructuredPostal.TYPE, typeCode)
@@ -1107,7 +1132,7 @@ public class AndroidContact {
                 .withValue(StructuredPostal.REGION, address.getRegion())
                 .withValue(StructuredPostal.POSTCODE, address.getPostalCode())
                 .withValue(StructuredPostal.COUNTRY, address.getCountry());
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
     }
 
     protected void insertWebsite(BatchOperation batch, LabeledProperty<Url> labeledUrl) {
@@ -1146,16 +1171,19 @@ public class AndroidContact {
                 }
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Website.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Website.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Website.RAW_CONTACT_ID, id);
+        }
         builder .withValue(Website.MIMETYPE, Website.CONTENT_ITEM_TYPE)
                 .withValue(Website.URL, url.getValue())
                 .withValue(Website.TYPE, typeCode)
                 .withValue(Website.LABEL, typeLabel);
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
     }
 
     protected void insertEvent(BatchOperation batch, int type, DateOrTimeProperty dateOrTime) {
@@ -1165,15 +1193,18 @@ public class AndroidContact {
             return;
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Event.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Event.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Event.RAW_CONTACT_ID, id);
+        }
         builder .withValue(Event.MIMETYPE, Event.CONTENT_ITEM_TYPE)
                 .withValue(Event.TYPE, type)
                 .withValue(Event.START_DATE, formatter.format(dateOrTime.getDate()));
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
     }
 
     protected void insertRelation(BatchOperation batch, Related related) {
@@ -1200,16 +1231,19 @@ public class AndroidContact {
                 labels.add(type.getValue());
         }
 
-        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final BatchOperation.Operation op;
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
-            builder.withValueBackReference(Relation.RAW_CONTACT_ID, 0);
-        else
+            op = new BatchOperation.Operation(builder, Relation.RAW_CONTACT_ID, 0);
+        else {
+            op = new BatchOperation.Operation(builder);
             builder.withValue(Relation.RAW_CONTACT_ID, id);
+        }
         builder .withValue(Relation.MIMETYPE, Relation.CONTENT_ITEM_TYPE)
                 .withValue(Relation.NAME, related.getText())
                 .withValue(Relation.TYPE, typeCode)
                 .withValue(Relation.LABEL, StringUtils.join(labels, "/"));
-        batch.enqueue(builder.build());
+        batch.enqueue(op);
     }
 
     protected void insertPhoto(byte[] photo) {

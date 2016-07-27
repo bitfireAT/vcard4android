@@ -26,6 +26,7 @@ import ezvcard.Ezvcard;
 import ezvcard.VCardVersion;
 import ezvcard.io.text.VCardWriter;
 import ezvcard.property.Address;
+import ezvcard.property.Email;
 import lombok.Cleanup;
 
 public class AndroidContactTest extends InstrumentationTestCase {
@@ -61,10 +62,10 @@ public class AndroidContactTest extends InstrumentationTestCase {
         vcard.phoneticMiddleName = "Mittelerde";
         vcard.phoneticFamilyName = "Fämilie";
 
-        @Cleanup("delete") AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
+        AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();
 
-        AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
         Contact vcard2 = contact2.getContact();
         assertEquals(vcard2.displayName, vcard.displayName);
         assertEquals(vcard2.prefix, vcard.prefix);
@@ -74,6 +75,20 @@ public class AndroidContactTest extends InstrumentationTestCase {
         assertEquals(vcard2.phoneticGivenName, vcard.phoneticGivenName);
         assertEquals(vcard2.phoneticMiddleName, vcard.phoneticMiddleName);
         assertEquals(vcard2.phoneticFamilyName, vcard.phoneticFamilyName);
+    }
+
+    public void testLargeTransaction() throws FileNotFoundException, ContactsStorageException {
+        Contact vcard = new Contact();
+        vcard.displayName = "Large Transaction";
+        for (int i = 0; i < 4000; i++)
+            vcard.emails.add(new LabeledProperty<Email>(new Email("test" + i + "@example.com")));
+
+        AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
+        contact.create();
+
+        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        Contact vcard2 = contact2.getContact();
+        assertEquals(4000, vcard2.emails.size());
     }
 
 
