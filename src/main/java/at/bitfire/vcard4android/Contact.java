@@ -430,12 +430,9 @@ public class Contact {
         } else if (vCardVersion == VCardVersion.V3_0) {
             // (only) VCard 3 requires N [RFC 2426 3.1.2]
             if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
-                // iCloud uses the whole structured (!) name string as group name (why??)
-                vCard.addExtendedProperty("N", fn);
-            } else {
-                Constants.log.warning("No structured name available, using formatted name as first name");
+                Constants.log.info("No structured name available, using formatted name as family name");
                 StructuredName n = new StructuredName();
-                n.setGiven(fn);
+                n.setFamily(fn);
                 vCard.setStructuredName(n);
             }
         }
