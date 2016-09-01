@@ -74,10 +74,10 @@ public class AndroidContact {
             COLUMN_UID = RawContacts.SYNC1,
             COLUMN_ETAG = RawContacts.SYNC2;
 
-	protected final AndroidAddressBook addressBook;
+    protected final AndroidAddressBook addressBook;
 
     @Getter
-	protected Long id;
+    protected Long id;
 
     @Getter
     protected String fileName;
@@ -85,230 +85,230 @@ public class AndroidContact {
     @Getter
     public String eTag;
 
-	protected Contact contact;
+    protected Contact contact;
 
-	protected AndroidContact(@NonNull AndroidAddressBook addressBook, long id, String fileName, String eTag) {
-		this.addressBook = addressBook;
-		this.id = id;
+    protected AndroidContact(@NonNull AndroidAddressBook addressBook, long id, String fileName, String eTag) {
+        this.addressBook = addressBook;
+        this.id = id;
         this.fileName = fileName;
         this.eTag = eTag;
-	}
+    }
 
-	protected AndroidContact(@NonNull AndroidAddressBook addressBook, @NonNull Contact contact, String fileName, String eTag) {
-		this.addressBook = addressBook;
-		this.contact = contact;
+    protected AndroidContact(@NonNull AndroidAddressBook addressBook, @NonNull Contact contact, String fileName, String eTag) {
+        this.addressBook = addressBook;
+        this.contact = contact;
         this.fileName = fileName;
         this.eTag = eTag;
-	}
+    }
 
-	public Contact getContact() throws FileNotFoundException, ContactsStorageException {
-		if (contact != null)
-			return contact;
+    public Contact getContact() throws FileNotFoundException, ContactsStorageException {
+        if (contact != null)
+            return contact;
 
-		try {
-			@Cleanup EntityIterator iter = RawContacts.newEntityIterator(addressBook.provider.query(
-					addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
-					null, ContactsContract.RawContacts._ID + "=?", new String[] { String.valueOf(id) }, null));
+        try {
+            @Cleanup EntityIterator iter = RawContacts.newEntityIterator(addressBook.provider.query(
+                    addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
+                    null, ContactsContract.RawContacts._ID + "=?", new String[] { String.valueOf(id) }, null));
 
-			if (iter.hasNext()) {
-				Entity e = iter.next();
+            if (iter.hasNext()) {
+                Entity e = iter.next();
 
-				contact = new Contact();
-				populateContact(e.getEntityValues());
+                contact = new Contact();
+                populateContact(e.getEntityValues());
 
-				List<Entity.NamedContentValues> subValues = e.getSubValues();
-				for (Entity.NamedContentValues subValue : subValues) {
-					ContentValues values = subValue.values;
-					String mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE);
+                List<Entity.NamedContentValues> subValues = e.getSubValues();
+                for (Entity.NamedContentValues subValue : subValues) {
+                    ContentValues values = subValue.values;
+                    String mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE);
 
                     if (mimeType == null) {
                         Constants.log.warning("Ignoring raw contact data row without " + ContactsContract.RawContactsEntity.MIMETYPE);
                         continue;
                     }
 
-					switch (mimeType) {
-						case StructuredName.CONTENT_ITEM_TYPE:
-							populateStructuredName(values);
-							break;
-						case Phone.CONTENT_ITEM_TYPE:
-							populatePhoneNumber(values);
-							break;
-						case Email.CONTENT_ITEM_TYPE:
-							populateEmail(values);
-							break;
-						case Photo.CONTENT_ITEM_TYPE:
-							populatePhoto(values);
-							break;
-						case Organization.CONTENT_ITEM_TYPE:
-							populateOrganization(values);
-							break;
-						case Im.CONTENT_ITEM_TYPE:
-							populateIMPP(values);
-							break;
-						case Nickname.CONTENT_ITEM_TYPE:
-							populateNickname(values);
-							break;
-						case Note.CONTENT_ITEM_TYPE:
-							populateNote(values);
-							break;
-						case StructuredPostal.CONTENT_ITEM_TYPE:
-							populateStructuredPostal(values);
-							break;
-						case Website.CONTENT_ITEM_TYPE:
-							populateWebsite(values);
-							break;
-						case Event.CONTENT_ITEM_TYPE:
-							populateEvent(values);
-							break;
-						case Relation.CONTENT_ITEM_TYPE:
-							populateRelation(values);
-							break;
-						case SipAddress.CONTENT_ITEM_TYPE:
-							populateSipAddress(values);
-							break;
+                    switch (mimeType) {
+                        case StructuredName.CONTENT_ITEM_TYPE:
+                            populateStructuredName(values);
+                            break;
+                        case Phone.CONTENT_ITEM_TYPE:
+                            populatePhoneNumber(values);
+                            break;
+                        case Email.CONTENT_ITEM_TYPE:
+                            populateEmail(values);
+                            break;
+                        case Photo.CONTENT_ITEM_TYPE:
+                            populatePhoto(values);
+                            break;
+                        case Organization.CONTENT_ITEM_TYPE:
+                            populateOrganization(values);
+                            break;
+                        case Im.CONTENT_ITEM_TYPE:
+                            populateIMPP(values);
+                            break;
+                        case Nickname.CONTENT_ITEM_TYPE:
+                            populateNickname(values);
+                            break;
+                        case Note.CONTENT_ITEM_TYPE:
+                            populateNote(values);
+                            break;
+                        case StructuredPostal.CONTENT_ITEM_TYPE:
+                            populateStructuredPostal(values);
+                            break;
+                        case Website.CONTENT_ITEM_TYPE:
+                            populateWebsite(values);
+                            break;
+                        case Event.CONTENT_ITEM_TYPE:
+                            populateEvent(values);
+                            break;
+                        case Relation.CONTENT_ITEM_TYPE:
+                            populateRelation(values);
+                            break;
+                        case SipAddress.CONTENT_ITEM_TYPE:
+                            populateSipAddress(values);
+                            break;
                         default:
                             populateData(mimeType, values);
                             break;
-					}
-				}
+                    }
+                }
 
-				return contact;
-			} else
-				throw new FileNotFoundException();
-		} catch(RemoteException e) {
-			throw new ContactsStorageException("Couldn't read local contact", e);
-		}
-	}
+                return contact;
+            } else
+                throw new FileNotFoundException();
+        } catch(RemoteException e) {
+            throw new ContactsStorageException("Couldn't read local contact", e);
+        }
+    }
 
-	protected void populateContact(ContentValues row) {
+    protected void populateContact(ContentValues row) {
         fileName = row.getAsString(COLUMN_FILENAME);
         eTag = row.getAsString(COLUMN_ETAG);
 
         contact.uid = row.getAsString(COLUMN_UID);
     }
 
-	protected void populateStructuredName(ContentValues row) {
-		contact.displayName = row.getAsString(StructuredName.DISPLAY_NAME);
+    protected void populateStructuredName(ContentValues row) {
+        contact.displayName = row.getAsString(StructuredName.DISPLAY_NAME);
 
-		contact.prefix = row.getAsString(StructuredName.PREFIX);
-		contact.givenName = row.getAsString(StructuredName.GIVEN_NAME);
-		contact.middleName = row.getAsString(StructuredName.MIDDLE_NAME);
-		contact.familyName = row.getAsString(StructuredName.FAMILY_NAME);
-		contact.suffix = row.getAsString(StructuredName.SUFFIX);
+        contact.prefix = row.getAsString(StructuredName.PREFIX);
+        contact.givenName = row.getAsString(StructuredName.GIVEN_NAME);
+        contact.middleName = row.getAsString(StructuredName.MIDDLE_NAME);
+        contact.familyName = row.getAsString(StructuredName.FAMILY_NAME);
+        contact.suffix = row.getAsString(StructuredName.SUFFIX);
 
-		contact.phoneticGivenName = row.getAsString(StructuredName.PHONETIC_GIVEN_NAME);
-		contact.phoneticMiddleName = row.getAsString(StructuredName.PHONETIC_MIDDLE_NAME);
-		contact.phoneticFamilyName = row.getAsString(StructuredName.PHONETIC_FAMILY_NAME);
-	}
+        contact.phoneticGivenName = row.getAsString(StructuredName.PHONETIC_GIVEN_NAME);
+        contact.phoneticMiddleName = row.getAsString(StructuredName.PHONETIC_MIDDLE_NAME);
+        contact.phoneticFamilyName = row.getAsString(StructuredName.PHONETIC_FAMILY_NAME);
+    }
 
-	protected void populatePhoneNumber(ContentValues row) {
-		Telephone number = new Telephone(row.getAsString(Phone.NUMBER));
+    protected void populatePhoneNumber(ContentValues row) {
+        Telephone number = new Telephone(row.getAsString(Phone.NUMBER));
         LabeledProperty<Telephone> labeledNumber = new LabeledProperty<>(number);
 
         Integer type = row.getAsInteger(Phone.TYPE);
-		if (type != null)
-			switch (type) {
-				case Phone.TYPE_HOME:
-					number.getTypes().add(TelephoneType.HOME);
-					break;
-				case Phone.TYPE_MOBILE:
-					number.getTypes().add(TelephoneType.CELL);
-					break;
-				case Phone.TYPE_WORK:
-					number.getTypes().add(TelephoneType.WORK);
-					break;
-				case Phone.TYPE_FAX_WORK:
-					number.getTypes().add(TelephoneType.FAX);
-					number.getTypes().add(TelephoneType.WORK);
-					break;
-				case Phone.TYPE_FAX_HOME:
-					number.getTypes().add(TelephoneType.FAX);
-					number.getTypes().add(TelephoneType.HOME);
-					break;
-				case Phone.TYPE_PAGER:
-					number.getTypes().add(TelephoneType.PAGER);
-					break;
-				case Phone.TYPE_CALLBACK:
-					number.getTypes().add(Contact.PHONE_TYPE_CALLBACK);
-					break;
-				case Phone.TYPE_CAR:
-					number.getTypes().add(TelephoneType.CAR);
-					break;
-				case Phone.TYPE_COMPANY_MAIN:
-					number.getTypes().add(Contact.PHONE_TYPE_COMPANY_MAIN);
-					break;
-				case Phone.TYPE_ISDN:
-					number.getTypes().add(TelephoneType.ISDN);
-					break;
-				case Phone.TYPE_MAIN:
-					number.getTypes().add(TelephoneType.VOICE);
-					break;
-				case Phone.TYPE_OTHER_FAX:
-					number.getTypes().add(TelephoneType.FAX);
-					break;
-				case Phone.TYPE_RADIO:
-					number.getTypes().add(Contact.PHONE_TYPE_RADIO);
-					break;
-				case Phone.TYPE_TELEX:
-					number.getTypes().add(TelephoneType.TEXTPHONE);
-					break;
-				case Phone.TYPE_TTY_TDD:
-					number.getTypes().add(TelephoneType.TEXT);
-					break;
-				case Phone.TYPE_WORK_MOBILE:
-					number.getTypes().add(TelephoneType.CELL);
-					number.getTypes().add(TelephoneType.WORK);
-					break;
-				case Phone.TYPE_WORK_PAGER:
-					number.getTypes().add(TelephoneType.PAGER);
-					number.getTypes().add(TelephoneType.WORK);
-					break;
-				case Phone.TYPE_ASSISTANT:
-					number.getTypes().add(Contact.PHONE_TYPE_ASSISTANT);
-					break;
-				case Phone.TYPE_MMS:
-					number.getTypes().add(Contact.PHONE_TYPE_MMS);
-					break;
-				case Phone.TYPE_CUSTOM:
-					String customType = row.getAsString(CommonDataKinds.Phone.LABEL);
-					if (!TextUtils.isEmpty(customType)) {
+        if (type != null)
+            switch (type) {
+                case Phone.TYPE_HOME:
+                    number.getTypes().add(TelephoneType.HOME);
+                    break;
+                case Phone.TYPE_MOBILE:
+                    number.getTypes().add(TelephoneType.CELL);
+                    break;
+                case Phone.TYPE_WORK:
+                    number.getTypes().add(TelephoneType.WORK);
+                    break;
+                case Phone.TYPE_FAX_WORK:
+                    number.getTypes().add(TelephoneType.FAX);
+                    number.getTypes().add(TelephoneType.WORK);
+                    break;
+                case Phone.TYPE_FAX_HOME:
+                    number.getTypes().add(TelephoneType.FAX);
+                    number.getTypes().add(TelephoneType.HOME);
+                    break;
+                case Phone.TYPE_PAGER:
+                    number.getTypes().add(TelephoneType.PAGER);
+                    break;
+                case Phone.TYPE_CALLBACK:
+                    number.getTypes().add(Contact.PHONE_TYPE_CALLBACK);
+                    break;
+                case Phone.TYPE_CAR:
+                    number.getTypes().add(TelephoneType.CAR);
+                    break;
+                case Phone.TYPE_COMPANY_MAIN:
+                    number.getTypes().add(Contact.PHONE_TYPE_COMPANY_MAIN);
+                    break;
+                case Phone.TYPE_ISDN:
+                    number.getTypes().add(TelephoneType.ISDN);
+                    break;
+                case Phone.TYPE_MAIN:
+                    number.getTypes().add(TelephoneType.VOICE);
+                    break;
+                case Phone.TYPE_OTHER_FAX:
+                    number.getTypes().add(TelephoneType.FAX);
+                    break;
+                case Phone.TYPE_RADIO:
+                    number.getTypes().add(Contact.PHONE_TYPE_RADIO);
+                    break;
+                case Phone.TYPE_TELEX:
+                    number.getTypes().add(TelephoneType.TEXTPHONE);
+                    break;
+                case Phone.TYPE_TTY_TDD:
+                    number.getTypes().add(TelephoneType.TEXT);
+                    break;
+                case Phone.TYPE_WORK_MOBILE:
+                    number.getTypes().add(TelephoneType.CELL);
+                    number.getTypes().add(TelephoneType.WORK);
+                    break;
+                case Phone.TYPE_WORK_PAGER:
+                    number.getTypes().add(TelephoneType.PAGER);
+                    number.getTypes().add(TelephoneType.WORK);
+                    break;
+                case Phone.TYPE_ASSISTANT:
+                    number.getTypes().add(Contact.PHONE_TYPE_ASSISTANT);
+                    break;
+                case Phone.TYPE_MMS:
+                    number.getTypes().add(Contact.PHONE_TYPE_MMS);
+                    break;
+                case Phone.TYPE_CUSTOM:
+                    String customType = row.getAsString(CommonDataKinds.Phone.LABEL);
+                    if (!TextUtils.isEmpty(customType)) {
                         labeledNumber.label = customType;
                         number.getTypes().add(TelephoneType.get(labelToXName(customType)));
                     }
-			}
-		if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
-			number.setPref(1);
+            }
+        if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
+            number.setPref(1);
 
-		contact.phoneNumbers.add(labeledNumber);
-	}
+        contact.phoneNumbers.add(labeledNumber);
+    }
 
-	protected void populateEmail(ContentValues row) {
-		ezvcard.property.Email email = new ezvcard.property.Email(row.getAsString(Email.ADDRESS));
+    protected void populateEmail(ContentValues row) {
+        ezvcard.property.Email email = new ezvcard.property.Email(row.getAsString(Email.ADDRESS));
         LabeledProperty<ezvcard.property.Email> labeledEmail = new LabeledProperty<>(email);
 
         Integer type = row.getAsInteger(Email.TYPE);
         if (type != null)
-			switch (type) {
-				case Email.TYPE_HOME:
-					email.getTypes().add(EmailType.HOME);
-					break;
-				case Email.TYPE_WORK:
-					email.getTypes().add(EmailType.WORK);
-					break;
-				case Email.TYPE_MOBILE:
-					email.getTypes().add(Contact.EMAIL_TYPE_MOBILE);
-					break;
-				case Email.TYPE_CUSTOM:
-					String customType = row.getAsString(Email.LABEL);
-					if (!TextUtils.isEmpty(customType)) {
+            switch (type) {
+                case Email.TYPE_HOME:
+                    email.getTypes().add(EmailType.HOME);
+                    break;
+                case Email.TYPE_WORK:
+                    email.getTypes().add(EmailType.WORK);
+                    break;
+                case Email.TYPE_MOBILE:
+                    email.getTypes().add(Contact.EMAIL_TYPE_MOBILE);
+                    break;
+                case Email.TYPE_CUSTOM:
+                    String customType = row.getAsString(Email.LABEL);
+                    if (!TextUtils.isEmpty(customType)) {
                         labeledEmail.label = customType;
                         email.getTypes().add(EmailType.get(labelToXName(customType)));
                     }
-			}
-		if (row.getAsInteger(Email.IS_PRIMARY) != 0)
-			email.setPref(1);
-		contact.emails.add(labeledEmail);
-	}
+            }
+        if (row.getAsInteger(Email.IS_PRIMARY) != 0)
+            email.setPref(1);
+        contact.emails.add(labeledEmail);
+    }
 
     protected void populatePhoto(ContentValues row) throws RemoteException {
         if (row.containsKey(Photo.PHOTO_FILE_ID)) {
@@ -624,23 +624,23 @@ public class AndroidContact {
 
 
     public Uri create() throws ContactsStorageException {
-		BatchOperation batch = new BatchOperation(addressBook.provider);
+        BatchOperation batch = new BatchOperation(addressBook.provider);
 
-		ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI));
-		buildContact(builder, false);
-		batch.enqueue(new BatchOperation.Operation(builder));
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI));
+        buildContact(builder, false);
+        batch.enqueue(new BatchOperation.Operation(builder));
 
-		insertDataRows(batch);
+        insertDataRows(batch);
 
-		batch.commit();
-		Uri uri = batch.getResult(0).uri;
-		id = ContentUris.parseId(uri);
+        batch.commit();
+        Uri uri = batch.getResult(0).uri;
+        id = ContentUris.parseId(uri);
 
         // we need a raw contact ID to insert the photo
         insertPhoto(contact.photo);
 
-		return uri;
-	}
+        return uri;
+    }
 
     public int update(Contact contact) throws ContactsStorageException {
         this.contact = contact;
@@ -666,25 +666,25 @@ public class AndroidContact {
         return results;
     }
 
-	public int delete() throws ContactsStorageException {
-		try {
-			return addressBook.provider.delete(rawContactSyncURI(), null, null);
-		} catch (RemoteException e) {
-			throw new ContactsStorageException("Couldn't delete local contact", e);
-		}
-	}
+    public int delete() throws ContactsStorageException {
+        try {
+            return addressBook.provider.delete(rawContactSyncURI(), null, null);
+        } catch (RemoteException e) {
+            throw new ContactsStorageException("Couldn't delete local contact", e);
+        }
+    }
 
-	protected void buildContact(ContentProviderOperation.Builder builder, boolean update) {
-		if (!update)
-			builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.account.name)
-					.withValue(RawContacts.ACCOUNT_TYPE, addressBook.account.type);
+    protected void buildContact(ContentProviderOperation.Builder builder, boolean update) {
+        if (!update)
+            builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.account.name)
+                    .withValue(RawContacts.ACCOUNT_TYPE, addressBook.account.type);
 
         builder .withValue(RawContacts.DIRTY, 0)
                 .withValue(RawContacts.DELETED, 0)
                 .withValue(COLUMN_FILENAME, fileName)
                 .withValue(COLUMN_ETAG, eTag)
                 .withValue(COLUMN_UID, contact.uid);
-	}
+    }
 
 
     /**
@@ -694,14 +694,14 @@ public class AndroidContact {
      * @param batch    batch operation used to insert the data rows
      * @throws ContactsStorageException on contact provider errors
      */
-	protected void insertDataRows(BatchOperation batch) throws ContactsStorageException {
-		insertStructuredName(batch);
+    protected void insertDataRows(BatchOperation batch) throws ContactsStorageException {
+        insertStructuredName(batch);
 
-		for (LabeledProperty<Telephone> number : contact.phoneNumbers)
-			insertPhoneNumber(batch, number);
+        for (LabeledProperty<Telephone> number : contact.phoneNumbers)
+            insertPhoneNumber(batch, number);
 
-		for (LabeledProperty<ezvcard.property.Email> email : contact.emails)
-			insertEmail(batch, email);
+        for (LabeledProperty<ezvcard.property.Email> email : contact.emails)
+            insertEmail(batch, email);
 
         insertOrganization(batch);
 
@@ -725,44 +725,44 @@ public class AndroidContact {
 
         for (Related related : contact.relations)
             insertRelation(batch, related);
-	}
+    }
 
-	protected void insertStructuredName(BatchOperation batch) {
+    protected void insertStructuredName(BatchOperation batch) {
         final BatchOperation.Operation op;
-		final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
+        final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
             op = new BatchOperation.Operation(builder, StructuredName.RAW_CONTACT_ID, 0);
         else {
             op = new BatchOperation.Operation(builder);
             builder.withValue(StructuredName.RAW_CONTACT_ID, id);
         }
-		builder .withValue(RawContacts.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-				.withValue(StructuredName.PREFIX, contact.prefix)
-				.withValue(StructuredName.DISPLAY_NAME, contact.displayName)
-				.withValue(StructuredName.GIVEN_NAME, contact.givenName)
-				.withValue(StructuredName.MIDDLE_NAME, contact.middleName)
-				.withValue(StructuredName.FAMILY_NAME, contact.familyName)
-				.withValue(StructuredName.SUFFIX, contact.suffix)
-				.withValue(StructuredName.PHONETIC_GIVEN_NAME, contact.phoneticGivenName)
-				.withValue(StructuredName.PHONETIC_MIDDLE_NAME, contact.phoneticMiddleName)
-				.withValue(StructuredName.PHONETIC_FAMILY_NAME, contact.phoneticFamilyName);
-		batch.enqueue(op);
-	}
+        builder .withValue(RawContacts.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                .withValue(StructuredName.PREFIX, contact.prefix)
+                .withValue(StructuredName.DISPLAY_NAME, contact.displayName)
+                .withValue(StructuredName.GIVEN_NAME, contact.givenName)
+                .withValue(StructuredName.MIDDLE_NAME, contact.middleName)
+                .withValue(StructuredName.FAMILY_NAME, contact.familyName)
+                .withValue(StructuredName.SUFFIX, contact.suffix)
+                .withValue(StructuredName.PHONETIC_GIVEN_NAME, contact.phoneticGivenName)
+                .withValue(StructuredName.PHONETIC_MIDDLE_NAME, contact.phoneticMiddleName)
+                .withValue(StructuredName.PHONETIC_FAMILY_NAME, contact.phoneticFamilyName);
+        batch.enqueue(op);
+    }
 
-	protected void insertPhoneNumber(BatchOperation batch, LabeledProperty<Telephone> labeledNumber) {
+    protected void insertPhoneNumber(BatchOperation batch, LabeledProperty<Telephone> labeledNumber) {
         Telephone number = labeledNumber.property;
 
-		int typeCode = Phone.TYPE_OTHER;
-		String typeLabel = null;
+        int typeCode = Phone.TYPE_OTHER;
+        String typeLabel = null;
 
-		List<TelephoneType> types = number.getTypes();
+        List<TelephoneType> types = number.getTypes();
 
-		// preferred number?
-		boolean is_primary = number.getPref() != null;
-		if (types.contains(TelephoneType.PREF)) {
-			is_primary = true;
-			types.remove(TelephoneType.PREF);
-		}
+        // preferred number?
+        boolean is_primary = number.getPref() != null;
+        if (types.contains(TelephoneType.PREF)) {
+            is_primary = true;
+            types.remove(TelephoneType.PREF);
+        }
 
         if (labeledNumber.label != null) {
             typeCode = Phone.TYPE_CUSTOM;
@@ -826,29 +826,29 @@ public class AndroidContact {
             op = new BatchOperation.Operation(builder);
             builder.withValue(Phone.RAW_CONTACT_ID, id);
         }
-		builder	.withValue(Phone.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
-				.withValue(Phone.NUMBER, number.getText())
-				.withValue(Phone.TYPE, typeCode)
+        builder	.withValue(Phone.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
+                .withValue(Phone.NUMBER, number.getText())
+                .withValue(Phone.TYPE, typeCode)
                 .withValue(Phone.LABEL, typeLabel)
-				.withValue(Phone.IS_PRIMARY, is_primary ? 1 : 0)
-				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
-		batch.enqueue(op);
-	}
+                .withValue(Phone.IS_PRIMARY, is_primary ? 1 : 0)
+                .withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
+        batch.enqueue(op);
+    }
 
-	protected void insertEmail(BatchOperation batch, LabeledProperty<ezvcard.property.Email> labeledEmail) {
+    protected void insertEmail(BatchOperation batch, LabeledProperty<ezvcard.property.Email> labeledEmail) {
         ezvcard.property.Email email = labeledEmail.property;
 
-		int typeCode = 0;
-		String typeLabel = null;
+        int typeCode = 0;
+        String typeLabel = null;
 
-		List<EmailType> types = email.getTypes();
+        List<EmailType> types = email.getTypes();
 
-		// preferred email address?
-		boolean is_primary = email.getPref() != null;
-		if (types.contains(EmailType.PREF)) {
-			is_primary = true;
-			types.remove(EmailType.PREF);
-		}
+        // preferred email address?
+        boolean is_primary = email.getPref() != null;
+        if (types.contains(EmailType.PREF)) {
+            is_primary = true;
+            types.remove(EmailType.PREF);
+        }
 
         if (labeledEmail.label != null) {
             typeCode = Email.TYPE_CUSTOM;
@@ -879,14 +879,14 @@ public class AndroidContact {
             op = new BatchOperation.Operation(builder);
             builder.withValue(Email.RAW_CONTACT_ID, id);
         }
-		builder	.withValue(Email.MIMETYPE, Email.CONTENT_ITEM_TYPE)
-				.withValue(Email.ADDRESS, email.getValue())
-				.withValue(Email.TYPE, typeCode)
+        builder	.withValue(Email.MIMETYPE, Email.CONTENT_ITEM_TYPE)
+                .withValue(Email.ADDRESS, email.getValue())
+                .withValue(Email.TYPE, typeCode)
                 .withValue(Email.LABEL, typeLabel)
-				.withValue(Email.IS_PRIMARY, is_primary ? 1 : 0)
-				.withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
+                .withValue(Email.IS_PRIMARY, is_primary ? 1 : 0)
+                .withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
         batch.enqueue(op);
-	}
+    }
 
     protected void insertOrganization(BatchOperation batch) {
         if (contact.organization == null && contact.jobTitle == null && contact.jobDescription == null)
@@ -1068,15 +1068,15 @@ public class AndroidContact {
     protected void insertStructuredPostal(BatchOperation batch, LabeledProperty<Address> labeledAddress) {
         Address address = labeledAddress.property;
 
-		/*	street po.box (extended)
-		 *	postcode city
-		 *	region
-		 *	COUNTRY
-		 */
+        /*	street po.box (extended)
+         *	postcode city
+         *	region
+         *	COUNTRY
+         */
         String formattedAddress = address.getLabel();
-        if (!TextUtils.isEmpty(formattedAddress)) {
+        if (TextUtils.isEmpty(formattedAddress)) {
             String  lineStreet = StringUtils.join(new String[] { address.getStreetAddress(), address.getPoBox(), address.getExtendedAddress() }, " "),
-                    lineLocality = StringUtils.join(new String[]{address.getPostalCode(), address.getLocality()}, " ");
+                    lineLocality = StringUtils.join(new String[]{ address.getPostalCode(), address.getLocality() }, " ");
 
             List<String> lines = new LinkedList<>();
             if (!TextUtils.isEmpty(lineStreet))
@@ -1284,8 +1284,8 @@ public class AndroidContact {
 
 
     protected static String labelToXName(String label) {
-		return "X-" + label.replaceAll(" ","_").replaceAll("[^\\p{L}\\p{Nd}\\-_]", "").toUpperCase(Locale.US);
-	}
+        return "X-" + label.replaceAll(" ","_").replaceAll("[^\\p{L}\\p{Nd}\\-_]", "").toUpperCase(Locale.US);
+    }
 
     protected static String xNameToLabel(String xname) {
         // "X-MY_PROPERTY"
