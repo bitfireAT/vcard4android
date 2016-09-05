@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -1075,8 +1076,8 @@ public class AndroidContact {
          */
         String formattedAddress = address.getLabel();
         if (TextUtils.isEmpty(formattedAddress)) {
-            String  lineStreet = StringUtils.join(new String[] { address.getStreetAddress(), address.getPoBox(), address.getExtendedAddress() }, " "),
-                    lineLocality = StringUtils.join(new String[]{ address.getPostalCode(), address.getLocality() }, " ");
+            String  lineStreet = StringUtils.join(dropEmpty(new String[] { address.getStreetAddress(), address.getPoBox(), address.getExtendedAddress() }), " "),
+                    lineLocality = StringUtils.join(dropEmpty(new String[] { address.getPostalCode(), address.getLocality() }), " ");
 
             List<String> lines = new LinkedList<>();
             if (!TextUtils.isEmpty(lineStreet))
@@ -1282,6 +1283,14 @@ public class AndroidContact {
         }
     }
 
+
+    protected static String[] dropEmpty(String[] strings) {
+        ArrayList<String> list = new ArrayList<>(strings.length);
+        for (String s : strings)
+            if (!StringUtils.isEmpty(s))
+                list.add(s);
+        return list.toArray(new String[list.size()]);
+    }
 
     protected static String labelToXName(String label) {
         return "X-" + label.replaceAll(" ","_").replaceAll("[^\\p{L}\\p{Nd}\\-_]", "").toUpperCase(Locale.US);
