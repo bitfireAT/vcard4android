@@ -22,7 +22,6 @@ import android.provider.ContactsContract.RawContacts;
 import java.io.FileNotFoundException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 
 import lombok.Cleanup;
 
