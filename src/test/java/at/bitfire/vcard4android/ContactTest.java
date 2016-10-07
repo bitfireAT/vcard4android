@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 – 2015 Ricki Hirner (bitfire web engineering).
+ * Copyright © Ricki Hirner (bitfire web engineering).
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
@@ -8,9 +8,7 @@
 
 package at.bitfire.vcard4android;
 
-import android.content.res.AssetManager;
-import android.test.InstrumentationTestCase;
-import android.util.Log;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,7 +16,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.logging.Level;
 
@@ -37,16 +34,25 @@ import ezvcard.property.Url;
 import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 
-public class ContactTest extends InstrumentationTestCase {
-    private static final String TAG = "vcard4android.ContactTest";
+import static org.junit.Assert.*;
 
-    AssetManager assetMgr;
+public class ContactTest {
 
-
-    public void setUp() throws IOException {
-        assetMgr = getInstrumentation().getContext().getResources().getAssets();
+    private Contact parseContact(String fname, Charset charset) throws IOException {
+        @Cleanup InputStream is = getClass().getClassLoader().getResourceAsStream(fname);
+        assertNotNull(is);
+        return Contact.fromStream(is, charset, null)[0];
     }
 
+    private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        c.write(vCardVersion, GroupMethod.CATEGORIES, true, os);
+        Constants.log.log(Level.INFO, "Re-generated VCard", os.toString());
+        return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
+    }
+
+
+    @Test
     public void testVCard3FieldsAsVCard3() throws IOException {
         Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V3_0);
 
@@ -58,7 +64,7 @@ public class ContactTest extends InstrumentationTestCase {
 
         // N
         assertEquals("Firstname", c.givenName);
-        assertEquals("Middlename", c.middleName);
+        assertEquals("Middlename1 Middlename2", c.middleName);
         assertEquals("Lastname", c.familyName);
 
         // phonetic names
@@ -94,10 +100,10 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("work@example.com", email.property.getValue());
 
         // ORG, TITLE, ROLE
-        assertTrue(Arrays.equals(
-                new String[]{"ABC, Inc.", "North American Division", "Marketing"},
+        assertArrayEquals(
+                new String[] { "ABC, Inc.", "North American Division", "Marketing" },
                 c.organization.getValues().toArray(new String[3])
-        ));
+        );
         assertEquals("Director, Research and Development", c.jobTitle);
         assertEquals("Programmer", c.jobDescription);
 
@@ -122,7 +128,10 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("mysip@example.com", impp.property.getHandle());
 
         // NICKNAME
-        assertTrue(Arrays.equals(new String[] { "Nick1", "Nick2" }, c.nickName.getValues().toArray()));
+        assertArrayEquals(
+                new String[] { "Nick1", "Nick2" },
+                c.nickName.getValues().toArray()
+        );
 
         // ADR
         assertEquals(2, c.addresses.size());
@@ -155,10 +164,10 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.note);
 
         // CATEGORIES
-        assertTrue(Arrays.equals(
+        assertArrayEquals(
                 new String[] { "A", "B'C" },
                 c.categories.toArray()
-        ));
+        );
 
         // URL
         assertEquals(2, c.urls.size());
@@ -188,10 +197,11 @@ public class ContactTest extends InstrumentationTestCase {
         assertEquals("muuuum", rel.getText());
 
         // PHOTO
-        @Cleanup InputStream photo = assetMgr.open("lol.jpg");
-        assertTrue(Arrays.equals(IOUtils.toByteArray(photo), c.photo));
+        @Cleanup InputStream photo = getClass().getClassLoader().getResourceAsStream("lol.jpg");
+        assertArrayEquals(IOUtils.toByteArray(photo), c.photo);
     }
 
+    @Test
     public void testVCard3FieldsAsVCard4() throws IOException {
         Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V4_0);
         // let's check only things that should be different when VCard 4.0 is generated
@@ -211,18 +221,6 @@ public class ContactTest extends InstrumentationTestCase {
         Address addr = c.addresses.get(0).property;
         assertFalse(addr.getTypes().contains(AddressType.PREF));
         assertNotNull(addr.getPref());
-    }
-
-    private Contact parseContact(String fname, Charset charset) throws IOException {
-        @Cleanup InputStream is = assetMgr.open(fname, AssetManager.ACCESS_STREAMING);
-        return Contact.fromStream(is, charset, null)[0];
-    }
-
-    private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        c.write(vCardVersion, GroupMethod.CATEGORIES, true, os);
-        Constants.log.log(Level.INFO, "Re-generated VCard", os.toString());
-        return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
     }
 
 

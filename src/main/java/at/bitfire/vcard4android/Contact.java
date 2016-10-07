@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -212,11 +214,11 @@ public class Contact {
         // N
         StructuredName n = vCard.getStructuredName();
         if (n != null) {
-            c.prefix = TextUtils.join(" ", n.getPrefixes());
+            c.prefix = StringUtils.join(n.getPrefixes(), ' ');
             c.givenName = n.getGiven();
-            c.middleName = TextUtils.join(" ", n.getAdditionalNames());
+            c.middleName = StringUtils.join(n.getAdditionalNames(), ' ');
             c.familyName = n.getFamily();
-            c.suffix = TextUtils.join(" ", n.getSuffixes());
+            c.suffix = StringUtils.join(n.getSuffixes(), ' ');
             vCard.removeProperties(StructuredName.class);
         } else
             Constants.log.warning("Received VCard without N (structured name)");
@@ -291,7 +293,7 @@ public class Contact {
         for (Note note : vCard.getNotes())
             notes.add(note.getValue());
         if (!notes.isEmpty())
-            c.note = TextUtils.join("\n\n\n", notes);
+            c.note = StringUtils.join(notes, "\n\n\n");
         vCard.removeProperties(Note.class);
 
         // CATEGORY
@@ -315,7 +317,7 @@ public class Contact {
         // RELATED
         for (Related related : vCard.getRelations()) {
             String text = related.getText();
-            if (!TextUtils.isEmpty(text)) {
+            if (!StringUtils.isEmpty(text)) {
                 // process only free-form relations with text
                 c.relations.add(related);
             }
@@ -405,7 +407,7 @@ public class Contact {
                 fn = emails.get(0).property.getValue();
             Constants.log.warning("No FN (formatted name) available, using " + fn);
         }
-        if (TextUtils.isEmpty(fn)) {
+        if (StringUtils.isEmpty(fn)) {
             fn = "-";
             Constants.log.warning("No FN (formatted name) available, using \"-\"");
         }
@@ -415,15 +417,15 @@ public class Contact {
         if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
             StructuredName n = new StructuredName();
             if (prefix != null)
-                for (String p : TextUtils.split(prefix, " "))
+                for (String p : StringUtils.split(prefix, ' '))
                     n.getPrefixes().add(p);
             n.setGiven(givenName);
             if (middleName != null)
-                for (String middle : TextUtils.split(middleName, " "))
+                for (String middle : StringUtils.split(middleName, ' '))
                     n.getAdditionalNames().add(middle);
             n.setFamily(familyName);
             if (suffix != null)
-                for (String s : TextUtils.split(suffix, " "))
+                for (String s : StringUtils.split(suffix, ' '))
                     n.getSuffixes().add(s);
             vCard.setStructuredName(n);
 
@@ -542,14 +544,20 @@ public class Contact {
     }
 
     public static String uriToUID(String uriString) {
-        Uri uri = Uri.parse(uriString);
-        if (uri.getScheme() == null)
-            return uri.getSchemeSpecificPart();
-        else if ("urn".equalsIgnoreCase(uri.getScheme()) && StringUtils.startsWithIgnoreCase(uri.getSchemeSpecificPart(), "uuid:"))
-            return uri.getSchemeSpecificPart().substring(5);
-        else
-            return null;
+        URI uri = null;
+        try {
+            uri = new URI(uriString);
 
+            if (uri.getScheme() == null)
+                return uri.getSchemeSpecificPart();
+            else if ("urn".equalsIgnoreCase(uri.getScheme()) && StringUtils.startsWithIgnoreCase(uri.getSchemeSpecificPart(), "uuid:"))
+                return uri.getSchemeSpecificPart().substring(5);
+            else
+                return null;
+        } catch(URISyntaxException e) {
+            Constants.log.warning("Invalid URI for UID: " + uri);
+            return uriString;
+        }
     }
 
     private static void addLabel(LabeledProperty<? extends VCardProperty> labeledUrl, AtomicInteger labelIterator, VCard vCard) {

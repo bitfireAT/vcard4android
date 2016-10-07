@@ -2,7 +2,7 @@ BEGIN:VCARD
 VERSION:3.0
 UID:mostfields1@at.bitfire.vcard4android
 FN;CHARSET=UTF-8:Ämi Display
-N:Lastname;Firstname;Middlename;DDDr.;MBA
+N:Lastname;Firstname;Middlename1 Middlename2;DDDr.;MBA
 X-PHONETIC-FIRST-NAME;CHARSET=UTF-8:Förstnehm
 X-PHONETIC-MIDDLE-NAME:Mittelnehm
 X-PHONETIC-LAST-NAME;CHARSET=UTF-8:Laastnehm
