@@ -1,4 +1,7 @@
 
+[![build status](https://gitlab.com/bitfireAT/vcard4android/badges/master/build.svg)](https://gitlab.com/bitfireAT/vcard4android/commits/master)
+
+
 # vcard4android
 
 vcard4android is an Android library that brings together VCard and Android.
