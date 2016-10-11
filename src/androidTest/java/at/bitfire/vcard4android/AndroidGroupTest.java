@@ -8,56 +8,65 @@
 
 package at.bitfire.vcard4android;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.content.ContentProviderClient;
-import android.content.Context;
 import android.provider.ContactsContract;
-import android.test.InstrumentationTestCase;
+import android.support.annotation.RequiresPermission;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.FileNotFoundException;
 
-public class AndroidGroupTest extends InstrumentationTestCase {
+import static android.support.test.InstrumentationRegistry.getContext;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-	final Account testAccount = new Account("AndroidContactGroupTest", "at.bitfire.vcard4android");
-	ContentProviderClient provider;
+public class AndroidGroupTest {
 
-	AndroidAddressBook addressBook;
+    final Account testAccount = new Account("AndroidContactGroupTest", "at.bitfire.vcard4android");
+    ContentProviderClient provider;
 
-	@Override
-	protected void setUp() throws Exception {
-		Context context = getInstrumentation().getContext();
-		provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
-		assertNotNull(provider);
+    AndroidAddressBook addressBook;
 
-		addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
-	}
+    @Before
+    @RequiresPermission(allOf = { Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS })
+    public void connect() throws Exception {
+        provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
+        assertNotNull(provider);
 
-	@Override
-	public void tearDown() throws Exception {
-		provider.release();
-	}
+        addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
+    }
+
+    @After
+    public void disconnect() throws Exception {
+        provider.release();
+    }
 
 
-	public void testCreateReadDeleteGroup() throws FileNotFoundException, ContactsStorageException {
-		Contact contact = new Contact();
-		contact.displayName = "at.bitfire.vcard4android-AndroidGroupTest";
-		contact.note = "(test group)";
+    @Test
+    public void testCreateReadDeleteGroup() throws FileNotFoundException, ContactsStorageException {
+        Contact contact = new Contact();
+        contact.displayName = "at.bitfire.vcard4android-AndroidGroupTest";
+        contact.note = "(test group)";
 
-		// ensure we start without this group
-		assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
+        // ensure we start without this group
+        assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
 
-		// create group
-		AndroidGroup group = new AndroidGroup(addressBook, contact, null, null);
-		group.create();
-		AndroidGroup[] groups = addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName } );
-		assertEquals(1, groups.length);
-		Contact contact2 = groups[0].getContact();
-		assertEquals(contact.displayName, contact2.displayName);
-		assertEquals(contact.note, contact2.note);
+        // create group
+        AndroidGroup group = new AndroidGroup(addressBook, contact, null, null);
+        group.create();
+        AndroidGroup[] groups = addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName } );
+        assertEquals(1, groups.length);
+        Contact contact2 = groups[0].getContact();
+        assertEquals(contact.displayName, contact2.displayName);
+        assertEquals(contact.note, contact2.note);
 
-		// delete group
-		group.delete();
-		assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
-	}
+        // delete group
+        group.delete();
+        assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
+    }
 
 }

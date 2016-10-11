@@ -8,33 +8,44 @@
 
 package at.bitfire.vcard4android;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
-import android.content.Context;
 import android.provider.ContactsContract;
-import android.test.InstrumentationTestCase;
+import android.support.annotation.RequiresPermission;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Arrays;
 
-public class AndroidAddressBookTest extends InstrumentationTestCase {
+import static android.support.test.InstrumentationRegistry.getContext;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+public class AndroidAddressBookTest {
 
 	final Account testAccount = new Account("AndroidAddressBookTest", "at.bitfire.vcard4android");
 	ContentProviderClient provider;
 
-	@Override
-	protected void setUp() throws Exception {
-		Context context = getInstrumentation().getContext();
-		provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
+	@Before
+    @RequiresPermission(allOf = { Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS })
+	public void connect() throws Exception {
+		provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
 		assertNotNull(provider);
 	}
 
-	@Override
-	public void tearDown() throws Exception {
+	@After
+	public void disconnect() throws Exception {
 		provider.release();
 	}
 
 
+    @Test
 	public void testSettings() throws ContactsStorageException {
 		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
 
@@ -55,7 +66,8 @@ public class AndroidAddressBookTest extends InstrumentationTestCase {
 		assertTrue(values.getAsInteger(ContactsContract.Settings.UNGROUPED_VISIBLE) != 0);
 	}
 
-	public void testSyncState() throws ContactsStorageException {
+    @Test
+    public void testSyncState() throws ContactsStorageException {
 		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
 
 		addressBook.setSyncState(new byte[0]);

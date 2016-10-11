@@ -8,49 +8,53 @@
 
 package at.bitfire.vcard4android;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.content.ContentProviderClient;
-import android.content.Context;
 import android.provider.ContactsContract;
-import android.test.InstrumentationTestCase;
-import android.util.Log;
+import android.support.annotation.RequiresPermission;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.logging.Level;
 
-import ezvcard.Ezvcard;
 import ezvcard.VCardVersion;
-import ezvcard.io.text.VCardWriter;
 import ezvcard.property.Address;
 import ezvcard.property.Email;
 import lombok.Cleanup;
 
-public class AndroidContactTest extends InstrumentationTestCase {
+import static android.support.test.InstrumentationRegistry.getContext;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public class AndroidContactTest {
 
     final Account testAccount = new Account("AndroidContactTest", "at.bitfire.vcard4android");
     ContentProviderClient provider;
 
     AndroidAddressBook addressBook;
 
-    @Override
-    protected void setUp() throws Exception {
-        Context context = getInstrumentation().getContext();
-        provider = context.getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
+    @Before
+    @RequiresPermission(allOf = { Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS })
+    public void connect() throws Exception {
+        provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
         assertNotNull(provider);
 
         addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
     }
 
-    @Override
-    public void tearDown() throws Exception {
+    @After
+    public void disconnect() throws Exception {
         provider.release();
     }
 
 
+    @Test
     public void testAddAndReadContact() throws FileNotFoundException, ContactsStorageException {
         Contact vcard = new Contact();
         vcard.displayName = "Mya Contact";
@@ -77,6 +81,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
         assertEquals(vcard2.phoneticFamilyName, vcard.phoneticFamilyName);
     }
 
+    @Test
     public void testLargeTransaction() throws FileNotFoundException, ContactsStorageException {
         Contact vcard = new Contact();
         vcard.displayName = "Large Transaction";
@@ -91,7 +96,7 @@ public class AndroidContactTest extends InstrumentationTestCase {
         assertEquals(4000, vcard2.emails.size());
     }
 
-
+    @Test
     public void testAddressCaretEncoding() throws IOException {
         Address address = new Address();
         address.setLabel("My \"Label\"\nLine 2");
@@ -115,20 +120,24 @@ public class AndroidContactTest extends InstrumentationTestCase {
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         contact.write(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, true, os);
-        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'^nLine 2:;;Street \"Address\";;;;"));
+        Constants.log.info(os.toString());
+        assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'\\nLine 2:;;Street \"Address\";;;;"));
     }
 
 
+    @Test
     public void testLabelToXName() {
         assertEquals("X-AUNTIES_HOME", AndroidContact.labelToXName("auntie's home"));
     }
 
+    @Test
     public void testToURIScheme() {
         assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"));
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod Forum"));
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"));
     }
 
+    @Test
     public void testXNameToLabel() {
         assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES_HOME"));
     }
