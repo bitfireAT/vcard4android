@@ -206,37 +206,35 @@ public class Contact {
         // FN
         FormattedName fn = vCard.getFormattedName();
         if (fn != null) {
-            c.displayName = fn.getValue();
+            c.displayName = StringUtils.trimToNull(fn.getValue());
             vCard.removeProperties(FormattedName.class);
-        } else
-            Constants.log.warning("Received VCard without FN (formatted name)");
+        }
 
         // N
         StructuredName n = vCard.getStructuredName();
         if (n != null) {
-            c.prefix = StringUtils.join(n.getPrefixes(), ' ');
-            c.givenName = n.getGiven();
-            c.middleName = StringUtils.join(n.getAdditionalNames(), ' ');
-            c.familyName = n.getFamily();
-            c.suffix = StringUtils.join(n.getSuffixes(), ' ');
+            c.prefix = StringUtils.trimToNull(StringUtils.join(n.getPrefixes(), ' '));
+            c.givenName = StringUtils.trimToNull(n.getGiven());
+            c.middleName = StringUtils.trimToNull(StringUtils.join(n.getAdditionalNames(), ' '));
+            c.familyName = StringUtils.trimToNull(n.getFamily());
+            c.suffix = StringUtils.trimToNull(StringUtils.join(n.getSuffixes(), ' '));
             vCard.removeProperties(StructuredName.class);
-        } else
-            Constants.log.warning("Received VCard without N (structured name)");
+        }
 
         // phonetic names
         RawProperty phoneticFirstName = vCard.getExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME),
-                    phoneticMiddleName = vCard.getExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME),
-                    phoneticLastName = vCard.getExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
+                phoneticMiddleName = vCard.getExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME),
+                phoneticLastName = vCard.getExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
         if (phoneticFirstName != null) {
-            c.phoneticGivenName = phoneticFirstName.getValue();
+            c.phoneticGivenName = StringUtils.trimToNull(phoneticFirstName.getValue());
             vCard.removeExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME);
         }
         if (phoneticMiddleName != null) {
-            c.phoneticMiddleName = phoneticMiddleName.getValue();
+            c.phoneticMiddleName = StringUtils.trimToNull(phoneticMiddleName.getValue());
             vCard.removeExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME);
         }
         if (phoneticLastName != null) {
-            c.phoneticFamilyName = phoneticLastName.getValue();
+            c.phoneticFamilyName = StringUtils.trimToNull(phoneticLastName.getValue());
             vCard.removeExtendedProperty(PROPERTY_PHONETIC_LAST_NAME);
         }
 
@@ -259,10 +257,11 @@ public class Contact {
         vCard.removeProperties(Organization.class);
         // TITLE
         for (Title title : vCard.getTitles()) {
-            c.jobTitle = title.getValue();
+            c.jobTitle = StringUtils.trimToNull(title.getValue());
             vCard.removeProperties(Title.class);
             break;
         }
+
         // ROLE
         for (Role role : vCard.getRoles()) {
             c.jobDescription = role.getValue();
@@ -293,7 +292,7 @@ public class Contact {
         for (Note note : vCard.getNotes())
             notes.add(note.getValue());
         if (!notes.isEmpty())
-            c.note = StringUtils.join(notes, "\n\n\n");
+            c.note = StringUtils.trimToNull(StringUtils.join(notes, "\n\n\n"));
         vCard.removeProperties(Note.class);
 
         // CATEGORY
@@ -396,21 +395,18 @@ public class Contact {
         String fn = null;
         if (displayName != null)
             fn = displayName;
-        else if (organization != null && organization.getValues() != null && organization.getValues().get(0) != null)
+        if (StringUtils.isEmpty(fn) && organization != null && organization.getValues() != null && !organization.getValues().isEmpty())
             fn = organization.getValues().get(0);
-        else if (nickName != null)
+        if (StringUtils.isEmpty(fn) && nickName != null)
             fn = nickName.getValues().get(0);
-        else {
-            if (!phoneNumbers.isEmpty())
-                fn = phoneNumbers.get(0).property.getText();
-            else if (!emails.isEmpty())
-                fn = emails.get(0).property.getValue();
-            Constants.log.warning("No FN (formatted name) available, using " + fn);
-        }
-        if (StringUtils.isEmpty(fn)) {
-            fn = "-";
-            Constants.log.warning("No FN (formatted name) available, using \"-\"");
-        }
+        if (StringUtils.isEmpty(fn) && !emails.isEmpty())
+            fn = emails.get(0).property.getValue();
+        if (StringUtils.isEmpty(fn) && !phoneNumbers.isEmpty())
+            fn = phoneNumbers.get(0).property.getText();
+        if (StringUtils.isEmpty(fn))
+            fn = uid;
+        if (StringUtils.isEmpty(fn))
+            fn = "";
         vCard.setFormattedName(fn);
 
         // N
@@ -432,11 +428,11 @@ public class Contact {
         } else if (vCardVersion == VCardVersion.V3_0) {
             // (only) VCard 3 requires N [RFC 2426 3.1.2]
             if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
-                Constants.log.info("No structured name available, using formatted name as family name");
                 StructuredName n = new StructuredName();
                 n.setFamily(fn);
                 vCard.setStructuredName(n);
-            }
+            } else
+                vCard.setStructuredName(new StructuredName());
         }
 
         // phonetic names

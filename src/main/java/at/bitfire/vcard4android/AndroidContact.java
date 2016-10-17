@@ -729,6 +729,13 @@ public class AndroidContact {
     }
 
     protected void insertStructuredName(BatchOperation batch) {
+        if (contact.displayName == null &&
+                contact.prefix == null &&
+                contact.givenName == null && contact.middleName == null && contact.familyName == null &&
+                contact.suffix == null &&
+                contact.phoneticGivenName == null && contact.phoneticMiddleName == null && contact.phoneticFamilyName == null)
+            return;
+
         final BatchOperation.Operation op;
         final ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(dataSyncURI());
         if (id == null)
@@ -738,8 +745,8 @@ public class AndroidContact {
             builder.withValue(StructuredName.RAW_CONTACT_ID, id);
         }
         builder .withValue(RawContacts.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-                .withValue(StructuredName.PREFIX, contact.prefix)
                 .withValue(StructuredName.DISPLAY_NAME, contact.displayName)
+                .withValue(StructuredName.PREFIX, contact.prefix)
                 .withValue(StructuredName.GIVEN_NAME, contact.givenName)
                 .withValue(StructuredName.MIDDLE_NAME, contact.middleName)
                 .withValue(StructuredName.FAMILY_NAME, contact.familyName)
@@ -747,6 +754,7 @@ public class AndroidContact {
                 .withValue(StructuredName.PHONETIC_GIVEN_NAME, contact.phoneticGivenName)
                 .withValue(StructuredName.PHONETIC_MIDDLE_NAME, contact.phoneticMiddleName)
                 .withValue(StructuredName.PHONETIC_FAMILY_NAME, contact.phoneticFamilyName);
+        Constants.log.log(Level.FINER, "Built StructuredName data row", builder.build());
         batch.enqueue(op);
     }
 
@@ -833,6 +841,7 @@ public class AndroidContact {
                 .withValue(Phone.LABEL, typeLabel)
                 .withValue(Phone.IS_PRIMARY, is_primary ? 1 : 0)
                 .withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
+        Constants.log.log(Level.FINER, "Built Phone data row", builder.build());
         batch.enqueue(op);
     }
 
@@ -886,6 +895,7 @@ public class AndroidContact {
                 .withValue(Email.LABEL, typeLabel)
                 .withValue(Email.IS_PRIMARY, is_primary ? 1 : 0)
                 .withValue(Phone.IS_SUPER_PRIMARY, is_primary ? 1 : 0);
+        Constants.log.log(Level.FINER, "Built Email data row", builder.build());
         batch.enqueue(op);
     }
 
@@ -916,6 +926,7 @@ public class AndroidContact {
                 .withValue(Organization.DEPARTMENT, department)
                 .withValue(Organization.TITLE, contact.jobTitle)
                 .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription);
+        Constants.log.log(Level.FINER, "Built Organization data row", builder.build());
         batch.enqueue(op);
     }
 
@@ -990,13 +1001,14 @@ public class AndroidContact {
             op = new BatchOperation.Operation(builder);
             builder.withValue(Im.RAW_CONTACT_ID, id);
         }
-        if (sipAddress)
+        if (sipAddress) {
             // save as SIP address
-            builder	.withValue(SipAddress.MIMETYPE, SipAddress.CONTENT_ITEM_TYPE)
+            builder .withValue(SipAddress.MIMETYPE, SipAddress.CONTENT_ITEM_TYPE)
                     .withValue(SipAddress.DATA, impp.getHandle())
                     .withValue(SipAddress.TYPE, typeCode)
                     .withValue(SipAddress.LABEL, typeLabel);
-        else {
+            Constants.log.log(Level.FINER, "Built SipAddress data row", builder.build());
+        } else {
             // save as IM address
             builder	.withValue(Im.MIMETYPE, Im.CONTENT_ITEM_TYPE)
                     .withValue(Im.DATA, impp.getHandle())
@@ -1004,6 +1016,7 @@ public class AndroidContact {
                     .withValue(Im.LABEL, typeLabel)
                     .withValue(Im.PROTOCOL, protocolCode)
                     .withValue(Im.CUSTOM_PROTOCOL, protocolLabel);
+            Constants.log.log(Level.FINER, "Built Im data row", builder.build());
         }
         batch.enqueue(op);
     }
@@ -1046,6 +1059,7 @@ public class AndroidContact {
                     .withValue(Nickname.NAME, nick.getValues().get(0))
                     .withValue(Nickname.TYPE, typeCode)
                     .withValue(Nickname.LABEL, typeLabel);
+            Constants.log.log(Level.FINER, "Built Nickname data row", builder.build());
             batch.enqueue(op);
         }
     }
@@ -1062,6 +1076,7 @@ public class AndroidContact {
             }
             builder .withValue(Note.MIMETYPE, Note.CONTENT_ITEM_TYPE)
                     .withValue(Note.NOTE, contact.note);
+            Constants.log.log(Level.FINER, "Built Note data row", builder.build());
             batch.enqueue(op);
         }
     }
@@ -1133,6 +1148,7 @@ public class AndroidContact {
                 .withValue(StructuredPostal.REGION, address.getRegion())
                 .withValue(StructuredPostal.POSTCODE, address.getPostalCode())
                 .withValue(StructuredPostal.COUNTRY, address.getCountry());
+        Constants.log.log(Level.FINER, "Built StructuredPostal data row", builder.build());
         batch.enqueue(op);
     }
 
@@ -1184,6 +1200,7 @@ public class AndroidContact {
                 .withValue(Website.URL, url.getValue())
                 .withValue(Website.TYPE, typeCode)
                 .withValue(Website.LABEL, typeLabel);
+        Constants.log.log(Level.FINER, "Built Website data row", builder.build());
         batch.enqueue(op);
     }
 
@@ -1206,6 +1223,7 @@ public class AndroidContact {
                 .withValue(Event.TYPE, type)
                 .withValue(Event.START_DATE, formatter.format(dateOrTime.getDate()));
         batch.enqueue(op);
+        Constants.log.log(Level.FINER, "Built Event data row", builder.build());
     }
 
     protected void insertRelation(BatchOperation batch, Related related) {
@@ -1244,6 +1262,7 @@ public class AndroidContact {
                 .withValue(Relation.NAME, related.getText())
                 .withValue(Relation.TYPE, typeCode)
                 .withValue(Relation.LABEL, StringUtils.join(labels, "/"));
+        Constants.log.log(Level.FINER, "Built Relation data row", builder.build());
         batch.enqueue(op);
     }
 
