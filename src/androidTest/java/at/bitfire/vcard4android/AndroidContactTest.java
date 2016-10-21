@@ -119,7 +119,7 @@ public class AndroidContactTest {
          * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        contact.write(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, true, os);
+        contact.write(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, os);
         Constants.log.info(os.toString());
         assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'\\nLine 2:;;Street \"Address\";;;;"));
     }

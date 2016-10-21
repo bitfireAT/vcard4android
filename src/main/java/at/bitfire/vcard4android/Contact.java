@@ -106,7 +106,7 @@ public class Contact {
     public boolean group;
 
     /**
-     * List of UIDs of group members (only meaningful if {@link #group} is true).
+     * List of UIDs of group members without urn:uuid prefix (only meaningful if {@link #group} is true).
      */
     public List<String> members = new LinkedList<>();
 
@@ -354,7 +354,7 @@ public class Contact {
         return c;
     }
 
-    public void write(VCardVersion vCardVersion, GroupMethod groupMethod, boolean rfc6868, OutputStream os) throws IOException {
+    public void write(VCardVersion vCardVersion, GroupMethod groupMethod, OutputStream os) throws IOException {
         VCard vCard = null;
         try {
             if (unknownProperties != null)
@@ -392,11 +392,13 @@ public class Contact {
             vCard.setCategories(categories.toArray(new String[categories.size()]));
 
         // FN
-        String fn = null;
-        if (displayName != null)
-            fn = displayName;
-        if (StringUtils.isEmpty(fn) && organization != null && organization.getValues() != null && !organization.getValues().isEmpty())
-            fn = organization.getValues().get(0);
+        String fn = displayName;
+        if (StringUtils.isEmpty(fn) && organization != null)
+            for (String part : organization.getValues()) {
+                fn = part;
+                if (!StringUtils.isEmpty(fn))
+                    break;
+            }
         if (StringUtils.isEmpty(fn) && nickName != null)
             fn = nickName.getValues().get(0);
         if (StringUtils.isEmpty(fn) && !emails.isEmpty())
@@ -529,7 +531,7 @@ public class Contact {
         Ezvcard .write(vCard)
                 .version(vCardVersion)
                 .versionStrict(false)      // allow VCard4 properties in VCard3s
-                .caretEncoding(rfc6868)    // enable RFC 6868 support
+                .caretEncoding(true)       // enable RFC 6868 support
                 .prodId(productID == null)
                 .go(os);
     }

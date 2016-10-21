@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.logging.Level;
 
 import ezvcard.VCardVersion;
@@ -28,6 +29,8 @@ import ezvcard.parameter.TelephoneType;
 import ezvcard.property.Address;
 import ezvcard.property.Email;
 import ezvcard.property.Impp;
+import ezvcard.property.Nickname;
+import ezvcard.property.Organization;
 import ezvcard.property.Related;
 import ezvcard.property.Telephone;
 import ezvcard.property.Url;
@@ -46,9 +49,137 @@ public class ContactTest {
 
     private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        c.write(vCardVersion, GroupMethod.CATEGORIES, true, os);
+        c.write(vCardVersion, GroupMethod.CATEGORIES, os);
         Constants.log.log(Level.INFO, "Re-generated VCard", os.toString());
         return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
+    }
+
+    private String toString(Contact c, GroupMethod groupMethod, VCardVersion vCardVersion) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        c.write(vCardVersion, groupMethod, os);
+        return os.toString();
+    }
+
+
+    @Test
+    public void testGenerateOrganizationOnly() throws IOException {
+        Contact c = new Contact();
+        c.uid = UUID.randomUUID().toString();
+        c.organization = new Organization();
+        c.organization.getValues().add("My Organization");
+        c.organization.getValues().add("My Department");
+
+        // vCard 3 needs FN and N
+        String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
+        assertTrue(vCard.contains("\nORG:My Organization;My Department\r\n"));
+        assertTrue(vCard.contains("\nFN:My Organization\r\n"));
+        assertTrue(vCard.contains("\nN:\r\n"));
+
+        // vCard 4 only needs FN
+        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0);
+        assertTrue(vCard.contains("\nORG:My Organization;My Department\r\n"));
+        assertTrue(vCard.contains("\nFN:My Organization\r\n"));
+        assertFalse(vCard.contains("\nN:"));
+    }
+
+    @Test
+    public void testGenerateOrgDepartmentOnly() throws IOException {
+        Contact c = new Contact();
+        c.uid = UUID.randomUUID().toString();
+        c.organization = new Organization();
+        c.organization.getValues().add("");
+        c.organization.getValues().add("My Department");
+
+        // vCard 3 needs FN and N
+        String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
+        assertTrue(vCard.contains("\nORG:;My Department\r\n"));
+        assertTrue(vCard.contains("\nFN:My Department\r\n"));
+        assertTrue(vCard.contains("\nN:\r\n"));
+
+        // vCard 4 only needs FN
+        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0);
+        assertTrue(vCard.contains("\nORG:;My Department\r\n"));
+        assertTrue(vCard.contains("\nFN:My Department\r\n"));
+        assertFalse(vCard.contains("\nN:"));
+    }
+
+    @Test
+    public void testGenerateGroup() throws IOException {
+        Contact c = new Contact();
+        c.uid = UUID.randomUUID().toString();
+        c.displayName = "My Group";
+        c.group = true;
+        c.members.add("member1");
+        c.members.add("member2");
+
+        // vCard 3 needs FN and N
+        // exception for Apple: "N:<group name>"
+        String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
+        assertTrue(vCard.contains("\nX-ADDRESSBOOKSERVER-KIND:group\r\n"));
+        assertTrue(vCard.contains("\nFN:My Group\r\n"));
+        assertTrue(vCard.contains("\nN:My Group\r\n"));
+        assertTrue(vCard.contains("\nX-ADDRESSBOOKSERVER-MEMBER:urn:uuid:member1\r\n"));
+        assertTrue(vCard.contains("\nX-ADDRESSBOOKSERVER-MEMBER:urn:uuid:member2\r\n"));
+
+        // vCard 4 only needs FN
+        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0);
+        assertTrue(vCard.contains("\nKIND:group\r\n"));
+        assertTrue(vCard.contains("\nFN:My Group\r\n"));
+        assertFalse(vCard.contains("\nN:"));
+        assertTrue(vCard.contains("\nMEMBER:urn:uuid:member1\r\n"));
+        assertTrue(vCard.contains("\nMEMBER:urn:uuid:member2\r\n"));
+    }
+
+    @Test
+    public void testGenerateWithoutName() throws IOException {
+        /* no data */
+        Contact c = new Contact();
+        // vCard 3 needs FN and N
+        String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
+        assertTrue(vCard.contains("\nFN:\r\n"));
+        assertTrue(vCard.contains("\nN:\r\n"));
+        // vCard 4 only needs FN
+        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0);
+        assertTrue(vCard.contains("\nFN:\r\n"));
+        assertFalse(vCard.contains("\nN:"));
+
+        /* only UID */
+        c.uid = UUID.randomUUID().toString();
+        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
+        // vCard 3 needs FN and N
+        assertTrue(vCard.contains("\nFN:" + c.uid + "\r\n"));
+        assertTrue(vCard.contains("\nN:\r\n"));
+        // vCard 4 only needs FN
+        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0);
+        assertTrue(vCard.contains("\nFN:" + c.uid + "\r\n"));
+        assertFalse(vCard.contains("\nN:"));
+
+        // phone number available
+        c.phoneNumbers.add(new LabeledProperty<>(new Telephone("12345")));
+        assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:12345\r\n"));
+
+        // email address available
+        c.emails.add(new LabeledProperty<>(new Email("test@example.com")));
+        assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:test@example.com\r\n"));
+
+        // nick name available
+        c.nickName = new Nickname();
+        c.nickName.getValues().add("Nikki");
+        assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:Nikki\r\n"));
+    }
+
+    @Test
+    public void testGenerateLabeledProperty() throws IOException {
+        Contact c = new Contact();
+        c.uid = UUID.randomUUID().toString();
+        c.phoneNumbers.add(new LabeledProperty<>(new Telephone("12345"), "My Phone"));
+        String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
+        assertTrue(vCard.contains("\ndavdroid1.TEL:12345\r\n"));
+        assertTrue(vCard.contains("\ndavdroid1.X-ABLabel:My Phone\r\n"));
+
+        c = regenerate(c, VCardVersion.V4_0);
+        assertEquals("12345", c.phoneNumbers.get(0).property.getText());
+        assertEquals("My Phone", c.phoneNumbers.get(0).label);
     }
 
 
