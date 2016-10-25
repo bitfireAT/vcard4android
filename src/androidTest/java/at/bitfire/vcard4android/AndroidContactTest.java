@@ -21,6 +21,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 
 import ezvcard.VCardVersion;
 import ezvcard.property.Address;
@@ -82,9 +83,9 @@ public class AndroidContactTest {
     }
 
     @Test
-    public void testLargeTransaction() throws FileNotFoundException, ContactsStorageException {
+    public void testLargeTransactionManyRows() throws FileNotFoundException, ContactsStorageException {
         Contact vcard = new Contact();
-        vcard.displayName = "Large Transaction";
+        vcard.displayName = "Large Transaction (many rows)";
         for (int i = 0; i < 4000; i++)
             vcard.emails.add(new LabeledProperty<Email>(new Email("test" + i + "@example.com")));
 
@@ -94,6 +95,20 @@ public class AndroidContactTest {
         @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
         Contact vcard2 = contact2.getContact();
         assertEquals(4000, vcard2.emails.size());
+    }
+
+    @Test(expected = ContactsStorageException.class)
+    public void testLargeTransactionSingleRow() throws FileNotFoundException, ContactsStorageException {
+        Contact vcard = new Contact();
+        vcard.displayName = "Large Transaction (one row which is too large)";
+
+        // 1 MB eTag ... have fun
+        char data[] = new char[1024*1024];
+        Arrays.fill(data, 'x');
+        String eTag = new String(data);
+
+        AndroidContact contact = new AndroidContact(addressBook, vcard, null, eTag);
+        contact.create();
     }
 
     @Test
