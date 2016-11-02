@@ -14,6 +14,9 @@ import android.content.ContentValues;
 import android.content.Entity;
 import android.content.EntityIterator;
 import android.content.res.AssetFileDescriptor;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
@@ -38,6 +41,7 @@ import android.text.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,6 +91,15 @@ public class AndroidContact {
     public String eTag;
 
     protected Contact contact;
+
+    private static int photoMaxDimensions;
+    protected synchronized int getPhotoMaxDimensions() {
+        if (photoMaxDimensions == 0)
+            return photoMaxDimensions = queryPhotoMaxDimensions();
+        else
+            return photoMaxDimensions;
+    }
+
 
     protected AndroidContact(@NonNull AndroidAddressBook addressBook, long id, String fileName, String eTag) {
         this.addressBook = addressBook;
@@ -1271,6 +1284,8 @@ public class AndroidContact {
             // The following approach would be correct, but it doesn't work:
             // the ContactsProvider handler will process the image in background and update
             // the raw contact with the new photo ID when it's finished, setting it to dirty again!
+            // See https://code.google.com/p/android/issues/detail?id=226875
+
             /*Uri photoUri = addressBook.syncAdapterURI(Uri.withAppendedPath(
                     ContentUris.withAppendedId(RawContacts.CONTENT_URI, id),
                     RawContacts.DisplayPhoto.CONTENT_DIRECTORY));
@@ -1287,17 +1302,21 @@ public class AndroidContact {
             }*/
 
             // So we have to write the photo directly into the PHOTO BLOB, which causes
-            // a TransactionTooLargeException for photos > 1 MB
-            Constants.log.fine("Inserting photo for raw contact " + id);
+            // a TransactionTooLargeException for photos > 1 MB, so let's scale them down
+            photo = processPhoto(photo);
 
-            ContentValues values = new ContentValues(2);
-            values.put(RawContacts.Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
-            values.put(Photo.RAW_CONTACT_ID, id);
-            values.put(Photo.PHOTO, photo);
-            try {
-                addressBook.provider.insert(dataSyncURI(), values);
-            } catch (RemoteException e) {
-                Constants.log.log(Level.WARNING, "Couldn't set local contact photo, ignoring", e);
+            if (photo != null) {
+                Constants.log.fine("Inserting photo for raw contact " + id);
+
+                ContentValues values = new ContentValues(2);
+                values.put(RawContacts.Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE);
+                values.put(Photo.RAW_CONTACT_ID, id);
+                values.put(Photo.PHOTO, photo);
+                try {
+                    addressBook.provider.insert(dataSyncURI(), values);
+                } catch(RemoteException e) {
+                    Constants.log.log(Level.WARNING, "Couldn't set local contact photo, ignoring", e);
+                }
             }
         }
     }
@@ -1330,6 +1349,53 @@ public class AndroidContact {
         // ALPHA       =  %x41-5A / %x61-7A   ; A-Z / a-z
         // DIGIT       =  %x30-39             ; 0-9
         return s.replaceAll("^[^a-zA-Z]+", "").replaceAll("[^\\da-zA-Z+-.]", "");
+    }
+
+
+    protected int queryPhotoMaxDimensions() {
+        @Cleanup Cursor cursor = null;
+        try {
+            cursor = addressBook.provider.query(ContactsContract.DisplayPhoto.CONTENT_MAX_DIMENSIONS_URI,
+                    new String[] { ContactsContract.DisplayPhoto.DISPLAY_MAX_DIM }, null, null, null);
+            cursor.moveToFirst();
+            return cursor.getInt(0);
+        } catch(RemoteException e) {
+            Constants.log.log(Level.SEVERE, "Couldn't get max photo dimensions, assuming 720x720 px", e);
+            return 720;
+        }
+    }
+
+    protected byte[] processPhoto(byte[] orig) {
+        Constants.log.fine("Processing photo");
+        Bitmap bitmap = BitmapFactory.decodeByteArray(orig, 0, orig.length);
+        if (bitmap == null) {
+            Constants.log.warning("Image decoding failed");
+            return null;
+        }
+
+        int width = bitmap.getWidth(),
+            height = bitmap.getHeight(),
+            max = getPhotoMaxDimensions();
+
+        if (width > max || height > max) {
+            float   scaleWidth = (float)max/width,
+                    scaleHeight = (float)max/height,
+                    scale = Math.min(scaleWidth, scaleHeight);
+            int     newWidth = (int)(width * scale),
+                    newHeight = (int)(height * scale);
+
+            Constants.log.fine("Resizing image from " + width + "x" + height + " to " + newWidth + "x" + newHeight);
+            bitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 97, baos)) {
+                Constants.log.warning("Couldn't generate JPEG image");
+                return orig;
+            }
+            return baos.toByteArray();
+        }
+
+        return orig;
     }
 
 
