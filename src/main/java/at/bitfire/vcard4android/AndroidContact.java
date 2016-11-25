@@ -698,6 +698,8 @@ public class AndroidContact {
                 .withValue(COLUMN_FILENAME, fileName)
                 .withValue(COLUMN_ETAG, eTag)
                 .withValue(COLUMN_UID, contact.uid);
+
+        Constants.log.log(Level.FINER, "Built RawContact data row", builder.build());
     }
 
 
