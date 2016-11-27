@@ -355,4 +355,10 @@ public class ContactTest {
     }
 
 
+    @Test
+    public void testStrangeREV() throws IOException {
+        Contact c = parseContact("strange-rev.vcf", null);
+        assertTrue(c.unknownProperties.contains("REV;VALUE=timestamp:2016-11-19T17:44:22.057Z"));
+    }
+
 }
