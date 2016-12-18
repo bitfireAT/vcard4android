@@ -39,6 +39,7 @@ import lombok.Cleanup;
 
 import static org.junit.Assert.*;
 
+
 public class ContactTest {
 
     private Contact parseContact(String fname, Charset charset) throws IOException {
