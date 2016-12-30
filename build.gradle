@@ -21,12 +21,12 @@ apply plugin: 'com.android.library'
 
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion '25.0.0'
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 24
+        targetSdkVersion 25
     }
     buildTypes {
         release {
@@ -51,7 +51,7 @@ android {
 
 dependencies {
     compile 'org.apache.commons:commons-lang3:3.4'
-    provided 'org.projectlombok:lombok:1.16.10'
+    provided 'org.projectlombok:lombok:1.16.12'
 
     // ez-vcard to parse/generate VCards
     compile('com.googlecode.ez-vcard:ez-vcard:0.10.0') {
