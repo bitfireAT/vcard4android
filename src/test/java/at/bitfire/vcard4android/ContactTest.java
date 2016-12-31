@@ -8,6 +8,7 @@
 
 package at.bitfire.vcard4android;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -34,10 +35,14 @@ import ezvcard.property.Organization;
 import ezvcard.property.Related;
 import ezvcard.property.Telephone;
 import ezvcard.property.Url;
-import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class ContactTest {
@@ -359,7 +364,7 @@ public class ContactTest {
     @Test
     public void testStrangeREV() throws IOException {
         Contact c = parseContact("strange-rev.vcf", null);
-        assertTrue(c.unknownProperties.contains("REV;VALUE=timestamp:2016-11-19T17:44:22.057Z"));
+        assertNull(c.unknownProperties);
     }
 
 }

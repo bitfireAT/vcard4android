@@ -38,6 +38,7 @@ import android.provider.ContactsContract.CommonDataKinds.Website;
 import android.provider.ContactsContract.RawContacts;
 import android.text.TextUtils;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -68,7 +69,6 @@ import ezvcard.property.Impp;
 import ezvcard.property.Related;
 import ezvcard.property.Telephone;
 import ezvcard.property.Url;
-import ezvcard.util.IOUtils;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.NonNull;
