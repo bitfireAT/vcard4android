@@ -16,20 +16,6 @@ import ezvcard.VCard;
 
 public class EzVCardTest {
 
-    /*
-    FAILS, see https://github.com/mangstadt/ez-vcard/issues/76
-
-    @Test
-    public void testInvalidPref() {
-        VCard vCard = Ezvcard.parse("BEGIN:VCARD\r\n" +
-                "VERSION:4.0\r\n" +
-                "TEL;CELL=;PREF=:+12345\r\n" +
-                "END:VCARD").first();
-        assertEquals("+12345", vCard.getTelephoneNumbers().get(0).getText());
-        assertNull(vCard.getTelephoneNumbers().get(0).getPref());
-    }*/
-
-
     @Test
     public void testREV_UTC() {
         VCard vCard = Ezvcard.parse("BEGIN:VCARD\r\n" +

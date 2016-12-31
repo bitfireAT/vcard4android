@@ -14,6 +14,10 @@ import android.content.ContentProviderClient;
 import android.provider.ContactsContract;
 import android.support.annotation.RequiresPermission;
 
+import junit.framework.Assert;
+
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +25,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import ezvcard.VCardVersion;
@@ -56,7 +61,7 @@ public class AndroidContactTest {
 
 
     @Test
-    public void testAddAndReadContact() throws FileNotFoundException, ContactsStorageException {
+    public void testAddAndReadContact() throws ContactsStorageException, FileNotFoundException {
         Contact vcard = new Contact();
         vcard.displayName = "Mya Contact";
         vcard.prefix = "Magª";
@@ -83,7 +88,28 @@ public class AndroidContactTest {
     }
 
     @Test
-    public void testLargeTransactionManyRows() throws FileNotFoundException, ContactsStorageException {
+    public void testInvalidPREF() throws ContactsStorageException, IOException {
+        Charset charset = Charsets.UTF_8;
+        String vCard = "BEGIN:VCARD\r\n" +
+                "VERSION:4.0\r\n" +
+                "FN:Test\r\n" +
+                "TEL;CELL=;PREF=:+12345\r\n" +
+                "EMAIL;PREF=invalid:test@example.com\r\n" +
+                "END:VCARD\r\n";
+        Contact[] contacts = Contact.fromStream(IOUtils.toInputStream(vCard, charset), charset, null);
+
+        AndroidContact dbContact = new AndroidContact(addressBook, contacts[0], null, null);
+        dbContact.create();
+
+        @Cleanup("delete") AndroidContact dbContact2 = new AndroidContact(addressBook, dbContact.id, null, null);
+        Contact contact2 = dbContact2.getContact();
+        assertEquals("Test", contact2.displayName);
+        assertEquals("+12345", contact2.phoneNumbers.get(0).property.getText());
+        assertEquals("test@example.com", contact2.emails.get(0).property.getValue());
+    }
+
+    @Test
+    public void testLargeTransactionManyRows() throws ContactsStorageException, FileNotFoundException {
         Contact vcard = new Contact();
         vcard.displayName = "Large Transaction (many rows)";
         for (int i = 0; i < 4000; i++)
@@ -98,7 +124,7 @@ public class AndroidContactTest {
     }
 
     @Test(expected = ContactsStorageException.class)
-    public void testLargeTransactionSingleRow() throws FileNotFoundException, ContactsStorageException {
+    public void testLargeTransactionSingleRow() throws ContactsStorageException {
         Contact vcard = new Contact();
         vcard.displayName = "Large Transaction (one row which is too large)";
 

@@ -782,7 +782,13 @@ public class AndroidContact {
         List<TelephoneType> types = number.getTypes();
 
         // preferred number?
-        boolean is_primary = number.getPref() != null;
+        Integer pref = null;
+        try {
+            pref = number.getPref();
+        } catch(IllegalStateException e) {
+            Constants.log.log(Level.FINER, "Can't understand phone number PREF", e);
+        }
+        boolean is_primary = pref != null;
         if (types.contains(TelephoneType.PREF)) {
             is_primary = true;
             types.remove(TelephoneType.PREF);
@@ -869,7 +875,13 @@ public class AndroidContact {
         List<EmailType> types = email.getTypes();
 
         // preferred email address?
-        boolean is_primary = email.getPref() != null;
+        Integer pref = null;
+        try {
+            pref = email.getPref();
+        } catch(IllegalStateException e) {
+            Constants.log.log(Level.FINER, "Can't understand email PREF", e);
+        }
+        boolean is_primary = pref != null;
         if (types.contains(EmailType.PREF)) {
             is_primary = true;
             types.remove(EmailType.PREF);
