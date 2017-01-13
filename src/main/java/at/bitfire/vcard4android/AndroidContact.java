@@ -72,7 +72,9 @@ import ezvcard.property.Url;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
+@ToString(of={ "id","fileName","eTag" })
 public class AndroidContact {
     public static final String
             COLUMN_FILENAME = RawContacts.SOURCE_ID,

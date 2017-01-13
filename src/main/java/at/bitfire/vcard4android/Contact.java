@@ -8,9 +8,6 @@
 
 package at.bitfire.vcard4android;
 
-import android.net.Uri;
-import android.text.TextUtils;
-
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -62,9 +59,11 @@ import ezvcard.property.Uid;
 import ezvcard.property.Url;
 import ezvcard.property.VCardProperty;
 import lombok.Cleanup;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 
+@EqualsAndHashCode()
 @ToString(of={"uid","displayName","givenName","familyName"})
 public class Contact {
     // productID (if set) will be used to generate a PRODID property.

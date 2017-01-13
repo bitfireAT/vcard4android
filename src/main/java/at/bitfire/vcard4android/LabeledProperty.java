@@ -8,6 +8,9 @@
 
 package at.bitfire.vcard4android;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode
 public class LabeledProperty<T> {
 
     public final static String PROPERTY_AB_LABEL = "X-ABLabel";
