@@ -74,7 +74,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 
-@ToString(of={ "id","fileName","eTag" })
+@ToString(of={ "id","fileName","eTag","contact" }, doNotUseGetters=true)
 public class AndroidContact {
     public static final String
             COLUMN_FILENAME = RawContacts.SOURCE_ID,
