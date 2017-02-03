@@ -63,8 +63,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 
-@EqualsAndHashCode()
-@ToString(of={"uid","displayName","givenName","familyName"})
+@EqualsAndHashCode(exclude = { "categories" })
+@ToString(exclude = { "photo" })
 public class Contact {
     // productID (if set) will be used to generate a PRODID property.
     // You may set this statically from the calling application.
