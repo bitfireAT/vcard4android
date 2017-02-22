@@ -55,7 +55,7 @@ dependencies {
     provided 'org.projectlombok:lombok:1.16.14'
 
     // ez-vcard to parse/generate VCards
-    compile('com.googlecode.ez-vcard:ez-vcard:0.10.1') {
+    compile('com.googlecode.ez-vcard:ez-vcard:0.10.2') {
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'

@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import ezvcard.Ezvcard;
 import ezvcard.VCard;
 import ezvcard.VCardVersion;
+import ezvcard.ValidationWarning;
 import ezvcard.ValidationWarnings;
-import ezvcard.Warning;
 import ezvcard.parameter.EmailType;
 import ezvcard.parameter.ImageType;
 import ezvcard.parameter.TelephoneType;
@@ -520,8 +520,8 @@ public class Contact {
         ValidationWarnings validation = vCard.validate(vCardVersion);
         if (!validation.isEmpty()) {
             Constants.log.warning("Generating possibly invalid VCard:");
-            for (Map.Entry<VCardProperty, List<Warning>> entry : validation)
-                for (Warning warning : entry.getValue())
+            for (Map.Entry<VCardProperty, List<ValidationWarning>> entry : validation)
+                for (ValidationWarning warning : entry.getValue())
                     if (entry.getKey() != null)
                         Constants.log.warning("  * " + entry.getKey().getClass().getSimpleName() + " - " + warning.getMessage());
         }
