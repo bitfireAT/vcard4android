@@ -26,7 +26,7 @@ import java.util.List;
 import lombok.Cleanup;
 
 public class AndroidAddressBook {
-	final public Account account;
+	public Account account;
 	final public ContentProviderClient provider;
 	final AndroidGroupFactory groupFactory;
 	final AndroidContactFactory contactFactory;
