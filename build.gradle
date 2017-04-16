@@ -50,9 +50,9 @@ android {
 }
 
 dependencies {
-    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'org.apache.commons:commons-lang3:3.5'
     compile 'commons-io:commons-io:2.5'
-    provided 'org.projectlombok:lombok:1.16.14'
+    provided 'org.projectlombok:lombok:1.16.16'
 
     // ez-vcard to parse/generate VCards
     compile('com.googlecode.ez-vcard:ez-vcard:0.10.2') {
