@@ -17,11 +17,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 import ezvcard.Ezvcard;
 import ezvcard.VCard;
@@ -35,6 +38,7 @@ import ezvcard.property.Address;
 import ezvcard.property.Anniversary;
 import ezvcard.property.Birthday;
 import ezvcard.property.Categories;
+import ezvcard.property.DateOrTimeProperty;
 import ezvcard.property.Email;
 import ezvcard.property.FormattedName;
 import ezvcard.property.Impp;
@@ -58,6 +62,7 @@ import ezvcard.property.Title;
 import ezvcard.property.Uid;
 import ezvcard.property.Url;
 import ezvcard.property.VCardProperty;
+import ezvcard.util.PartialDate;
 import lombok.Cleanup;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -100,6 +105,9 @@ public class Contact {
             URL_TYPE_BLOG = "x-blog",
             URL_TYPE_PROFILE = "x-profile",
             URL_TYPE_FTP = "x-ftp";
+
+    public static final String DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR";
+    public static final int DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604;
 
     public String uid;
     public boolean group;
@@ -307,9 +315,11 @@ public class Contact {
 
         // BDAY
         c.birthDay = vCard.getBirthday();
+        checkVCard3PartialDate(c.birthDay);
         vCard.removeProperties(Birthday.class);
         // ANNIVERSARY
         c.anniversary = vCard.getAnniversary();
+        checkVCard3PartialDate(c.anniversary);
         vCard.removeProperties(Anniversary.class);
 
         // RELATED
@@ -499,11 +509,37 @@ public class Contact {
         }
 
         // ANNIVERSARY
-        if (anniversary != null)
-            vCard.setAnniversary(anniversary);
+        if (anniversary != null) {
+            if (vCardVersion == VCardVersion.V4_0 || anniversary.getDate() != null)
+                vCard.setAnniversary(anniversary);
+            else if (anniversary.getPartialDate() != null) {
+                // VCard 3: partial date with month and day, but without year
+                PartialDate partial = anniversary.getPartialDate();
+                if (partial.getDate() != null && partial.getMonth() != null && partial.getYear() == null) {
+                    Calendar fakeCal = GregorianCalendar.getInstance();
+                    fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.getMonth()-1, partial.getDate());
+                    Anniversary fakeAnniversary = new Anniversary(fakeCal.getTime(), false);
+                    fakeAnniversary.addParameter(DATE_PARAMETER_OMIT_YEAR, String.valueOf(DATE_PARAMETER_OMIT_YEAR_DEFAULT));
+                    vCard.setAnniversary(fakeAnniversary);
+                }
+            }
+        }
         // BDAY
-        if (birthDay != null)
-            vCard.setBirthday(birthDay);
+        if (birthDay != null) {
+            if (vCardVersion == VCardVersion.V4_0 || birthDay.getDate() != null)
+                vCard.setBirthday(birthDay);
+            else if (birthDay.getPartialDate() != null) {
+                // VCard 3: partial date with month and day, but without year
+                PartialDate partial = birthDay.getPartialDate();
+                if (partial.getDate() != null && partial.getMonth() != null && partial.getYear() == null) {
+                    Calendar fakeCal = GregorianCalendar.getInstance();
+                    fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.getMonth()-1, partial.getDate());
+                    Birthday fakeBirthday = new Birthday(fakeCal.getTime(), false);
+                    fakeBirthday.addParameter(DATE_PARAMETER_OMIT_YEAR, String.valueOf(DATE_PARAMETER_OMIT_YEAR_DEFAULT));
+                    vCard.setBirthday(fakeBirthday);
+                }
+            }
+        }
 
         // RELATED
         for (Related related : relations)
@@ -574,6 +610,29 @@ public class Contact {
             if (StringUtils.equalsIgnoreCase(label.getGroup(), group))
                 return label.getValue();
         return null;
+    }
+
+    protected static void checkVCard3PartialDate(DateOrTimeProperty property) {
+        if (property != null && property.getDate() != null) {
+            String omitYearStr = property.getParameter(DATE_PARAMETER_OMIT_YEAR);
+            if (omitYearStr != null)
+                try {
+                    int omitYear = Integer.parseInt(omitYearStr);
+                    Calendar cal = GregorianCalendar.getInstance();
+                    cal.setTime(property.getDate());
+                    if (cal.get(GregorianCalendar.YEAR) == omitYear) {
+                        PartialDate partial = PartialDate.builder()
+                                .date(cal.get(GregorianCalendar.DAY_OF_MONTH))
+                                .month(cal.get(GregorianCalendar.MONTH)+1)
+                                .build();
+                        property.setPartialDate(partial);
+                    }
+                } catch(NumberFormatException e) {
+                    Constants.log.log(Level.WARNING, "Unparseable " + DATE_PARAMETER_OMIT_YEAR);
+                } finally {
+                    property.removeParameter(DATE_PARAMETER_OMIT_YEAR);
+                }
+        }
     }
 
 

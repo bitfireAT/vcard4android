@@ -14,8 +14,6 @@ import android.content.ContentProviderClient;
 import android.provider.ContactsContract;
 import android.support.annotation.RequiresPermission;
 
-import junit.framework.Assert;
-
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -30,7 +28,9 @@ import java.util.Arrays;
 
 import ezvcard.VCardVersion;
 import ezvcard.property.Address;
+import ezvcard.property.Birthday;
 import ezvcard.property.Email;
+import ezvcard.util.PartialDate;
 import lombok.Cleanup;
 
 import static android.support.test.InstrumentationRegistry.getContext;
@@ -71,20 +71,22 @@ public class AndroidContactTest {
         vcard.phoneticGivenName = "Först";
         vcard.phoneticMiddleName = "Mittelerde";
         vcard.phoneticFamilyName = "Fämilie";
+        vcard.birthDay = new Birthday(PartialDate.parse("1980-04-16"));
 
         AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();
 
         @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
         Contact vcard2 = contact2.getContact();
-        assertEquals(vcard2.displayName, vcard.displayName);
-        assertEquals(vcard2.prefix, vcard.prefix);
-        assertEquals(vcard2.givenName, vcard.givenName);
-        assertEquals(vcard2.familyName, vcard.familyName);
-        assertEquals(vcard2.suffix, vcard.suffix);
-        assertEquals(vcard2.phoneticGivenName, vcard.phoneticGivenName);
-        assertEquals(vcard2.phoneticMiddleName, vcard.phoneticMiddleName);
-        assertEquals(vcard2.phoneticFamilyName, vcard.phoneticFamilyName);
+        assertEquals(vcard.displayName, vcard2.displayName);
+        assertEquals(vcard.prefix, vcard2.prefix);
+        assertEquals(vcard.givenName, vcard2.givenName);
+        assertEquals(vcard.familyName, vcard2.familyName);
+        assertEquals(vcard.suffix, vcard2.suffix);
+        assertEquals(vcard.phoneticGivenName, vcard2.phoneticGivenName);
+        assertEquals(vcard.phoneticMiddleName, vcard2.phoneticMiddleName);
+        assertEquals(vcard.phoneticFamilyName, vcard2.phoneticFamilyName);
+        assertEquals(vcard.birthDay, vcard2.birthDay);
     }
 
     @Test
@@ -163,6 +165,21 @@ public class AndroidContactTest {
         contact.write(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, os);
         Constants.log.info(os.toString());
         assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'\\nLine 2:;;Street \"Address\";;;;"));
+    }
+
+    @Test
+    public void testBirthdayWithoutYear() throws ContactsStorageException, FileNotFoundException {
+        Contact vcard = new Contact();
+        vcard.displayName = "Mya Contact";
+        vcard.birthDay = new Birthday(PartialDate.parse("-04-16"));
+
+        AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
+        contact.create();
+
+        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        Contact vcard2 = contact2.getContact();
+        assertEquals(vcard.displayName, vcard2.displayName);
+        assertEquals(vcard.birthDay, vcard2.birthDay);
     }
 
 

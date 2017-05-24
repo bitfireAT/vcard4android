@@ -28,6 +28,7 @@ import ezvcard.parameter.ImppType;
 import ezvcard.parameter.RelatedType;
 import ezvcard.parameter.TelephoneType;
 import ezvcard.property.Address;
+import ezvcard.property.Birthday;
 import ezvcard.property.Email;
 import ezvcard.property.Impp;
 import ezvcard.property.Nickname;
@@ -35,6 +36,7 @@ import ezvcard.property.Organization;
 import ezvcard.property.Related;
 import ezvcard.property.Telephone;
 import ezvcard.property.Url;
+import ezvcard.util.PartialDate;
 import lombok.Cleanup;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -358,6 +360,18 @@ public class ContactTest {
         Address addr = c.addresses.get(0).property;
         assertFalse(addr.getTypes().contains(AddressType.PREF));
         assertNotNull(addr.getPref());
+    }
+
+    @Test
+    public void testVCard4FieldsAsVCard3() throws IOException {
+        Contact c = regenerate(parseContact("vcard4.vcf", null), VCardVersion.V3_0);;
+        assertEquals(new Birthday(PartialDate.parse("--04-16")), c.birthDay);
+    }
+
+    @Test
+    public void testVCard4FieldsAsVCard4() throws IOException {
+        Contact c = regenerate(parseContact("vcard4.vcf", null), VCardVersion.V4_0);
+        assertEquals(new Birthday(PartialDate.parse("--04-16")), c.birthDay);
     }
 
 

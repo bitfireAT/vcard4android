@@ -46,10 +46,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,6 +67,7 @@ import ezvcard.property.Impp;
 import ezvcard.property.Related;
 import ezvcard.property.Telephone;
 import ezvcard.property.Url;
+import ezvcard.util.PartialDate;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.NonNull;
@@ -541,9 +540,8 @@ public class AndroidContact {
     }
 
     protected void populateEvent(ContentValues row) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         try {
-            Date date = formatter.parse(row.getAsString(CommonDataKinds.Event.START_DATE));
+            PartialDate date = PartialDate.parse(row.getAsString(CommonDataKinds.Event.START_DATE));
             if (row.containsKey(Event.TYPE))
             switch (row.getAsInteger(Event.TYPE)) {
                 case Event.TYPE_ANNIVERSARY:
@@ -553,7 +551,7 @@ public class AndroidContact {
                     contact.birthDay = new Birthday(date);
                     break;
             }
-        } catch (ParseException e) {
+        } catch (IllegalArgumentException e) {
             Constants.log.log(Level.WARNING, "Couldn't parse birthday/anniversary date from database", e);
         }
     }
@@ -1233,10 +1231,15 @@ public class AndroidContact {
         batch.enqueue(op);
     }
 
-    protected void insertEvent(BatchOperation batch, int type, DateOrTimeProperty dateOrTime) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        if (dateOrTime.getDate() == null) {
-            Constants.log.warning("Ignoring contact event (birthday/anniversary) without date");
+    protected void insertEvent(BatchOperation batch, int type, @NonNull DateOrTimeProperty dateOrTime) {
+        final String dateStr;
+        if (dateOrTime.getDate() != null) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            dateStr = format.format(dateOrTime.getDate());
+        } else if (dateOrTime.getPartialDate() != null)
+            dateStr = dateOrTime.getPartialDate().toString();
+        else {
+            Constants.log.log(Level.WARNING, "Ignoring date/time without (partial) date", dateOrTime);
             return;
         }
 
@@ -1250,7 +1253,7 @@ public class AndroidContact {
         }
         builder .withValue(Event.MIMETYPE, Event.CONTENT_ITEM_TYPE)
                 .withValue(Event.TYPE, type)
-                .withValue(Event.START_DATE, formatter.format(dateOrTime.getDate()));
+                .withValue(Event.START_DATE, dateStr);
         batch.enqueue(op);
         Constants.log.log(Level.FINER, "Built Event data row", builder.build());
     }
