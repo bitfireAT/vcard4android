@@ -515,12 +515,18 @@ public class Contact {
             else if (anniversary.getPartialDate() != null) {
                 // VCard 3: partial date with month and day, but without year
                 PartialDate partial = anniversary.getPartialDate();
-                if (partial.getDate() != null && partial.getMonth() != null && partial.getYear() == null) {
-                    Calendar fakeCal = GregorianCalendar.getInstance();
-                    fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.getMonth()-1, partial.getDate());
-                    Anniversary fakeAnniversary = new Anniversary(fakeCal.getTime(), false);
-                    fakeAnniversary.addParameter(DATE_PARAMETER_OMIT_YEAR, String.valueOf(DATE_PARAMETER_OMIT_YEAR_DEFAULT));
-                    vCard.setAnniversary(fakeAnniversary);
+                if (partial.getDate() != null && partial.getMonth() != null) {
+                    if (partial.getYear() != null)
+                        // partial date is a complete date
+                        vCard.setAnniversary(anniversary);
+                    else {
+                        // VCard 3: partial date with month and day, but without year
+                        Calendar fakeCal = GregorianCalendar.getInstance();
+                        fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.getMonth()-1, partial.getDate());
+                        Anniversary fakeAnniversary = new Anniversary(fakeCal.getTime(), false);
+                        fakeAnniversary.addParameter(DATE_PARAMETER_OMIT_YEAR, String.valueOf(DATE_PARAMETER_OMIT_YEAR_DEFAULT));
+                        vCard.setAnniversary(fakeAnniversary);
+                    }
                 }
             }
         }
@@ -529,14 +535,19 @@ public class Contact {
             if (vCardVersion == VCardVersion.V4_0 || birthDay.getDate() != null)
                 vCard.setBirthday(birthDay);
             else if (birthDay.getPartialDate() != null) {
-                // VCard 3: partial date with month and day, but without year
                 PartialDate partial = birthDay.getPartialDate();
-                if (partial.getDate() != null && partial.getMonth() != null && partial.getYear() == null) {
-                    Calendar fakeCal = GregorianCalendar.getInstance();
-                    fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.getMonth()-1, partial.getDate());
-                    Birthday fakeBirthday = new Birthday(fakeCal.getTime(), false);
-                    fakeBirthday.addParameter(DATE_PARAMETER_OMIT_YEAR, String.valueOf(DATE_PARAMETER_OMIT_YEAR_DEFAULT));
-                    vCard.setBirthday(fakeBirthday);
+                if (partial.getDate() != null && partial.getMonth() != null) {
+                    if (partial.getYear() != null)
+                        // partial date is a complete date
+                        vCard.setBirthday(birthDay);
+                    else {
+                        // VCard 3: partial date with month and day, but without year
+                        Calendar fakeCal = GregorianCalendar.getInstance();
+                        fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.getMonth()-1, partial.getDate());
+                        Birthday fakeBirthday = new Birthday(fakeCal.getTime(), false);
+                        fakeBirthday.addParameter(DATE_PARAMETER_OMIT_YEAR, String.valueOf(DATE_PARAMETER_OMIT_YEAR_DEFAULT));
+                        vCard.setBirthday(fakeBirthday);
+                    }
                 }
             }
         }

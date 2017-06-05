@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.sql.Date;
 import java.util.Arrays;
 
 import ezvcard.VCardVersion;
@@ -71,7 +72,7 @@ public class AndroidContactTest {
         vcard.phoneticGivenName = "Först";
         vcard.phoneticMiddleName = "Mittelerde";
         vcard.phoneticFamilyName = "Fämilie";
-        vcard.birthDay = new Birthday(PartialDate.parse("1980-04-16"));
+        vcard.birthDay = new Birthday(Date.valueOf("1980-04-16"));
 
         AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();

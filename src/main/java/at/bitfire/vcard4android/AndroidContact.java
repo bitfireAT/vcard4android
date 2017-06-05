@@ -46,8 +46,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -540,20 +542,29 @@ public class AndroidContact {
     }
 
     protected void populateEvent(ContentValues row) {
+        String dateStr = row.getAsString(CommonDataKinds.Event.START_DATE);
+        Date full = null;
+        PartialDate partial = null;
+        SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         try {
-            PartialDate date = PartialDate.parse(row.getAsString(CommonDataKinds.Event.START_DATE));
-            if (row.containsKey(Event.TYPE))
+            full = fullFormat.parse(dateStr);
+        } catch(ParseException ignored) {
+            try {
+                partial = PartialDate.parse(dateStr);
+            } catch (IllegalArgumentException e) {
+                Constants.log.log(Level.WARNING, "Couldn't parse birthday/anniversary date from database", e);
+            }
+        }
+
+        if ((full != null || partial != null) && row.containsKey(Event.TYPE))
             switch (row.getAsInteger(Event.TYPE)) {
                 case Event.TYPE_ANNIVERSARY:
-                    contact.anniversary = new Anniversary(date);
+                    contact.anniversary = full != null ? new Anniversary(full) : new Anniversary(partial);
                     break;
                 case Event.TYPE_BIRTHDAY:
-                    contact.birthDay = new Birthday(date);
+                    contact.birthDay = full != null ? new Birthday(full) : new Birthday(partial);
                     break;
             }
-        } catch (IllegalArgumentException e) {
-            Constants.log.log(Level.WARNING, "Couldn't parse birthday/anniversary date from database", e);
-        }
     }
 
     protected void populateRelation(ContentValues row) {
@@ -1262,7 +1273,7 @@ public class AndroidContact {
         if (TextUtils.isEmpty(related.getText()))
             return;
 
-        int typeCode = Event.TYPE_CUSTOM;
+        int typeCode = Relation.TYPE_CUSTOM;
 
         List<String> labels = new LinkedList<>();
         for (RelatedType type : related.getTypes()) {
