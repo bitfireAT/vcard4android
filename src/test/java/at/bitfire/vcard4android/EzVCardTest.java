@@ -8,11 +8,12 @@
 
 package at.bitfire.vcard4android;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 import ezvcard.Ezvcard;
 import ezvcard.VCard;
+
+import static org.junit.Assert.assertNotNull;
 
 public class EzVCardTest {
 

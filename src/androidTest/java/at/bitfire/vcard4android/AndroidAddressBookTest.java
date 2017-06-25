@@ -21,6 +21,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import at.bitfire.vcard4android.impl.TestAddressBook;
+
 import static android.support.test.InstrumentationRegistry.getContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,7 +49,7 @@ public class AndroidAddressBookTest {
 
     @Test
 	public void testSettings() throws ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
+		AndroidAddressBook addressBook = new TestAddressBook(testAccount, provider);
 
 		ContentValues values = new ContentValues();
 		values.put(ContactsContract.Settings.SHOULD_SYNC, false);
@@ -68,7 +70,7 @@ public class AndroidAddressBookTest {
 
     @Test
     public void testSyncState() throws ContactsStorageException {
-		AndroidAddressBook addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
+		AndroidAddressBook addressBook = new TestAddressBook(testAccount, provider);
 
 		addressBook.setSyncState(new byte[0]);
 		assertEquals(0, addressBook.getSyncState().length);

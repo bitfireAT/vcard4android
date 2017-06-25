@@ -52,14 +52,14 @@ public class ContactTest {
     private Contact parseContact(String fname, Charset charset) throws IOException {
         @Cleanup InputStream is = getClass().getClassLoader().getResourceAsStream(fname);
         assertNotNull(is);
-        return Contact.fromStream(is, charset, null)[0];
+        return Contact.fromStream(is, charset, null).get(0);
     }
 
     private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         c.write(vCardVersion, GroupMethod.CATEGORIES, os);
-        Constants.log.log(Level.INFO, "Re-generated VCard", os.toString());
-        return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null)[0];
+        Constants.log.log(Level.FINE, "Re-generated VCard", os.toString());
+        return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null).get(0);
     }
 
     private String toString(Contact c, GroupMethod groupMethod, VCardVersion vCardVersion) throws IOException {
@@ -72,10 +72,10 @@ public class ContactTest {
     @Test
     public void testGenerateOrganizationOnly() throws IOException {
         Contact c = new Contact();
-        c.uid = UUID.randomUUID().toString();
-        c.organization = new Organization();
-        c.organization.getValues().add("My Organization");
-        c.organization.getValues().add("My Department");
+        c.setUid(UUID.randomUUID().toString());
+        c.setOrganization(new Organization());
+        c.getOrganization().getValues().add("My Organization");
+        c.getOrganization().getValues().add("My Department");
 
         // vCard 3 needs FN and N
         String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
@@ -93,10 +93,10 @@ public class ContactTest {
     @Test
     public void testGenerateOrgDepartmentOnly() throws IOException {
         Contact c = new Contact();
-        c.uid = UUID.randomUUID().toString();
-        c.organization = new Organization();
-        c.organization.getValues().add("");
-        c.organization.getValues().add("My Department");
+        c.setUid(UUID.randomUUID().toString());
+        c.setOrganization(new Organization());
+        c.getOrganization().getValues().add("");
+        c.getOrganization().getValues().add("My Department");
 
         // vCard 3 needs FN and N
         String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
@@ -114,11 +114,11 @@ public class ContactTest {
     @Test
     public void testGenerateGroup() throws IOException {
         Contact c = new Contact();
-        c.uid = UUID.randomUUID().toString();
-        c.displayName = "My Group";
-        c.group = true;
-        c.members.add("member1");
-        c.members.add("member2");
+        c.setUid(UUID.randomUUID().toString());
+        c.setDisplayName("My Group");
+        c.setGroup(true);
+        c.getMembers().add("member1");
+        c.getMembers().add("member2");
 
         // vCard 3 needs FN and N
         // exception for Apple: "N:<group name>"
@@ -152,42 +152,42 @@ public class ContactTest {
         assertFalse(vCard.contains("\nN:"));
 
         /* only UID */
-        c.uid = UUID.randomUUID().toString();
+        c.setUid(UUID.randomUUID().toString());
         vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
         // vCard 3 needs FN and N
-        assertTrue(vCard.contains("\nFN:" + c.uid + "\r\n"));
+        assertTrue(vCard.contains("\nFN:" + c.getUid() + "\r\n"));
         assertTrue(vCard.contains("\nN:\r\n"));
         // vCard 4 only needs FN
         vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0);
-        assertTrue(vCard.contains("\nFN:" + c.uid + "\r\n"));
+        assertTrue(vCard.contains("\nFN:" + c.getUid() + "\r\n"));
         assertFalse(vCard.contains("\nN:"));
 
         // phone number available
-        c.phoneNumbers.add(new LabeledProperty<>(new Telephone("12345")));
+        c.getPhoneNumbers().add(new LabeledProperty<>(new Telephone("12345")));
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:12345\r\n"));
 
         // email address available
-        c.emails.add(new LabeledProperty<>(new Email("test@example.com")));
+        c.getEmails().add(new LabeledProperty<>(new Email("test@example.com")));
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:test@example.com\r\n"));
 
         // nick name available
-        c.nickName = new Nickname();
-        c.nickName.getValues().add("Nikki");
+        c.setNickName(new Nickname());
+        c.getNickName().getValues().add("Nikki");
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:Nikki\r\n"));
     }
 
     @Test
     public void testGenerateLabeledProperty() throws IOException {
         Contact c = new Contact();
-        c.uid = UUID.randomUUID().toString();
-        c.phoneNumbers.add(new LabeledProperty<>(new Telephone("12345"), "My Phone"));
+        c.setUid(UUID.randomUUID().toString());
+        c.getPhoneNumbers().add(new LabeledProperty<>(new Telephone("12345"), "My Phone"));
         String vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0);
         assertTrue(vCard.contains("\ndavdroid1.TEL:12345\r\n"));
         assertTrue(vCard.contains("\ndavdroid1.X-ABLabel:My Phone\r\n"));
 
         c = regenerate(c, VCardVersion.V4_0);
-        assertEquals("12345", c.phoneNumbers.get(0).property.getText());
-        assertEquals("My Phone", c.phoneNumbers.get(0).label);
+        assertEquals("12345", c.getPhoneNumbers().get(0).getProperty().getText());
+        assertEquals("My Phone", c.getPhoneNumbers().get(0).getLabel());
     }
 
 
@@ -196,148 +196,148 @@ public class ContactTest {
         Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V3_0);
 
         // UID
-        assertEquals("mostfields1@at.bitfire.vcard4android", c.uid);
+        assertEquals("mostfields1@at.bitfire.vcard4android", c.getUid());
 
         // FN
-        assertEquals("Ämi Display", c.displayName);
+        assertEquals("Ämi Display", c.getDisplayName());
 
         // N
-        assertEquals("Firstname", c.givenName);
-        assertEquals("Middlename1 Middlename2", c.middleName);
-        assertEquals("Lastname", c.familyName);
+        assertEquals("Firstname", c.getGivenName());
+        assertEquals("Middlename1 Middlename2", c.getMiddleName());
+        assertEquals("Lastname", c.getFamilyName());
 
         // phonetic names
-        assertEquals("Förstnehm", c.phoneticGivenName);
-        assertEquals("Mittelnehm", c.phoneticMiddleName);
-        assertEquals("Laastnehm", c.phoneticFamilyName);
+        assertEquals("Förstnehm", c.getPhoneticGivenName());
+        assertEquals("Mittelnehm", c.getPhoneticMiddleName());
+        assertEquals("Laastnehm", c.getPhoneticFamilyName());
 
         // TEL
-        assertEquals(2, c.phoneNumbers.size());
-        LabeledProperty<Telephone> phone = c.phoneNumbers.get(0);
-        assertEquals("Useless", phone.label);
-        assertTrue(phone.property.getTypes().contains(TelephoneType.VOICE));
-        assertTrue(phone.property.getTypes().contains(TelephoneType.HOME));
-        assertTrue(phone.property.getTypes().contains(TelephoneType.PREF));
-        assertNull(phone.property.getPref());
-        assertEquals("+49 1234 56788", phone.property.getText());
-        phone = c.phoneNumbers.get(1);
-        assertNull(phone.label);
-        assertTrue(phone.property.getTypes().contains(TelephoneType.FAX));
-        assertEquals("+1-800-MYFAX", phone.property.getText());
+        assertEquals(2, c.getPhoneNumbers().size());
+        LabeledProperty<Telephone> phone = c.getPhoneNumbers().get(0);
+        assertEquals("Useless", phone.getLabel());
+        assertTrue(phone.getProperty().getTypes().contains(TelephoneType.VOICE));
+        assertTrue(phone.getProperty().getTypes().contains(TelephoneType.HOME));
+        assertTrue(phone.getProperty().getTypes().contains(TelephoneType.PREF));
+        assertNull(phone.getProperty().getPref());
+        assertEquals("+49 1234 56788", phone.getProperty().getText());
+        phone = c.getPhoneNumbers().get(1);
+        assertNull(phone.getLabel());
+        assertTrue(phone.getProperty().getTypes().contains(TelephoneType.FAX));
+        assertEquals("+1-800-MYFAX", phone.getProperty().getText());
 
         // EMAIL
-        assertEquals(2, c.emails.size());
-        LabeledProperty<Email> email = c.emails.get(0);
-        assertNull(email.label);
-        assertTrue(email.property.getTypes().contains(EmailType.HOME));
-        assertTrue(email.property.getTypes().contains(EmailType.PREF));
-        assertNull(email.property.getPref());
-        assertEquals("private@example.com", email.property.getValue());
-        email = c.emails.get(1);
-        assertEquals("@work", email.label);
-        assertTrue(email.property.getTypes().contains(EmailType.WORK));
-        assertEquals("work@example.com", email.property.getValue());
+        assertEquals(2, c.getEmails().size());
+        LabeledProperty<Email> email = c.getEmails().get(0);
+        assertNull(email.getLabel());
+        assertTrue(email.getProperty().getTypes().contains(EmailType.HOME));
+        assertTrue(email.getProperty().getTypes().contains(EmailType.PREF));
+        assertNull(email.getProperty().getPref());
+        assertEquals("private@example.com", email.getProperty().getValue());
+        email = c.getEmails().get(1);
+        assertEquals("@work", email.getLabel());
+        assertTrue(email.getProperty().getTypes().contains(EmailType.WORK));
+        assertEquals("work@example.com", email.getProperty().getValue());
 
         // ORG, TITLE, ROLE
         assertArrayEquals(
                 new String[] { "ABC, Inc.", "North American Division", "Marketing" },
-                c.organization.getValues().toArray(new String[3])
+                c.getOrganization().getValues().toArray(new String[3])
         );
-        assertEquals("Director, Research and Development", c.jobTitle);
-        assertEquals("Programmer", c.jobDescription);
+        assertEquals("Director, Research and Development", c.getJobTitle());
+        assertEquals("Programmer", c.getJobDescription());
 
         // IMPP
-        assertEquals(3, c.impps.size());
-        LabeledProperty<Impp> impp = c.impps.get(0);
-        assertEquals("MyIM", impp.label);
-        assertTrue(impp.property.getTypes().contains(ImppType.PERSONAL));
-        assertTrue(impp.property.getTypes().contains(ImppType.MOBILE));
-        assertTrue(impp.property.getTypes().contains(ImppType.PREF));
-        assertNull(impp.property.getPref());
-        assertEquals("myIM", impp.property.getProtocol());
-        assertEquals("anonymous@example.com", impp.property.getHandle());
-        impp = c.impps.get(1);
-        assertNull(impp.label);
-        assertTrue(impp.property.getTypes().contains(ImppType.BUSINESS));
-        assertEquals("skype", impp.property.getProtocol());
-        assertEquals("echo@example.com", impp.property.getHandle());
-        impp = c.impps.get(2);
-        assertNull(impp.label);
-        assertEquals("sip", impp.property.getProtocol());
-        assertEquals("mysip@example.com", impp.property.getHandle());
+        assertEquals(3, c.getImpps().size());
+        LabeledProperty<Impp> impp = c.getImpps().get(0);
+        assertEquals("MyIM", impp.getLabel());
+        assertTrue(impp.getProperty().getTypes().contains(ImppType.PERSONAL));
+        assertTrue(impp.getProperty().getTypes().contains(ImppType.MOBILE));
+        assertTrue(impp.getProperty().getTypes().contains(ImppType.PREF));
+        assertNull(impp.getProperty().getPref());
+        assertEquals("myIM", impp.getProperty().getProtocol());
+        assertEquals("anonymous@example.com", impp.getProperty().getHandle());
+        impp = c.getImpps().get(1);
+        assertNull(impp.getLabel());
+        assertTrue(impp.getProperty().getTypes().contains(ImppType.BUSINESS));
+        assertEquals("skype", impp.getProperty().getProtocol());
+        assertEquals("echo@example.com", impp.getProperty().getHandle());
+        impp = c.getImpps().get(2);
+        assertNull(impp.getLabel());
+        assertEquals("sip", impp.getProperty().getProtocol());
+        assertEquals("mysip@example.com", impp.getProperty().getHandle());
 
         // NICKNAME
         assertArrayEquals(
                 new String[] { "Nick1", "Nick2" },
-                c.nickName.getValues().toArray()
+                c.getNickName().getValues().toArray()
         );
 
         // ADR
-        assertEquals(2, c.addresses.size());
-        LabeledProperty<Address> addr = c.addresses.get(0);
-        assertNull(addr.label);
-        assertTrue(addr.property.getTypes().contains(AddressType.WORK));
-        assertTrue(addr.property.getTypes().contains(AddressType.POSTAL));
-        assertTrue(addr.property.getTypes().contains(AddressType.PARCEL));
-        assertTrue(addr.property.getTypes().contains(AddressType.PREF));
-        assertNull(addr.property.getPref());
-        assertNull(addr.property.getPoBox());
-        assertNull(addr.property.getExtendedAddress());
-        assertEquals("6544 Battleford Drive", addr.property.getStreetAddress());
-        assertEquals("Raleigh", addr.property.getLocality());
-        assertEquals("NC", addr.property.getRegion());
-        assertEquals("27613-3502", addr.property.getPostalCode());
-        assertEquals("U.S.A.", addr.property.getCountry());
-        addr = c.addresses.get(1);
-        assertEquals("Monkey Tree", addr.label);
-        assertTrue(addr.property.getTypes().contains(AddressType.WORK));
-        assertEquals("Postfach 314", addr.property.getPoBox());
-        assertEquals("vorne hinten", addr.property.getExtendedAddress());
-        assertEquals("Teststraße 22", addr.property.getStreetAddress());
-        assertEquals("Mönchspfaffingen", addr.property.getLocality());
-        assertNull(addr.property.getRegion());
-        assertEquals("4043", addr.property.getPostalCode());
-        assertEquals("Klöster-Reich", addr.property.getCountry());
+        assertEquals(2, c.getAddresses().size());
+        LabeledProperty<Address> addr = c.getAddresses().get(0);
+        assertNull(addr.getLabel());
+        assertTrue(addr.getProperty().getTypes().contains(AddressType.WORK));
+        assertTrue(addr.getProperty().getTypes().contains(AddressType.POSTAL));
+        assertTrue(addr.getProperty().getTypes().contains(AddressType.PARCEL));
+        assertTrue(addr.getProperty().getTypes().contains(AddressType.PREF));
+        assertNull(addr.getProperty().getPref());
+        assertNull(addr.getProperty().getPoBox());
+        assertNull(addr.getProperty().getExtendedAddress());
+        assertEquals("6544 Battleford Drive", addr.getProperty().getStreetAddress());
+        assertEquals("Raleigh", addr.getProperty().getLocality());
+        assertEquals("NC", addr.getProperty().getRegion());
+        assertEquals("27613-3502", addr.getProperty().getPostalCode());
+        assertEquals("U.S.A.", addr.getProperty().getCountry());
+        addr = c.getAddresses().get(1);
+        assertEquals("Monkey Tree", addr.getLabel());
+        assertTrue(addr.getProperty().getTypes().contains(AddressType.WORK));
+        assertEquals("Postfach 314", addr.getProperty().getPoBox());
+        assertEquals("vorne hinten", addr.getProperty().getExtendedAddress());
+        assertEquals("Teststraße 22", addr.getProperty().getStreetAddress());
+        assertEquals("Mönchspfaffingen", addr.getProperty().getLocality());
+        assertNull(addr.getProperty().getRegion());
+        assertEquals("4043", addr.getProperty().getPostalCode());
+        assertEquals("Klöster-Reich", addr.getProperty().getCountry());
 
         // NOTE
-        assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.note);
+        assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.getNote());
 
         // CATEGORIES
         assertArrayEquals(
                 new String[] { "A", "B'C" },
-                c.categories.toArray()
+                c.getCategories().toArray()
         );
 
         // URL
-        assertEquals(2, c.urls.size());
+        assertEquals(2, c.getUrls().size());
         boolean url1 = false, url2 = false;
-        for (LabeledProperty<Url> url : c.urls) {
-            if ("https://davdroid.bitfire.at/".equals(url.property.getValue()) && url.property.getType() == null && url.label == null)
+        for (LabeledProperty<Url> url : c.getUrls()) {
+            if ("https://davdroid.bitfire.at/".equals(url.getProperty().getValue()) && url.getProperty().getType() == null && url.getLabel() == null)
                 url1 = true;
-            if ("http://www.swbyps.restaurant.french/~chezchic.html".equals(url.property.getValue()) && "x-blog".equals(url.property.getType()) && "blog".equals(url.label))
+            if ("http://www.swbyps.restaurant.french/~chezchic.html".equals(url.getProperty().getValue()) && "x-blog".equals(url.getProperty().getType()) && "blog".equals(url.getLabel()))
                 url2 = true;
         }
         assertTrue(url1 && url2);
 
         // BDAY
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        assertEquals("1996-04-15", dateFormat.format(c.birthDay.getDate()));
+        assertEquals("1996-04-15", dateFormat.format(c.getBirthDay().getDate()));
         // ANNIVERSARY
-        assertEquals("2014-08-12", dateFormat.format(c.anniversary.getDate()));
+        assertEquals("2014-08-12", dateFormat.format(c.getAnniversary().getDate()));
 
         // RELATED
-        assertEquals(2, c.relations.size());
-        Related rel = c.relations.get(0);
+        assertEquals(2, c.getRelations().size());
+        Related rel = c.getRelations().get(0);
         assertTrue(rel.getTypes().contains(RelatedType.CO_WORKER));
         assertTrue(rel.getTypes().contains(RelatedType.CRUSH));
         assertEquals("Ägidius", rel.getText());
-        rel = c.relations.get(1);
+        rel = c.getRelations().get(1);
         assertTrue(rel.getTypes().contains(RelatedType.PARENT));
         assertEquals("muuuum", rel.getText());
 
         // PHOTO
         @Cleanup InputStream photo = getClass().getClassLoader().getResourceAsStream("lol.jpg");
-        assertArrayEquals(IOUtils.toByteArray(photo), c.photo);
+        assertArrayEquals(IOUtils.toByteArray(photo), c.getPhoto());
     }
 
     @Test
@@ -345,19 +345,19 @@ public class ContactTest {
         Contact c = regenerate(parseContact("allfields-vcard3.vcf", null), VCardVersion.V4_0);
         // let's check only things that should be different when VCard 4.0 is generated
 
-        Telephone phone = c.phoneNumbers.get(0).property;
+        Telephone phone = c.getPhoneNumbers().get(0).getProperty();
         assertFalse(phone.getTypes().contains(TelephoneType.PREF));
         assertNotNull(phone.getPref());
 
-        Email email = c.emails.get(0).property;
+        Email email = c.getEmails().get(0).getProperty();
         assertFalse(email.getTypes().contains(EmailType.PREF));
         assertNotNull(email.getPref());
 
-        Impp impp = c.impps.get(0).property;
+        Impp impp = c.getImpps().get(0).getProperty();
         assertFalse(impp.getTypes().contains(ImppType.PREF));
         assertNotNull(impp.getPref());
 
-        Address addr = c.addresses.get(0).property;
+        Address addr = c.getAddresses().get(0).getProperty();
         assertFalse(addr.getTypes().contains(AddressType.PREF));
         assertNotNull(addr.getPref());
     }
@@ -365,20 +365,20 @@ public class ContactTest {
     @Test
     public void testVCard4FieldsAsVCard3() throws IOException {
         Contact c = regenerate(parseContact("vcard4.vcf", null), VCardVersion.V3_0);;
-        assertEquals(new Birthday(PartialDate.parse("--04-16")), c.birthDay);
+        assertEquals(new Birthday(PartialDate.parse("--04-16")), c.getBirthDay());
     }
 
     @Test
     public void testVCard4FieldsAsVCard4() throws IOException {
         Contact c = regenerate(parseContact("vcard4.vcf", null), VCardVersion.V4_0);
-        assertEquals(new Birthday(PartialDate.parse("--04-16")), c.birthDay);
+        assertEquals(new Birthday(PartialDate.parse("--04-16")), c.getBirthDay());
     }
 
 
     @Test
     public void testStrangeREV() throws IOException {
         Contact c = parseContact("strange-rev.vcf", null);
-        assertNull(c.unknownProperties);
+        assertNull(c.getUnknownProperties());
     }
 
 }

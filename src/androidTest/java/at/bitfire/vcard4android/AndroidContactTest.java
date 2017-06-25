@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.Date;
 import java.util.Arrays;
+import java.util.List;
 
+import at.bitfire.vcard4android.impl.TestAddressBook;
 import ezvcard.VCardVersion;
 import ezvcard.property.Address;
 import ezvcard.property.Birthday;
@@ -52,7 +54,7 @@ public class AndroidContactTest {
         provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
         assertNotNull(provider);
 
-        addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
+        addressBook = new TestAddressBook(testAccount, provider);
     }
 
     @After
@@ -64,30 +66,30 @@ public class AndroidContactTest {
     @Test
     public void testAddAndReadContact() throws ContactsStorageException, FileNotFoundException {
         Contact vcard = new Contact();
-        vcard.displayName = "Mya Contact";
-        vcard.prefix = "Magª";
-        vcard.givenName = "Mya";
-        vcard.familyName = "Contact";
-        vcard.suffix = "BSc";
-        vcard.phoneticGivenName = "Först";
-        vcard.phoneticMiddleName = "Mittelerde";
-        vcard.phoneticFamilyName = "Fämilie";
-        vcard.birthDay = new Birthday(Date.valueOf("1980-04-16"));
+        vcard.setDisplayName("Mya Contact");
+        vcard.setPrefix("Magª");
+        vcard.setGivenName("Mya");
+        vcard.setFamilyName("Contact");
+        vcard.setSuffix("BSc");
+        vcard.setPhoneticGivenName("Först");
+        vcard.setPhoneticMiddleName("Mittelerde");
+        vcard.setPhoneticFamilyName("Fämilie");
+        vcard.setBirthDay(new Birthday(Date.valueOf("1980-04-16")));
 
         AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();
 
-        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.getId(), null, null);
         Contact vcard2 = contact2.getContact();
-        assertEquals(vcard.displayName, vcard2.displayName);
-        assertEquals(vcard.prefix, vcard2.prefix);
-        assertEquals(vcard.givenName, vcard2.givenName);
-        assertEquals(vcard.familyName, vcard2.familyName);
-        assertEquals(vcard.suffix, vcard2.suffix);
-        assertEquals(vcard.phoneticGivenName, vcard2.phoneticGivenName);
-        assertEquals(vcard.phoneticMiddleName, vcard2.phoneticMiddleName);
-        assertEquals(vcard.phoneticFamilyName, vcard2.phoneticFamilyName);
-        assertEquals(vcard.birthDay, vcard2.birthDay);
+        assertEquals(vcard.getDisplayName(), vcard2.getDisplayName());
+        assertEquals(vcard.getPrefix(), vcard2.getPrefix());
+        assertEquals(vcard.getGivenName(), vcard2.getGivenName());
+        assertEquals(vcard.getFamilyName(), vcard2.getFamilyName());
+        assertEquals(vcard.getSuffix(), vcard2.getSuffix());
+        assertEquals(vcard.getPhoneticGivenName(), vcard2.getPhoneticGivenName());
+        assertEquals(vcard.getPhoneticMiddleName(), vcard2.getPhoneticMiddleName());
+        assertEquals(vcard.getPhoneticFamilyName(), vcard2.getPhoneticFamilyName());
+        assertEquals(vcard.getBirthDay(), vcard2.getBirthDay());
     }
 
     @Test
@@ -99,37 +101,37 @@ public class AndroidContactTest {
                 "TEL;CELL=;PREF=:+12345\r\n" +
                 "EMAIL;PREF=invalid:test@example.com\r\n" +
                 "END:VCARD\r\n";
-        Contact[] contacts = Contact.fromStream(IOUtils.toInputStream(vCard, charset), charset, null);
+        List<Contact> contacts = Contact.fromStream(IOUtils.toInputStream(vCard, charset), charset, null);
 
-        AndroidContact dbContact = new AndroidContact(addressBook, contacts[0], null, null);
+        AndroidContact dbContact = new AndroidContact(addressBook, contacts.get(0), null, null);
         dbContact.create();
 
-        @Cleanup("delete") AndroidContact dbContact2 = new AndroidContact(addressBook, dbContact.id, null, null);
+        @Cleanup("delete") AndroidContact dbContact2 = new AndroidContact(addressBook, dbContact.getId(), null, null);
         Contact contact2 = dbContact2.getContact();
-        assertEquals("Test", contact2.displayName);
-        assertEquals("+12345", contact2.phoneNumbers.get(0).property.getText());
-        assertEquals("test@example.com", contact2.emails.get(0).property.getValue());
+        assertEquals("Test", contact2.getDisplayName());
+        assertEquals("+12345", contact2.getPhoneNumbers().get(0).getProperty().getText());
+        assertEquals("test@example.com", contact2.getEmails().get(0).getProperty().getValue());
     }
 
     @Test
     public void testLargeTransactionManyRows() throws ContactsStorageException, FileNotFoundException {
         Contact vcard = new Contact();
-        vcard.displayName = "Large Transaction (many rows)";
+        vcard.setDisplayName("Large Transaction (many rows)");
         for (int i = 0; i < 4000; i++)
-            vcard.emails.add(new LabeledProperty<Email>(new Email("test" + i + "@example.com")));
+            vcard.getEmails().add(new LabeledProperty<Email>(new Email("test" + i + "@example.com")));
 
         AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();
 
-        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.getId(), null, null);
         Contact vcard2 = contact2.getContact();
-        assertEquals(4000, vcard2.emails.size());
+        assertEquals(4000, vcard2.getEmails().size());
     }
 
     @Test(expected = ContactsStorageException.class)
     public void testLargeTransactionSingleRow() throws ContactsStorageException {
         Contact vcard = new Contact();
-        vcard.displayName = "Large Transaction (one row which is too large)";
+        vcard.setDisplayName("Large Transaction (one row which is too large)");
 
         // 1 MB eTag ... have fun
         char data[] = new char[1024*1024];
@@ -146,7 +148,7 @@ public class AndroidContactTest {
         address.setLabel("My \"Label\"\nLine 2");
         address.setStreetAddress("Street \"Address\"");
         Contact contact = new Contact();
-        contact.addresses.add(new LabeledProperty<>(address));
+        contact.getAddresses().add(new LabeledProperty<>(address));
 
         /* label-param = "LABEL=" param-value
          * param-values must not contain DQUOTE and should be encoded as defined in RFC 6868
@@ -171,16 +173,16 @@ public class AndroidContactTest {
     @Test
     public void testBirthdayWithoutYear() throws ContactsStorageException, FileNotFoundException {
         Contact vcard = new Contact();
-        vcard.displayName = "Mya Contact";
-        vcard.birthDay = new Birthday(PartialDate.parse("-04-16"));
+        vcard.setDisplayName("Mya Contact");
+        vcard.setBirthDay(new Birthday(PartialDate.parse("-04-16")));
 
         AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();
 
-        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.id, null, null);
+        @Cleanup("delete") AndroidContact contact2 = new AndroidContact(addressBook, contact.getId(), null, null);
         Contact vcard2 = contact2.getContact();
-        assertEquals(vcard.displayName, vcard2.displayName);
-        assertEquals(vcard.birthDay, vcard2.birthDay);
+        assertEquals(vcard.getDisplayName(), vcard2.getDisplayName());
+        assertEquals(vcard.getBirthDay(), vcard2.getBirthDay());
     }
 
 

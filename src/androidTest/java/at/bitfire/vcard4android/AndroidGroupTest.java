@@ -19,6 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
+import java.util.List;
+
+import at.bitfire.vcard4android.impl.TestAddressBook;
 
 import static android.support.test.InstrumentationRegistry.getContext;
 import static org.junit.Assert.assertEquals;
@@ -37,7 +40,7 @@ public class AndroidGroupTest {
         provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
         assertNotNull(provider);
 
-        addressBook = new AndroidAddressBook(testAccount, provider, AndroidGroupFactory.INSTANCE, AndroidContactFactory.INSTANCE);
+        addressBook = new TestAddressBook(testAccount, provider);
     }
 
     @After
@@ -49,24 +52,24 @@ public class AndroidGroupTest {
     @Test
     public void testCreateReadDeleteGroup() throws FileNotFoundException, ContactsStorageException {
         Contact contact = new Contact();
-        contact.displayName = "at.bitfire.vcard4android-AndroidGroupTest";
-        contact.note = "(test group)";
+        contact.setDisplayName("at.bitfire.vcard4android-AndroidGroupTest");
+        contact.setNote("(test group)");
 
         // ensure we start without this group
-        assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
+        assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.getDisplayName() }).size());
 
         // create group
         AndroidGroup group = new AndroidGroup(addressBook, contact, null, null);
         group.create();
-        AndroidGroup[] groups = addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName } );
-        assertEquals(1, groups.length);
-        Contact contact2 = groups[0].getContact();
-        assertEquals(contact.displayName, contact2.displayName);
-        assertEquals(contact.note, contact2.note);
+        List<AndroidGroup> groups = addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.getDisplayName() } );
+        assertEquals(1, groups.size());
+        Contact contact2 = groups.get(0).getContact();
+        assertEquals(contact.getDisplayName(), contact2.getDisplayName());
+        assertEquals(contact.getNote(), contact2.getNote());
 
         // delete group
         group.delete();
-        assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.displayName }).length);
+        assertEquals(0, addressBook.queryGroups(ContactsContract.Groups.TITLE + "=?", new String[] { contact.getDisplayName() }).size());
     }
 
 }

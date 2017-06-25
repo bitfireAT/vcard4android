@@ -6,16 +6,13 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.vcard4android;
+package at.bitfire.vcard4android
 
-public class ContactsStorageException extends Exception {
+import java.util.logging.Logger
 
-	public ContactsStorageException(String message) {
-		super(message);
-	}
+object Constants {
 
-	public ContactsStorageException(String message, Throwable ex) {
-		super(message, ex);
-	}
+    @JvmField
+    val log = Logger.getLogger("davdroid.vcard4android")!!
 
 }

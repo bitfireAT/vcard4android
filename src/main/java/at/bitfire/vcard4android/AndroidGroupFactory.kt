@@ -6,11 +6,11 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.vcard4android;
+package at.bitfire.vcard4android
 
-public class AndroidGroupFactory {
+interface AndroidGroupFactory<out T: AndroidGroup> {
 
-	public static final AndroidGroupFactory INSTANCE = new AndroidGroupFactory();
+	/*public static final AndroidGroupFactory INSTANCE = new AndroidGroupFactory();
 
 	public AndroidGroup newInstance(AndroidAddressBook addressBook, long id, String fileName, String eTag) {
 		return new AndroidGroup(addressBook, id, fileName, eTag);
@@ -22,6 +22,9 @@ public class AndroidGroupFactory {
 
     public AndroidGroup[] newArray(int size) {
 		return new AndroidGroup[size];
-	}
+	}*/
+
+    fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, id: Long, fileName: String?, eTag: String?): T
+    fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): T
 
 }

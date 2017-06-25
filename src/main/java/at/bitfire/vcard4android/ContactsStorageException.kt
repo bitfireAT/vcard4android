@@ -6,12 +6,6 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.vcard4android;
+package at.bitfire.vcard4android
 
-import java.util.logging.Logger;
-
-public class Constants {
-
-    static final Logger log = Logger.getLogger("davdroid.vcard4android");
-
-}
+class ContactsStorageException @JvmOverloads constructor(message: String?, ex: Throwable? = null): Exception(message, ex)
