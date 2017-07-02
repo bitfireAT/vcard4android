@@ -133,8 +133,6 @@ class Contact {
             return contacts
         }
 
-
-        //@SuppressWarnings("LoopStatementThatDoesntLoop")
         @JvmStatic
         private fun fromVCard(vCard: VCard, downloader: Downloader?): Contact {
             val c = Contact()

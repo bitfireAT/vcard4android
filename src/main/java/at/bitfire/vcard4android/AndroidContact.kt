@@ -32,6 +32,7 @@ import ezvcard.property.*
 import ezvcard.util.PartialDate
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.builder.ToStringBuilder
 import org.apache.commons.lang3.text.WordUtils
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
@@ -41,7 +42,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Level
 
-// FIXME @ToString(of={ "id","fileName","eTag","contact" }, doNotUseGetters=true)
 open class AndroidContact(
         val addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>
 ) {
@@ -1235,6 +1235,11 @@ open class AndroidContact(
     }
 
 
+    override fun toString() = ToStringBuilder.reflectionToString(this)!!
+
+
+    // helpers
+
     protected fun queryPhotoMaxDimensions(): Int {
         try {
             addressBook.provider.query(ContactsContract.DisplayPhoto.CONTENT_MAX_DIMENSIONS_URI,
@@ -1247,7 +1252,6 @@ open class AndroidContact(
         }
         return 720
     }
-
 
     protected fun rawContactSyncURI(): Uri {
         val id = requireNotNull(id)

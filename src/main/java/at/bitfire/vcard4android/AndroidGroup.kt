@@ -165,11 +165,7 @@ open class AndroidGroup(
     }
 
 
-    override fun toString() = ToStringBuilder(this)
-            .append(id)
-            .append(fileName)
-            .append(this::class.java.getField("contact").toString())
-            .build()!!
+    override fun toString() = ToStringBuilder.reflectionToString(this)!!
 
 
     // helpers
