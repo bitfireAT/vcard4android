@@ -119,6 +119,14 @@ open class AndroidContact(
                 val subValues = e.subValues
                 for (subValue in subValues) {
                     val values = subValue.values
+
+                    // remove empty values
+                    val it = values.keySet().iterator()
+                    while (it.hasNext()) {
+                        val obj = values[it.next()]
+                        if (obj is String && obj.isEmpty())
+                            it.remove()
+                    }
                     
                     val mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE)
                     when (mimeType) {
@@ -297,27 +305,20 @@ open class AndroidContact(
         
         val company = row.getAsString(Organization.COMPANY)
         val department = row.getAsString(Organization.DEPARTMENT)
-        val title = row.getAsString(Organization.TITLE)
-        val role = row.getAsString(Organization.JOB_DESCRIPTION)
-
-        if (!company.isNullOrEmpty() || !department.isNullOrEmpty()) {
+        if (company != null || department != null) {
             val org = ezvcard.property.Organization()
-            if (!company.isNullOrEmpty())
-                org.values += company
-            if (!department.isNullOrEmpty())
-                org.values += department
+            company?.let { org.values += it }
+            department?.let { org.values += it }
             contact.organization = org
         }
 
-        if (!title.isNullOrEmpty())
-            contact.jobTitle = title
-        if (!role.isNullOrEmpty())
-            contact.jobDescription = role
+        row.getAsString(Organization.TITLE)?.let { contact.jobTitle = it }
+        row.getAsString(Organization.JOB_DESCRIPTION)?.let { contact.jobDescription = it }
     }
 
     protected fun populateIMPP(row: ContentValues) {
         val handle = row.getAsString(Im.DATA)
-        if (handle.isNullOrEmpty()) {
+        if (handle == null) {
             Constants.log.warning("Ignoring instant messenger record without handle")
             return
         }
