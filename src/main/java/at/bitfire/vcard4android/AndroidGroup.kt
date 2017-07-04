@@ -60,7 +60,7 @@ open class AndroidGroup(
         val id = requireNotNull(id)
         val c = Contact()
         try {
-			addressBook.provider.query(addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id)),
+			addressBook.provider!!.query(addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id)),
 					arrayOf(COLUMN_UID, Groups.TITLE, Groups.NOTES), null, null, null)?.use { cursor ->
                 if (!cursor.moveToNext())
                     throw FileNotFoundException ("Contact group not found")
@@ -127,7 +127,7 @@ open class AndroidGroup(
         values.put(Groups.SHOULD_SYNC, 1)
         // read-only: values.put(Groups.GROUP_VISIBLE, 1);
 		try {
-			val uri = addressBook.provider.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values)
+			val uri = addressBook.provider!!.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values)
 			id = ContentUris.parseId(uri)
 			return uri
 		} catch (e: RemoteException) {
@@ -138,7 +138,7 @@ open class AndroidGroup(
     @Throws(ContactsStorageException::class)
     fun delete() =
 		try {
-			addressBook.provider.delete(groupSyncURI(), null, null)
+			addressBook.provider!!.delete(groupSyncURI(), null, null)
 		} catch (e: RemoteException) {
 			throw ContactsStorageException("Couldn't delete contact group", e)
 		}
@@ -146,7 +146,7 @@ open class AndroidGroup(
     @Throws(ContactsStorageException::class)
     fun update(values: ContentValues) =
         try {
-            addressBook.provider.update(groupSyncURI(), values, null, null)
+            addressBook.provider!!.update(groupSyncURI(), values, null, null)
         } catch (e: RemoteException) {
             throw ContactsStorageException("Couldn't delete contact group", e)
         }

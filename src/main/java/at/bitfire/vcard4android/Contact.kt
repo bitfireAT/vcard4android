@@ -8,7 +8,6 @@
 
 package at.bitfire.vcard4android
 
-import com.github.mangstadt.vinnie.io.Warning
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
@@ -88,13 +87,13 @@ class Contact {
         val PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME"
         val PROPERTY_SIP = "X-SIP"
 
-        val PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback")
-        val PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main")
-        val PHONE_TYPE_RADIO = TelephoneType.get("x-radio")
-        val PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant")
-        val PHONE_TYPE_MMS = TelephoneType.get("x-mms")
+        val PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback")!!
+        val PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main")!!
+        val PHONE_TYPE_RADIO = TelephoneType.get("x-radio")!!
+        val PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant")!!
+        val PHONE_TYPE_MMS = TelephoneType.get("x-mms")!!
 
-        val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")
+        val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
 
         val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
         val NICKNAME_TYPE_SHORT_NAME = "x-short-name"
@@ -170,13 +169,13 @@ class Contact {
                     is Title -> c.jobTitle = StringUtils.trimToNull(prop.value)
                     is Role -> c.jobDescription = StringUtils.trimToNull(prop.value)
 
-                    is Telephone -> c.phoneNumbers += LabeledProperty<Telephone>(prop, findLabel(prop.group))
-                    is Email -> c.emails += LabeledProperty<Email>(prop, findLabel(prop.group))
-                    is Impp -> c.impps += LabeledProperty<Impp>(prop, findLabel(prop.group))
-                    is Address -> c.addresses += LabeledProperty<Address>(prop, findLabel(prop.group))
+                    is Telephone -> c.phoneNumbers += LabeledProperty(prop, findLabel(prop.group))
+                    is Email -> c.emails += LabeledProperty(prop, findLabel(prop.group))
+                    is Impp -> c.impps += LabeledProperty(prop, findLabel(prop.group))
+                    is Address -> c.addresses += LabeledProperty(prop, findLabel(prop.group))
 
                     is Note -> c.note = if (c.note.isNullOrEmpty()) prop.value else "${c.note}\n\n\n${prop.value}"
-                    is Url -> c.urls += LabeledProperty<Url>(prop, findLabel(prop.group))
+                    is Url -> c.urls += LabeledProperty(prop, findLabel(prop.group))
                     is Categories -> c.categories.addAll(prop.values)
 
                     is Birthday -> c.birthDay = checkVCard3PartialDate(prop)
@@ -374,7 +373,7 @@ class Contact {
         // will be used to count "davdroidXX." property groups
         val labelIterator = AtomicInteger()
 
-        fun addLabel(labeledProperty: LabeledProperty<out VCardProperty>) {
+        fun addLabel(labeledProperty: LabeledProperty<VCardProperty>) {
             labeledProperty.label?.let {
                 val group = "davdroid${labelIterator.incrementAndGet()}"
                 labeledProperty.property.group = group

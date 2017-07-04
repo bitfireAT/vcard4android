@@ -106,7 +106,7 @@ open class AndroidContact(
         var iter: EntityIterator? = null
         try {
             @SuppressLint("Recycle")
-            iter = RawContacts.newEntityIterator(addressBook.provider.query(
+            iter = RawContacts.newEntityIterator(addressBook.provider!!.query(
                     addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
                     null, ContactsContract.RawContacts._ID + "=?", arrayOf(id.toString()), null))
 
@@ -290,7 +290,7 @@ open class AndroidContact(
                     rawContactSyncURI(),
                     RawContacts.DisplayPhoto.CONTENT_DIRECTORY)
             try {
-                addressBook.provider.openAssetFile(photoUri, "r")?.use { fd ->
+                addressBook.provider!!.openAssetFile(photoUri, "r")?.use { fd ->
                     fd.createInputStream()?.use { contact.photo = IOUtils.toByteArray(it) }
                 }
             } catch(e: IOException) {
@@ -544,7 +544,7 @@ open class AndroidContact(
 
     @Throws(ContactsStorageException::class)
     fun create(): Uri {
-        val batch = BatchOperation(addressBook.provider)
+        val batch = BatchOperation(addressBook.provider!!)
 
         val builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI))
         buildContact(builder, false)
@@ -566,7 +566,7 @@ open class AndroidContact(
     fun update(contact: Contact): Int {
         this.contact = contact
 
-        val batch = BatchOperation(addressBook.provider)
+        val batch = BatchOperation(addressBook.provider!!)
 
         val builder = ContentProviderOperation.newUpdate(rawContactSyncURI())
         buildContact(builder, true)
@@ -589,7 +589,7 @@ open class AndroidContact(
     @Throws(ContactsStorageException::class)
     fun delete() =
         try {
-            addressBook.provider.delete(rawContactSyncURI(), null, null)
+            addressBook.provider!!.delete(rawContactSyncURI(), null, null)
         } catch (e: RemoteException) {
             throw ContactsStorageException("Couldn't delete local contact", e)
         }
@@ -1001,13 +1001,13 @@ open class AndroidContact(
              *	COUNTRY
              */
 
-            val lineStreet = arrayOf(address.streetAddress, address.poBox, address.extendedAddress).filter { it.isNotEmpty() }.joinToString(" ")
-            val lineLocality = arrayOf(address.postalCode, address.locality).filter { it.isNotEmpty() }.joinToString(" ")
+            val lineStreet = arrayOf(address.streetAddress, address.poBox, address.extendedAddress).filterNot { it.isNullOrEmpty() }.joinToString(" ")
+            val lineLocality = arrayOf(address.postalCode, address.locality).filterNot { it.isNullOrEmpty() }.joinToString(" ")
 
             val lines = LinkedList<String>()
-            if (lineStreet.isNotEmpty())
+            if (!lineStreet.isNullOrEmpty())
                 lines += lineStreet
-            if (lineLocality.isNotEmpty())
+            if (!lineLocality.isNullOrEmpty())
                 lines += lineLocality
             if (!address.region.isNullOrEmpty())
                 lines += address.region
@@ -1228,7 +1228,7 @@ open class AndroidContact(
             values.put(Photo.RAW_CONTACT_ID, id)
             values.put(Photo.PHOTO, photo)
             try {
-                addressBook.provider.insert(dataSyncURI(), values)
+                addressBook.provider!!.insert(dataSyncURI(), values)
             } catch(e: RemoteException) {
                 Constants.log.log(Level.WARNING, "Couldn't insert contact photo", e)
             }
@@ -1243,7 +1243,7 @@ open class AndroidContact(
 
     protected fun queryPhotoMaxDimensions(): Int {
         try {
-            addressBook.provider.query(ContactsContract.DisplayPhoto.CONTENT_MAX_DIMENSIONS_URI,
+            addressBook.provider?.query(ContactsContract.DisplayPhoto.CONTENT_MAX_DIMENSIONS_URI,
                     arrayOf(ContactsContract.DisplayPhoto.DISPLAY_MAX_DIM), null, null, null)?.use { cursor ->
                 cursor.moveToFirst()
                 return cursor.getInt(0)
