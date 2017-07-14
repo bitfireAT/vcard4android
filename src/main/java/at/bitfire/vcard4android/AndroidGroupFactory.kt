@@ -8,23 +8,9 @@
 
 package at.bitfire.vcard4android
 
-interface AndroidGroupFactory<out T: AndroidGroup> {
+interface AndroidGroupFactory<T: AndroidGroup> {
 
-	/*public static final AndroidGroupFactory INSTANCE = new AndroidGroupFactory();
-
-	public AndroidGroup newInstance(AndroidAddressBook addressBook, long id, String fileName, String eTag) {
-		return new AndroidGroup(addressBook, id, fileName, eTag);
-	}
-
-    public AndroidGroup newInstance(AndroidAddressBook addressBook, Contact contact, String fileName, String eTag) {
-		return new AndroidGroup(addressBook, contact, fileName, eTag);
-	}
-
-    public AndroidGroup[] newArray(int size) {
-		return new AndroidGroup[size];
-	}*/
-
-    fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, id: Long, fileName: String?, eTag: String?): T
-    fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): T
+    fun newInstance(addressBook: AndroidAddressBook<out AndroidContact, T>, id: Long, fileName: String?, eTag: String?): T
+    fun newInstance(addressBook: AndroidAddressBook<out AndroidContact, T>, contact: Contact, fileName: String?, eTag: String?): T
 
 }

@@ -43,7 +43,7 @@ import java.util.*
 import java.util.logging.Level
 
 open class AndroidContact(
-        val addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>
+        val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {
@@ -85,13 +85,13 @@ open class AndroidContact(
     val photoMaxDimensions: Int by lazy { queryPhotoMaxDimensions() }
 
 
-    constructor(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, id: Long, fileName: String?, eTag: String?): this(addressBook) {
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, id: Long, fileName: String?, eTag: String?): this(addressBook) {
         this.id = id
         this.fileName = fileName
         this.eTag = eTag
     }
 
-    constructor(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): this(addressBook) {
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): this(addressBook) {
         this.contact = contact
         this.fileName = fileName
         this.eTag = eTag

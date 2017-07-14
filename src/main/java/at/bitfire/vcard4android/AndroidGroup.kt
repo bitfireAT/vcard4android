@@ -22,7 +22,7 @@ import java.io.FileNotFoundException
 
 //FIXME @ToString(of={"id","fileName","contact"},doNotUseGetters=true)
 open class AndroidGroup(
-        val addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>
+        val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {
@@ -32,16 +32,17 @@ open class AndroidGroup(
     }
 
     var id: Long? = null
+
     var fileName: String? = null
     var eTag: String? = null
 
-	constructor(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, id: Long, fileName: String?, eTag: String?): this(addressBook) {
+	constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, id: Long, fileName: String?, eTag: String?): this(addressBook) {
 		this.id = id
         this.fileName = fileName
         this.eTag = eTag
 	}
 
-    constructor(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, contact: Contact, fileName: String?  = null, eTag: String? = null): this(addressBook) {
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, contact: Contact, fileName: String?  = null, eTag: String? = null): this(addressBook) {
 		this.contact = contact
         this.fileName = fileName
         this.eTag = eTag
@@ -63,7 +64,7 @@ open class AndroidGroup(
 			addressBook.provider!!.query(addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id)),
 					arrayOf(COLUMN_UID, Groups.TITLE, Groups.NOTES), null, null, null)?.use { cursor ->
                 if (!cursor.moveToNext())
-                    throw FileNotFoundException ("Contact group not found")
+                    throw FileNotFoundException("Contact group not found")
 
                 c.uid = cursor.getString(0)
                 c.group = true

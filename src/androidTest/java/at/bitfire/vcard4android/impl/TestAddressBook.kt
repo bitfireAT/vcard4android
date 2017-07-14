@@ -19,10 +19,10 @@ class TestAddressBook(
 
     object ContactFactory: AndroidContactFactory<AndroidContact> {
 
-        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, id: Long, fileName: String?, eTag: String?) =
+        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, *>, id: Long, fileName: String?, eTag: String?) =
                 AndroidContact(addressBook, id, fileName, eTag)
 
-        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): AndroidContact =
+        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, *>, contact: Contact, fileName: String?, eTag: String?): AndroidContact =
                 AndroidContact(addressBook, contact, fileName, eTag)
 
     }
@@ -30,10 +30,10 @@ class TestAddressBook(
 
     object GroupFactory: AndroidGroupFactory<AndroidGroup> {
 
-        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, id: Long, fileName: String?, eTag: String?) =
+        override fun newInstance(addressBook: AndroidAddressBook<*, AndroidGroup>, id: Long, fileName: String?, eTag: String?) =
                 AndroidGroup(addressBook, id, fileName, eTag)
 
-        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?) =
+        override fun newInstance(addressBook: AndroidAddressBook<*, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?) =
                 AndroidGroup(addressBook, contact, fileName, eTag)
 
     }

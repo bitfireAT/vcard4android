@@ -21,7 +21,7 @@ import android.provider.ContactsContract.RawContacts
 import java.io.FileNotFoundException
 import java.util.*
 
-open class AndroidAddressBook<out T1: AndroidContact, out T2: AndroidGroup>(
+open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         var account: Account,
         val provider: ContentProviderClient?,
         val contactFactory: AndroidContactFactory<T1>,
