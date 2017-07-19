@@ -20,12 +20,10 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder
 import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.OutputStream
+import java.io.Reader
 import java.net.URI
 import java.net.URISyntaxException
-import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
@@ -112,21 +110,15 @@ class Contact {
         /**
          * Parses an InputStream that contains a VCard.
          *
-         * @param stream     input stream containing the VCard (any parsable version, i.e. 3 or 4)
-         * @param charset    charset of the input stream or null (will assume UTF-8)
+         * @param reader     reader for the input stream containing the VCard (pay attention to the charset)
          * @param downloader will be used to download external resources like contact photos (may be null)
          * @return list of filled Event data objects (may have size 0) – doesn't return null
          * @throws IOException on I/O errors when reading the stream
          */
         @JvmStatic
         @Throws(IOException::class)
-        fun fromStream(stream: InputStream, charset: Charset?, downloader: Downloader?): List<Contact>  {
-            var vcards: List<VCard>? = null
-            if (charset != null)
-                InputStreamReader(stream, charset).use { vcards = Ezvcard.parse(it).all() }
-            else
-                vcards = Ezvcard.parse(stream).all()
-
+        fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
+            val vcards = Ezvcard.parse(reader).all()
             val contacts = LinkedList<Contact>()
             vcards?.forEach { contacts.add(fromVCard(it, downloader)) }
             return contacts
@@ -515,7 +507,7 @@ class Contact {
 
 
     interface Downloader {
-        fun download(url: String, accepts: String): ByteArray
+        fun download(url: String, accepts: String): ByteArray?
     }
 
 }

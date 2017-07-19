@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -37,6 +38,7 @@ import ezvcard.property.Related;
 import ezvcard.property.Telephone;
 import ezvcard.property.Url;
 import ezvcard.util.PartialDate;
+import kotlin.text.Charsets;
 import lombok.Cleanup;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -52,14 +54,14 @@ public class ContactTest {
     private Contact parseContact(String fname, Charset charset) throws IOException {
         @Cleanup InputStream is = getClass().getClassLoader().getResourceAsStream(fname);
         assertNotNull(is);
-        return Contact.fromStream(is, charset, null).get(0);
+        return Contact.fromReader(new InputStreamReader(is, charset == null ? Charsets.UTF_8 : charset), null).get(0);
     }
 
     private Contact regenerate(Contact c, VCardVersion vCardVersion) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         c.write(vCardVersion, GroupMethod.CATEGORIES, os);
         Constants.log.log(Level.FINE, "Re-generated VCard", os.toString());
-        return Contact.fromStream(new ByteArrayInputStream(os.toByteArray()), null, null).get(0);
+        return Contact.fromReader(new InputStreamReader(new ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), null).get(0);
     }
 
     private String toString(Contact c, GroupMethod groupMethod, VCardVersion vCardVersion) throws IOException {

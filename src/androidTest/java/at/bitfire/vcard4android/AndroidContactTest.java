@@ -23,6 +23,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.sql.Date;
 import java.util.Arrays;
@@ -94,14 +95,13 @@ public class AndroidContactTest {
 
     @Test
     public void testInvalidPREF() throws ContactsStorageException, IOException {
-        Charset charset = Charsets.UTF_8;
         String vCard = "BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
                 "FN:Test\r\n" +
                 "TEL;CELL=;PREF=:+12345\r\n" +
                 "EMAIL;PREF=invalid:test@example.com\r\n" +
                 "END:VCARD\r\n";
-        List<Contact> contacts = Contact.fromStream(IOUtils.toInputStream(vCard, charset), charset, null);
+        List<Contact> contacts = Contact.fromReader(new StringReader(vCard), null);
 
         AndroidContact dbContact = new AndroidContact(addressBook, contacts.get(0), null, null);
         dbContact.create();
