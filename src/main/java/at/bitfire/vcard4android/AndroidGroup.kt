@@ -20,7 +20,6 @@ import android.provider.ContactsContract.RawContacts.Data
 import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
 
-//FIXME @ToString(of={"id","fileName","contact"},doNotUseGetters=true)
 open class AndroidGroup(
         val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {

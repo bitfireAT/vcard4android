@@ -62,7 +62,9 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.core'
     }
 
+    //noinspection GradleDynamicVersion
     androidTestCompile 'com.android.support.test:runner:+'
+    //noinspection GradleDynamicVersion
     androidTestCompile 'com.android.support.test:rules:+'
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'org.projectlombok:lombok:1.16.16'
