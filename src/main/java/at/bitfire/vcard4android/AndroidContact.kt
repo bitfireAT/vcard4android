@@ -290,8 +290,8 @@ open class AndroidContact(
                     rawContactSyncURI(),
                     RawContacts.DisplayPhoto.CONTENT_DIRECTORY)
             try {
-                addressBook.provider!!.openAssetFile(photoUri, "r")?.use { fd ->
-                    fd.createInputStream()?.use { contact.photo = IOUtils.toByteArray(it) }
+                addressBook.provider!!.openAssetFile(photoUri, "r")?.let { afd ->
+                    afd.createInputStream().use { contact.photo = IOUtils.toByteArray(it) }
                 }
             } catch(e: IOException) {
                 Constants.log.log(Level.WARNING, "Couldn't read local contact photo file", e)

@@ -13,9 +13,8 @@ import android.accounts.Account;
 import android.content.ContentProviderClient;
 import android.provider.ContactsContract;
 import android.support.annotation.RequiresPermission;
+import android.util.Base64;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.Charset;
 import java.sql.Date;
 import java.util.Arrays;
 import java.util.List;
@@ -66,6 +64,8 @@ public class AndroidContactTest {
 
     @Test
     public void testAddAndReadContact() throws ContactsStorageException, FileNotFoundException {
+        byte[] samplePhoto = Base64.decode("/9j/4AAQSkZJRgABAQEASABIAAD//gATQ3JlYXRlZCB3aXRoIEdJTVD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAAFAAUDAREAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhADEAAAAVSf/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABCf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k=", Base64.DEFAULT);
+
         Contact vcard = new Contact();
         vcard.setDisplayName("Mya Contact");
         vcard.setPrefix("Magª");
@@ -76,6 +76,7 @@ public class AndroidContactTest {
         vcard.setPhoneticMiddleName("Mittelerde");
         vcard.setPhoneticFamilyName("Fämilie");
         vcard.setBirthDay(new Birthday(Date.valueOf("1980-04-16")));
+        vcard.setPhoto(samplePhoto);
 
         AndroidContact contact = new AndroidContact(addressBook, vcard, null, null);
         contact.create();
@@ -91,6 +92,7 @@ public class AndroidContactTest {
         assertEquals(vcard.getPhoneticMiddleName(), vcard2.getPhoneticMiddleName());
         assertEquals(vcard.getPhoneticFamilyName(), vcard2.getPhoneticFamilyName());
         assertEquals(vcard.getBirthDay(), vcard2.getBirthDay());
+        assertNotNull(vcard.getPhoto());
     }
 
     @Test
