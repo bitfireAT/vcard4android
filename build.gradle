@@ -54,7 +54,7 @@ dependencies {
     compile 'commons-io:commons-io:2.5'
 
     // ez-vcard to parse/generate VCards
-    compile('com.googlecode.ez-vcard:ez-vcard:0.10.2') {
+    compile('com.googlecode.ez-vcard:ez-vcard:0.10.3') {
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'

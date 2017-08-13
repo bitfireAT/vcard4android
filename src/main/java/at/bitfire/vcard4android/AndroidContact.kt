@@ -69,12 +69,12 @@ open class AndroidContact(
         }
 
         @JvmStatic
-        protected fun toURIScheme(s: String) =
+        protected fun toURIScheme(s: String?) =
                 // RFC 3986 3.1
                 // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
                 // ALPHA       =  %x41-5A / %x61-7A   ; A-Z / a-z
                 // DIGIT       =  %x30-39             ; 0-9
-                s.replace(Regex("^[^a-zA-Z]+"), "").replace(Regex("[^\\da-zA-Z+-.]"), "")
+                s?.replace(Regex("^[^a-zA-Z]+"), "")?.replace(Regex("[^\\da-zA-Z+-.]"), "")
 
     }
 
