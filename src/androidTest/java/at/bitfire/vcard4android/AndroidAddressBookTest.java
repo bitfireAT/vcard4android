@@ -72,12 +72,12 @@ public class AndroidAddressBookTest {
     public void testSyncState() throws ContactsStorageException {
 		AndroidAddressBook addressBook = new TestAddressBook(testAccount, provider);
 
-		addressBook.setSyncState(new byte[0]);
-		assertEquals(0, addressBook.getSyncState().length);
+		addressBook.writeSyncState(new byte[0]);
+		assertEquals(0, addressBook.readSyncState().length);
 
 		final byte[] random = { 1, 2, 3, 4, 5 };
-		addressBook.setSyncState(random);
-		assertTrue(Arrays.equals(random, addressBook.getSyncState()));
+		addressBook.writeSyncState(random);
+		assertTrue(Arrays.equals(random, addressBook.readSyncState()));
 	}
 
 }

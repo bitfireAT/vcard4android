@@ -61,7 +61,7 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 	// account-specific address book sync state
 
     @Throws(ContactsStorageException::class)
-	fun getSyncState(): ByteArray =
+	fun readSyncState(): ByteArray =
 		try {
 			ContactsContract.SyncState.get(provider, account)
 		} catch(e: RemoteException) {
@@ -69,11 +69,11 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 		}
 
     @Throws(ContactsStorageException::class)
-	fun setSyncState(data: ByteArray) {
+	fun writeSyncState(data: ByteArray) {
 		try {
 			ContactsContract.SyncState.set(provider, account, data)
 		} catch(e: RemoteException) {
-			throw ContactsStorageException("Couldn't write contacts sync state", e)
+			throw ContactsStorageException("Couldn't write address book sync state", e)
 		}
 	}
 
