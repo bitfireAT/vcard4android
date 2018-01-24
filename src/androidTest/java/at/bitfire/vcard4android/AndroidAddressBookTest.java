@@ -13,10 +13,11 @@ import android.accounts.Account;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.provider.ContactsContract;
-import android.support.annotation.RequiresPermission;
+import android.support.test.rule.GrantPermissionRule;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -31,11 +32,14 @@ import static org.junit.Assert.assertTrue;
 
 public class AndroidAddressBookTest {
 
-	final Account testAccount = new Account("AndroidAddressBookTest", "at.bitfire.vcard4android");
+    @Rule
+    public GrantPermissionRule permissionRule =
+            GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS);
+
+    final Account testAccount = new Account("AndroidAddressBookTest", "at.bitfire.vcard4android");
 	ContentProviderClient provider;
 
 	@Before
-    @RequiresPermission(allOf = { Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS })
 	public void connect() throws Exception {
 		provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
 		assertNotNull(provider);

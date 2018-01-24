@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.1.61'
+    ext.kotlin_version = '1.2.21'
     ext.dokka_version = '0.9.15'
 
     repositories {
@@ -72,32 +72,11 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.core'
     }
 
-    //noinspection GradleDynamicVersion
-    androidTestCompile 'com.android.support.test:runner:+'
-    //noinspection GradleDynamicVersion
-    androidTestCompile 'com.android.support.test:rules:+'
+    androidTestCompile 'com.android.support.test:runner:1.0.1'
+    androidTestCompile 'com.android.support.test:rules:1.0.1'
     androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'org.projectlombok:lombok:1.16.16'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.projectlombok:lombok:1.16.16'
-}
-
-// grant permissions for unit tests
-task grantPermissions(dependsOn: 'installDebugAndroidTest') {
-    doLast {
-        def adb = android.getAdbExe().toString()
-        [
-                'android.permission.READ_CONTACTS',
-                'android.permission.WRITE_CONTACTS'
-        ].each {
-            "${adb} shell pm grant at.bitfire.vcard4android.test ${it}".execute()
-        }
-    }
-}
-
-tasks.whenTaskAdded { task ->
-    if (task.name.startsWith('connectedDebugAndroidTest')) {
-        task.dependsOn grantPermissions
-    }
 }

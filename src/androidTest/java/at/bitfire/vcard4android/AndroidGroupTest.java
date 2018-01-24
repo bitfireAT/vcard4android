@@ -12,10 +12,11 @@ import android.Manifest;
 import android.accounts.Account;
 import android.content.ContentProviderClient;
 import android.provider.ContactsContract;
-import android.support.annotation.RequiresPermission;
+import android.support.test.rule.GrantPermissionRule;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
@@ -29,13 +30,16 @@ import static org.junit.Assert.assertNotNull;
 
 public class AndroidGroupTest {
 
+    @Rule
+    public GrantPermissionRule permissionRule =
+            GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS);
+
     final Account testAccount = new Account("AndroidContactGroupTest", "at.bitfire.vcard4android");
     ContentProviderClient provider;
 
     AndroidAddressBook addressBook;
 
     @Before
-    @RequiresPermission(allOf = { Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS })
     public void connect() throws Exception {
         provider = getContext().getContentResolver().acquireContentProviderClient(ContactsContract.AUTHORITY);
         assertNotNull(provider);
