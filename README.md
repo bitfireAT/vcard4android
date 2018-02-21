@@ -16,6 +16,20 @@ It has been primarily developed for [DAVdroid](https://www.davdroid.com).
 Generated KDoc: https://bitfireAT.gitlab.io/vcard4android/dokka/vcard4android/
 
 
+## Contact
+
+```
+bitfire web engineering – Stockmann, Hirner GesnbR
+Florastraße 27
+2540 Bad Vöslau, AUSTRIA
+```
+
+Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
+
+For questions, suggestions etc. please use the DAVdroid forum:
+https://www.davdroid.com/forums/
+
+
 ## License 
 
 Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).

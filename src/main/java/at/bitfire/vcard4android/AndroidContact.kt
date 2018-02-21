@@ -53,13 +53,13 @@ open class AndroidContact(
         @JvmField val COLUMN_ETAG = RawContacts.SYNC2
 
         @JvmStatic
-        protected fun labelToXName(label: String) = "X-" + label
+        fun labelToXName(label: String) = "X-" + label
                 .replace(" ","_")
                 .replace(Regex("[^\\p{L}\\p{Nd}\\-_]"), "")     // TODO check regex
                 .toUpperCase()
 
         @JvmStatic
-        protected fun xNameToLabel(xname: String): String {
+        fun xNameToLabel(xname: String): String {
             // "X-MY_PROPERTY"
             var s = xname.toLowerCase()     // 1. ensure lower case -> "x-my_property"
             if (s.startsWith("x-"))         // 2. remove x- from beginning -> "my_property"
@@ -69,7 +69,7 @@ open class AndroidContact(
         }
 
         @JvmStatic
-        protected fun toURIScheme(s: String?) =
+        fun toURIScheme(s: String?) =
                 // RFC 3986 3.1
                 // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
                 // ALPHA       =  %x41-5A / %x61-7A   ; A-Z / a-z

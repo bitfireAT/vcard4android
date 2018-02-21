@@ -99,7 +99,7 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 
     @SuppressLint("Recycle")
     @Throws(ContactsStorageException::class)
-	protected fun queryGroups(where: String?, whereArgs: Array<String>?): List<T2> {
+	fun queryGroups(where: String?, whereArgs: Array<String>?): List<T2> {
         val groups = LinkedList<T2>()
 		try {
 			provider!!.query(syncAdapterURI(Groups.CONTENT_URI),
