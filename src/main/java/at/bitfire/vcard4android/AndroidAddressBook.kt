@@ -9,12 +9,10 @@
 package at.bitfire.vcard4android
 
 import android.accounts.Account
-import android.annotation.SuppressLint
 import android.content.ContentProviderClient
 import android.content.ContentValues
 import android.database.DatabaseUtils
 import android.net.Uri
-import android.os.RemoteException
 import android.provider.ContactsContract
 import android.provider.ContactsContract.Groups
 import android.provider.ContactsContract.RawContacts
@@ -28,99 +26,75 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         val groupFactory: AndroidGroupFactory<T2>
 ) {
 
-	// account-specific address book settings
+    // account-specific address book settings
 
-    @Throws(ContactsStorageException::class)
-	fun getSettings(): ContentValues {
-        val values = ContentValues()
-        try {
-			provider!!.query(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), null, null, null, null)?.use { cursor ->
-                if (cursor.moveToNext())
-                    DatabaseUtils.cursorRowToContentValues(cursor, values)
-                else
-                    throw FileNotFoundException()
+    /**
+     * Retrieves [ContactsContract.Settings] for the current address book.
+     * @throws FileNotFoundException if the settings row couldn't be fetched.
+     */
+    fun getSettings(): ContentValues {
+        provider!!.query(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), null, null, null, null)?.use { cursor ->
+            if (cursor.moveToNext()) {
+                val values = ContentValues(cursor.columnCount)
+                DatabaseUtils.cursorRowToContentValues(cursor, values)
+                return values
             }
-		} catch(e: Exception) {
-			throw ContactsStorageException("Couldn't read address book settings", e)
-		}
-        return values
-	}
+        }
+        throw FileNotFoundException()
+    }
 
-    @Throws(ContactsStorageException::class)
-	fun updateSettings(values: ContentValues) {
-		values.put(ContactsContract.Settings.ACCOUNT_NAME, account.name)
-		values.put(ContactsContract.Settings.ACCOUNT_TYPE, account.type)
-		try {
-			provider!!.insert(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), values)
-		} catch(e: RemoteException) {
-			throw ContactsStorageException("Couldn't write address book settings", e)
-		}
-	}
+    /**
+     * Updates [ContactsContract.Settings] by inserting the given values into
+     * the current address book.
+     * @param values settings to be updated
+     */
+    fun updateSettings(values: ContentValues) {
+        values.put(ContactsContract.Settings.ACCOUNT_NAME, account.name)
+        values.put(ContactsContract.Settings.ACCOUNT_TYPE, account.type)
+        provider!!.insert(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), values)
+    }
 
 
-	// account-specific address book sync state
+    // account-specific address book sync state
 
-    @Throws(ContactsStorageException::class)
-	fun readSyncState(): ByteArray =
-		try {
-			ContactsContract.SyncState.get(provider, account)
-		} catch(e: RemoteException) {
-			throw ContactsStorageException("Couldn't read address book sync state", e)
-		}
-
-    @Throws(ContactsStorageException::class)
-	fun writeSyncState(data: ByteArray) {
-		try {
-			ContactsContract.SyncState.set(provider, account, data)
-		} catch(e: RemoteException) {
-			throw ContactsStorageException("Couldn't write address book sync state", e)
-		}
-	}
+    fun readSyncState(): ByteArray? = ContactsContract.SyncState.get(provider, account)
+    fun writeSyncState(data: ByteArray) = ContactsContract.SyncState.set(provider, account, data)
 
 
-	// groups
+    // groups
 
-    @SuppressLint("Recycle")
-    @Throws(ContactsStorageException::class)
     protected fun queryContacts(where: String?, whereArgs: Array<String>?): List<T1> {
         val contacts = LinkedList<T1>()
-        try {
-            provider!!.query(syncAdapterURI(RawContacts.CONTENT_URI),
-                    arrayOf(RawContacts._ID, AndroidContact.COLUMN_FILENAME, AndroidContact.COLUMN_ETAG),
-                    where, whereArgs, null)?.let { cursor ->
-                while (cursor.moveToNext())
-                    contacts += contactFactory.newInstance(this, cursor.getLong(0), cursor.getString(1), cursor.getString(2))
-            }
-        } catch(e: RemoteException) {
-            throw ContactsStorageException("Couldn't query contacts", e)
+        provider!!.query(rawContactsSyncUri(),
+                arrayOf(RawContacts._ID, AndroidContact.COLUMN_FILENAME, AndroidContact.COLUMN_ETAG),
+                where, whereArgs, null)?.let { cursor ->
+            while (cursor.moveToNext())
+                contacts += contactFactory.newInstance(this, cursor.getLong(0), cursor.getString(1), cursor.getString(2))
         }
         return contacts
     }
 
-    @SuppressLint("Recycle")
-    @Throws(ContactsStorageException::class)
-	fun queryGroups(where: String?, whereArgs: Array<String>?): List<T2> {
+    fun queryGroups(where: String?, whereArgs: Array<String>?): List<T2> {
         val groups = LinkedList<T2>()
-		try {
-			provider!!.query(syncAdapterURI(Groups.CONTENT_URI),
-					arrayOf(Groups._ID, AndroidGroup.COLUMN_FILENAME, AndroidGroup.COLUMN_ETAG),
-                    where, whereArgs, null)?.use { cursor ->
-                while (cursor.moveToNext())
-                    groups += groupFactory.newInstance(this, cursor.getLong(0), cursor.getString(1), cursor.getString(2))
-            }
-		} catch(e: RemoteException) {
-			throw ContactsStorageException("Couldn't query contact groups", e)
-		}
+        provider!!.query(groupsSyncUri(),
+                arrayOf(Groups._ID, AndroidGroup.COLUMN_FILENAME, AndroidGroup.COLUMN_ETAG),
+                where, whereArgs, null)?.use { cursor ->
+            while (cursor.moveToNext())
+                groups += groupFactory.newInstance(this, cursor.getLong(0), cursor.getString(1), cursor.getString(2))
+        }
         return groups
-	}
+    }
 
 
-	// helpers
+    // helpers
 
-	fun syncAdapterURI(uri: Uri) = uri.buildUpon()
-				.appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
-				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
-				.appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
-				.build()!!
+    fun syncAdapterURI(uri: Uri) = uri.buildUpon()
+                .appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
+                .appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
+                .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
+                .build()!!
+
+    fun rawContactsSyncUri() = syncAdapterURI(RawContacts.CONTENT_URI)
+    fun groupsSyncUri() = syncAdapterURI(Groups.CONTENT_URI)
 
 }

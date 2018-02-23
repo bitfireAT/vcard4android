@@ -70,7 +70,7 @@ class AndroidAddressBookTest {
 		val addressBook = TestAddressBook(testAccount, provider)
 
         addressBook.writeSyncState(ByteArray(0))
-        assertEquals(0, addressBook.readSyncState().size)
+        assertEquals(0, addressBook.readSyncState()!!.size)
 
         val random = byteArrayOf(1, 2, 3, 4, 5)
         addressBook.writeSyncState(random)

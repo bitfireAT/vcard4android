@@ -8,4 +8,5 @@
 
 package at.bitfire.vcard4android
 
+@Deprecated("Unnecessary generic wrapper around RemoteException")
 class ContactsStorageException @JvmOverloads constructor(message: String?, ex: Throwable? = null): Exception(message, ex)
