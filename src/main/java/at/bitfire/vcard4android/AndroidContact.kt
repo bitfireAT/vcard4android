@@ -8,7 +8,6 @@
 
 package at.bitfire.vcard4android;
 
-import android.annotation.SuppressLint
 import android.content.ContentProviderOperation
 import android.content.ContentUris
 import android.content.ContentValues
@@ -48,17 +47,15 @@ open class AndroidContact(
 
     companion object {
 
-        @JvmField val COLUMN_FILENAME = RawContacts.SOURCE_ID
-        @JvmField val COLUMN_UID = RawContacts.SYNC1
-        @JvmField val COLUMN_ETAG = RawContacts.SYNC2
+        const val COLUMN_FILENAME = RawContacts.SOURCE_ID
+        const val COLUMN_UID = RawContacts.SYNC1
+        const val COLUMN_ETAG = RawContacts.SYNC2
 
-        @JvmStatic
         fun labelToXName(label: String) = "X-" + label
                 .replace(" ","_")
-                .replace(Regex("[^\\p{L}\\p{Nd}\\-_]"), "")     // TODO check regex
+                .replace(Regex("[^\\p{L}\\p{Nd}\\-_]"), "")
                 .toUpperCase()
 
-        @JvmStatic
         fun xNameToLabel(xname: String): String {
             // "X-MY_PROPERTY"
             var s = xname.toLowerCase()     // 1. ensure lower case -> "x-my_property"
@@ -68,7 +65,6 @@ open class AndroidContact(
             return WordUtils.capitalize(s)  // 4. capitalize -> "My Property"
         }
 
-        @JvmStatic
         fun toURIScheme(s: String?) =
                 // RFC 3986 3.1
                 // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
@@ -79,108 +75,116 @@ open class AndroidContact(
     }
 
     var id: Long? = null
+        protected set
+
     var fileName: String? = null
+        protected set
+
     var eTag: String? = null
 
-    val photoMaxDimensions: Int by lazy { queryPhotoMaxDimensions() }
+    protected val photoMaxDimensions: Int by lazy { queryPhotoMaxDimensions() }
 
 
-    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, id: Long, fileName: String?, eTag: String?): this(addressBook) {
-        this.id = id
-        this.fileName = fileName
-        this.eTag = eTag
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, values: ContentValues)
+            : this(addressBook) {
+        this.id = values.getAsLong(RawContacts._ID)
+        this.fileName = values.getAsString(COLUMN_FILENAME)
+        this.eTag = values.getAsString(COLUMN_ETAG)
     }
 
-    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): this(addressBook) {
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, contact: Contact, fileName: String?, eTag: String?)
+            : this(addressBook) {
         this.contact = contact
         this.fileName = fileName
         this.eTag = eTag
     }
 
     var contact: Contact? = null
-    @Throws(FileNotFoundException::class, ContactsStorageException::class)
-    get() {
-        field?.let { return field }
+        /**
+         * Fetches contact data from the contacts provider.
+         * @throws IllegalArgumentException if contact has not been saved yet
+         * @throws FileNotFoundException when the contact is not available (anymore)
+         * @throws RemoteException on contact provider errors
+         */
+        get() {
+            field?.let { return field }
 
-        val id = requireNotNull(id)
-        var iter: EntityIterator? = null
-        try {
-            @SuppressLint("Recycle")
-            iter = RawContacts.newEntityIterator(addressBook.provider!!.query(
-                    addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
-                    null, ContactsContract.RawContacts._ID + "=?", arrayOf(id.toString()), null))
+            val id = requireNotNull(id)
+            var iter: EntityIterator? = null
+            try {
+                iter = RawContacts.newEntityIterator(addressBook.provider!!.query(
+                        addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
+                        null, ContactsContract.RawContacts._ID + "=?", arrayOf(id.toString()), null))
 
-            if (iter.hasNext()) {
-                val e = iter.next()
+                if (iter.hasNext()) {
+                    val e = iter.next()
 
-                field = Contact()
-                populateContact(e.entityValues)
+                    field = Contact()
+                    populateContact(e.entityValues)
 
-                val subValues = e.subValues
-                for (subValue in subValues) {
-                    val values = subValue.values
+                    val subValues = e.subValues
+                    for (subValue in subValues) {
+                        val values = subValue.values
 
-                    // remove empty values
-                    val it = values.keySet().iterator()
-                    while (it.hasNext()) {
-                        val obj = values[it.next()]
-                        if (obj is String && obj.isEmpty())
-                            it.remove()
+                        // remove empty values
+                        val it = values.keySet().iterator()
+                        while (it.hasNext()) {
+                            val obj = values[it.next()]
+                            if (obj is String && obj.isEmpty())
+                                it.remove()
+                        }
+
+                        val mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE)
+                        when (mimeType) {
+                            StructuredName.CONTENT_ITEM_TYPE ->
+                                populateStructuredName(values)
+                            Phone.CONTENT_ITEM_TYPE ->
+                                populatePhoneNumber(values)
+                            Email.CONTENT_ITEM_TYPE ->
+                                populateEmail(values)
+                            Photo.CONTENT_ITEM_TYPE ->
+                                populatePhoto(values)
+                            Organization.CONTENT_ITEM_TYPE ->
+                                populateOrganization(values)
+                            Im.CONTENT_ITEM_TYPE ->
+                                populateIMPP(values)
+                            Nickname.CONTENT_ITEM_TYPE ->
+                                populateNickname(values)
+                            Note.CONTENT_ITEM_TYPE ->
+                                populateNote(values)
+                            StructuredPostal.CONTENT_ITEM_TYPE ->
+                                populateStructuredPostal(values)
+                            Website.CONTENT_ITEM_TYPE ->
+                                populateWebsite(values)
+                            Event.CONTENT_ITEM_TYPE ->
+                                populateEvent(values)
+                            Relation.CONTENT_ITEM_TYPE ->
+                                populateRelation(values)
+                            SipAddress.CONTENT_ITEM_TYPE ->
+                                populateSipAddress(values)
+                            null ->
+                                Constants.log.warning("Ignoring raw contact data row without ${ContactsContract.RawContactsEntity.MIMETYPE}")
+                            else ->
+                                populateData(mimeType, values)
+                        }
                     }
-                    
-                    val mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE)
-                    when (mimeType) {
-                        StructuredName.CONTENT_ITEM_TYPE ->
-                            populateStructuredName(values)
-                        Phone.CONTENT_ITEM_TYPE ->
-                            populatePhoneNumber(values)
-                        Email.CONTENT_ITEM_TYPE ->
-                            populateEmail(values)
-                        Photo.CONTENT_ITEM_TYPE ->
-                            populatePhoto(values)
-                        Organization.CONTENT_ITEM_TYPE ->
-                            populateOrganization(values)
-                        Im.CONTENT_ITEM_TYPE ->
-                            populateIMPP(values)
-                        Nickname.CONTENT_ITEM_TYPE ->
-                            populateNickname(values)
-                        Note.CONTENT_ITEM_TYPE ->
-                            populateNote(values)
-                        StructuredPostal.CONTENT_ITEM_TYPE ->
-                            populateStructuredPostal(values)
-                        Website.CONTENT_ITEM_TYPE ->
-                            populateWebsite(values)
-                        Event.CONTENT_ITEM_TYPE ->
-                            populateEvent(values)
-                        Relation.CONTENT_ITEM_TYPE ->
-                            populateRelation(values)
-                        SipAddress.CONTENT_ITEM_TYPE ->
-                            populateSipAddress(values)
-                        null ->
-                            Constants.log.warning("Ignoring raw contact data row without ${ContactsContract.RawContactsEntity.MIMETYPE}")
-                        else ->
-                            populateData(mimeType, values)
-                    }
-                }
 
-                return field
-            } else
-                throw FileNotFoundException()
-        } catch(e: RemoteException) {
-            throw ContactsStorageException("Couldn't read local contact", e)
-        } finally {
-            iter?.close()
+                    return field
+                } else
+                    throw FileNotFoundException()
+            } finally {
+                iter?.close()
+            }
         }
-    }
 
-    protected fun populateContact(row: ContentValues) {
+    protected open fun populateContact(row: ContentValues) {
         fileName = row.getAsString(COLUMN_FILENAME)
         eTag = row.getAsString(COLUMN_ETAG)
 
         contact!!.uid = row.getAsString(COLUMN_UID)
     }
 
-    protected fun populateStructuredName(row: ContentValues) {
+    protected open fun populateStructuredName(row: ContentValues) {
         val contact = requireNotNull(contact)
         contact.displayName = row.getAsString(StructuredName.DISPLAY_NAME)
 
@@ -195,7 +199,7 @@ open class AndroidContact(
         contact.phoneticFamilyName = row.getAsString(StructuredName.PHONETIC_FAMILY_NAME)
     }
 
-    protected fun populatePhoneNumber(row: ContentValues) {
+    protected open fun populatePhoneNumber(row: ContentValues) {
         val number = Telephone(row.getAsString(Phone.NUMBER))
         val labeledNumber = LabeledProperty(number)
 
@@ -259,7 +263,7 @@ open class AndroidContact(
         contact!!.phoneNumbers += labeledNumber
     }
 
-    protected fun populateEmail(row: ContentValues) {
+    protected open fun populateEmail(row: ContentValues) {
         val email = ezvcard.property.Email(row.getAsString(Email.ADDRESS))
         val labeledEmail = LabeledProperty(email)
 
@@ -282,8 +286,7 @@ open class AndroidContact(
         contact!!.emails += labeledEmail
     }
 
-    @Throws(RemoteException::class)
-    protected fun populatePhoto(row: ContentValues) {
+    protected open fun populatePhoto(row: ContentValues) {
         val contact = requireNotNull(contact)
         if (row.containsKey(Photo.PHOTO_FILE_ID)) {
             val photoUri = Uri.withAppendedPath(
@@ -300,7 +303,7 @@ open class AndroidContact(
             contact.photo = row.getAsByteArray(Photo.PHOTO)
     }
 
-    protected fun populateOrganization(row: ContentValues) {
+    protected open fun populateOrganization(row: ContentValues) {
         val contact = requireNotNull(contact)
         
         val company = row.getAsString(Organization.COMPANY)
@@ -316,7 +319,7 @@ open class AndroidContact(
         row.getAsString(Organization.JOB_DESCRIPTION)?.let { contact.jobDescription = it }
     }
 
-    protected fun populateIMPP(row: ContentValues) {
+    protected open fun populateIMPP(row: ContentValues) {
         val handle = row.getAsString(Im.DATA)
         if (handle == null) {
             Constants.log.warning("Ignoring instant messenger record without handle")
@@ -370,7 +373,7 @@ open class AndroidContact(
         }
     }
 
-    protected fun populateNickname(row: ContentValues) {
+    protected open fun populateNickname(row: ContentValues) {
         row.getAsString(Nickname.NAME)?.let { name ->
             val nick = ezvcard.property.Nickname()
             nick.values += name
@@ -392,11 +395,11 @@ open class AndroidContact(
         }
     }
 
-    protected fun populateNote(row: ContentValues) {
+    protected open fun populateNote(row: ContentValues) {
         contact!!.note = row.getAsString(Note.NOTE)
     }
 
-    protected fun populateStructuredPostal(row: ContentValues) {
+    protected open fun populateStructuredPostal(row: ContentValues) {
         val address = Address()
         val labeledAddress = LabeledProperty(address)
 
@@ -423,7 +426,7 @@ open class AndroidContact(
         contact!!.addresses += labeledAddress
     }
 
-    protected fun populateWebsite(row: ContentValues) {
+    protected open fun populateWebsite(row: ContentValues) {
         val url = Url(row.getAsString(Website.URL))
         val labeledUrl = LabeledProperty(url)
 
@@ -449,7 +452,7 @@ open class AndroidContact(
         contact!!.urls += labeledUrl
     }
 
-    protected fun populateEvent(row: ContentValues) {
+    protected open fun populateEvent(row: ContentValues) {
         val dateStr = row.getAsString(CommonDataKinds.Event.START_DATE)
         var full: Date? = null
         var partial: PartialDate? = null
@@ -473,7 +476,7 @@ open class AndroidContact(
             }
     }
 
-    protected fun populateRelation(row: ContentValues) {
+    protected open fun populateRelation(row: ContentValues) {
         row.getAsString(Relation.NAME)?.let { name ->
             val related = Related()
             related.text = name
@@ -509,7 +512,7 @@ open class AndroidContact(
         }
     }
 
-    protected fun populateSipAddress(row: ContentValues) {
+    protected open fun populateSipAddress(row: ContentValues) {
         try {
             val impp = Impp("sip:" + row.getAsString(SipAddress.SIP_ADDRESS))
             val labeledImpp = LabeledProperty(impp)
@@ -537,12 +540,10 @@ open class AndroidContact(
      * @param mimeType    MIME type of the row
      * @param row         values of the row
      */
-    @Throws(ContactsStorageException::class)
-    open protected fun populateData(mimeType: String, row: ContentValues) {
+    protected open fun populateData(mimeType: String, row: ContentValues) {
     }
 
 
-    @Throws(ContactsStorageException::class)
     fun create(): Uri {
         val batch = BatchOperation(addressBook.provider!!)
 
@@ -562,7 +563,6 @@ open class AndroidContact(
         return result.uri
     }
 
-    @Throws(ContactsStorageException::class)
     fun update(contact: Contact): Int {
         this.contact = contact
 
@@ -586,16 +586,10 @@ open class AndroidContact(
         return results
     }
 
-    @Throws(ContactsStorageException::class)
-    fun delete() =
-        try {
-            addressBook.provider!!.delete(rawContactSyncURI(), null, null)
-        } catch (e: RemoteException) {
-            throw ContactsStorageException("Couldn't delete local contact", e)
-        }
+    fun delete() = addressBook.provider!!.delete(rawContactSyncURI(), null, null)
 
 
-    protected fun buildContact(builder: ContentProviderOperation.Builder, update: Boolean) {
+    protected open fun buildContact(builder: ContentProviderOperation.Builder, update: Boolean) {
         if (!update)
             builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.account.name)
                     .withValue(RawContacts.ACCOUNT_TYPE, addressBook.account.type)
@@ -615,10 +609,9 @@ open class AndroidContact(
      * Override this (and call [super]!) to add custom data rows,
      * for example generated from some properties of [contact].
      * @param  batch    batch operation used to insert the data rows
-     * @throws ContactsStorageException on contact provider errors
+     * @throws RemoteException on contact provider errors
      */
-    @Throws(ContactsStorageException::class)
-    open protected fun insertDataRows(batch: BatchOperation) {
+    protected open fun insertDataRows(batch: BatchOperation) {
         val contact = requireNotNull(contact)
 
         insertStructuredName(batch)
@@ -638,7 +631,7 @@ open class AndroidContact(
         contact.birthDay?.let { insertEvent(batch, Event.TYPE_BIRTHDAY, it) }
     }
 
-    protected fun insertStructuredName(batch: BatchOperation) {
+    protected open fun insertStructuredName(batch: BatchOperation) {
         val contact = requireNotNull(contact)
         if     (contact.displayName == null &&
                 contact.prefix == null &&
@@ -669,7 +662,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertPhoneNumber(batch: BatchOperation, labeledNumber: LabeledProperty<Telephone>) {
+    protected open fun insertPhoneNumber(batch: BatchOperation, labeledNumber: LabeledProperty<Telephone>) {
         val number = labeledNumber.property
 
         val types = number.types
@@ -761,7 +754,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertEmail(batch: BatchOperation, labeledEmail: LabeledProperty<ezvcard.property.Email>) {
+    protected open fun insertEmail(batch: BatchOperation, labeledEmail: LabeledProperty<ezvcard.property.Email>) {
         val email = labeledEmail.property
 
         val types = email.types
@@ -819,7 +812,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertOrganization(batch: BatchOperation) {
+    protected open fun insertOrganization(batch: BatchOperation) {
         val contact = requireNotNull(contact)
         if (contact.organization == null && contact.jobTitle == null && contact.jobDescription == null)
             return
@@ -852,7 +845,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertIMPP(batch: BatchOperation, labeledImpp: LabeledProperty<Impp>) {
+    protected open fun insertIMPP(batch: BatchOperation, labeledImpp: LabeledProperty<Impp>) {
         val impp = labeledImpp.property
 
         var typeCode: Int = Im.TYPE_OTHER
@@ -932,7 +925,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertNickname(batch: BatchOperation) {
+    protected open fun insertNickname(batch: BatchOperation) {
         val nick = contact!!.nickName
         if (nick == null || nick.values.isEmpty())
             return
@@ -969,7 +962,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertNote(batch: BatchOperation) {
+    protected open fun insertNote(batch: BatchOperation) {
         val contact = requireNotNull(contact)
         if (contact.note.isNullOrEmpty())
             return
@@ -988,7 +981,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertStructuredPostal(batch: BatchOperation, labeledAddress: LabeledProperty<Address>) {
+    protected open fun insertStructuredPostal(batch: BatchOperation, labeledAddress: LabeledProperty<Address>) {
         val address = labeledAddress.property
 
         var formattedAddress = address.label
@@ -1005,9 +998,9 @@ open class AndroidContact(
             val lineLocality = arrayOf(address.postalCode, address.locality).filterNot { it.isNullOrEmpty() }.joinToString(" ")
 
             val lines = LinkedList<String>()
-            if (!lineStreet.isNullOrEmpty())
+            if (!lineStreet.isEmpty())
                 lines += lineStreet
-            if (!lineLocality.isNullOrEmpty())
+            if (!lineLocality.isEmpty())
                 lines += lineLocality
             if (!address.region.isNullOrEmpty())
                 lines += address.region
@@ -1057,7 +1050,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertWebsite(batch: BatchOperation, labeledUrl: LabeledProperty<Url>) {
+    protected open fun insertWebsite(batch: BatchOperation, labeledUrl: LabeledProperty<Url>) {
         val url = labeledUrl.property
 
         val typeCode: Int
@@ -1098,15 +1091,15 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertEvent(batch: BatchOperation, type: Int, dateOrTime: DateOrTimeProperty) {
+    protected open fun insertEvent(batch: BatchOperation, type: Int, dateOrTime: DateOrTimeProperty) {
         val dateStr: String
-        when {
+        dateStr = when {
             dateOrTime.date != null -> {
                 val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                dateStr = format.format(dateOrTime.date)
+                format.format(dateOrTime.date)
             }
             dateOrTime.partialDate != null ->
-                dateStr = dateOrTime.partialDate.toString()
+                dateOrTime.partialDate.toString()
             else -> {
                 Constants.log.log(Level.WARNING, "Ignoring date/time without (partial) date", dateOrTime)
                 return
@@ -1128,7 +1121,7 @@ open class AndroidContact(
         Constants.log.log(Level.FINER, "Built Event data row", builder.build())
     }
 
-    protected fun insertRelation(batch: BatchOperation, related: Related) {
+    protected open fun insertRelation(batch: BatchOperation, related: Related) {
         if (related.text.isNullOrEmpty())
             return
 
@@ -1161,7 +1154,7 @@ open class AndroidContact(
         batch.enqueue(op)
     }
 
-    protected fun insertPhoto(orig: ByteArray?) {
+    protected open fun insertPhoto(orig: ByteArray?) {
         if (orig == null)
             return
 
@@ -1236,12 +1229,9 @@ open class AndroidContact(
     }
 
 
-    override fun toString() = ToStringBuilder.reflectionToString(this)!!
-
-
     // helpers
 
-    protected fun queryPhotoMaxDimensions(): Int {
+    protected open fun queryPhotoMaxDimensions(): Int {
         try {
             addressBook.provider?.query(ContactsContract.DisplayPhoto.CONTENT_MAX_DIMENSIONS_URI,
                     arrayOf(ContactsContract.DisplayPhoto.DISPLAY_MAX_DIM), null, null, null)?.use { cursor ->
@@ -1259,7 +1249,8 @@ open class AndroidContact(
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, id))
     }
 
-    protected fun dataSyncURI() =
-            addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)
+    protected fun dataSyncURI() = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)
+
+    override fun toString() = ToStringBuilder.reflectionToString(this)!!
 
 }

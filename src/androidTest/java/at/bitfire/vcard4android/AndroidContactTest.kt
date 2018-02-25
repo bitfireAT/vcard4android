@@ -78,7 +78,7 @@ class AndroidContactTest {
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.create()
 
-        val contact2 = AndroidContact(addressBook, contact.id!!, null, null)
+        val contact2 = addressBook.findContactByID(contact.id!!)
         try {
             val vcard2 = contact2.contact!!
             assertEquals(vcard.displayName, vcard2.displayName)
@@ -110,7 +110,7 @@ class AndroidContactTest {
         val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
         dbContact.create()
 
-        val dbContact2 = AndroidContact(addressBook, dbContact.id!!, null, null)
+        val dbContact2 = addressBook.findContactByID(dbContact.id!!)
         try {
             val contact2 = dbContact2.contact!!
             assertEquals("Test", contact2.displayName)
@@ -132,7 +132,7 @@ class AndroidContactTest {
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.create()
 
-        val contact2 = AndroidContact(addressBook, contact.id!!, null, null)
+        val contact2 = addressBook.findContactByID(contact.id!!)
         try {
             val vcard2 = contact2.contact!!
             assertEquals(4000, vcard2.emails.size)
@@ -191,7 +191,7 @@ class AndroidContactTest {
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.create()
 
-        val contact2 = AndroidContact(addressBook, contact.id!!, null, null)
+        val contact2 = addressBook.findContactByID(contact.id!!)
         try {
             val vcard2 = contact2.contact!!
             assertEquals(vcard.displayName, vcard2.displayName)

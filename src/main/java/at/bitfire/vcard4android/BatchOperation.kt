@@ -25,14 +25,13 @@ class BatchOperation(
 
     fun enqueue(operation: Operation) = queue.add(operation)
 
-    @Throws(ContactsStorageException::class)
     fun commit(): Int {
         var affected = 0
         if (!queue.isEmpty())
             try {
                 Constants.log.fine("Committing ${queue.size} operations …")
 
-                results = Array<ContentProviderResult?>(queue.size, { null })
+                results = Array(queue.size, { null })
                 runBatch(0, queue.size)
 
                 for (result in results.filterNotNull())
@@ -54,16 +53,14 @@ class BatchOperation(
 
 
     /**
-     * Runs a subset of the operations in {@link #queue} using {@link #providerClient} in a transaction.
-     * Catches {@link TransactionTooLargeException} and splits the operations accordingly.
-     * @param start    index of first operation which will be run (inclusive)
-     * @param end      index of last operation which will be run (exclusive!)
-     * @throws RemoteException  if the provider clients throws a {@link RemoteException}, or
-     *                          if the transaction is too large and can't be split
-     * @throws OperationApplicationException
-     * @throws ContactsStorageException
+     * Runs a subset of the operations in [queue] using [providerClient] in a transaction.
+     * Catches [TransactionTooLargeException] and splits the operations accordingly.
+     * @param start index of first operation which will be run (inclusive)
+     * @param end   index of last operation which will be run (exclusive!)
+     * @throws RemoteException on contact provider errors
+     * @throws OperationApplicationException when the batch can't be processed
+     * @throws ContactsStorageException if the transaction is too large or if the batch operation failed partially
      */
-    @Throws(RemoteException::class, OperationApplicationException::class, ContactsStorageException::class)
     private fun runBatch(start: Int, end: Int) {
         if (end == start)
             return     // nothing to do
@@ -80,7 +77,7 @@ class BatchOperation(
         } catch(e: TransactionTooLargeException) {
             if (end <= start + 1)
             // only one operation, can't be split
-                throw RemoteException("Can't transfer data to content provider (data row too large)")
+                throw ContactsStorageException("Can't transfer data to content provider (data row too large)")
 
             Constants.log.warning("Transaction too large, splitting (losing atomicity)")
             val mid = start + (end - start)/2
@@ -89,7 +86,7 @@ class BatchOperation(
         }
     }
 
-    fun toCPO(start: Int, end: Int): ArrayList<ContentProviderOperation> {
+    private fun toCPO(start: Int, end: Int): ArrayList<ContentProviderOperation> {
         val cpo = ArrayList<ContentProviderOperation>(end - start)
 
         for ((i, op) in queue.subList(start, end).withIndex()) {
@@ -116,7 +113,7 @@ class BatchOperation(
     }
 
 
-    class Operation @JvmOverloads constructor(
+    class Operation constructor(
             val builder: ContentProviderOperation.Builder,
             val backrefKey: String? = null,
             val backrefIdx: Int = -1

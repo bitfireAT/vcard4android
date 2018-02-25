@@ -10,6 +10,7 @@ package at.bitfire.vcard4android.impl
 
 import android.accounts.Account
 import android.content.ContentProviderClient
+import android.content.ContentValues
 import at.bitfire.vcard4android.*
 
 class TestAddressBook(
@@ -19,22 +20,16 @@ class TestAddressBook(
 
     object ContactFactory: AndroidContactFactory<AndroidContact> {
 
-        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, *>, id: Long, fileName: String?, eTag: String?) =
-                AndroidContact(addressBook, id, fileName, eTag)
-
-        override fun newInstance(addressBook: AndroidAddressBook<AndroidContact, *>, contact: Contact, fileName: String?, eTag: String?): AndroidContact =
-                AndroidContact(addressBook, contact, fileName, eTag)
+        override fun fromProvider(addressBook: AndroidAddressBook<AndroidContact, *>, values: ContentValues) =
+                AndroidContact(addressBook, values)
 
     }
 
 
     object GroupFactory: AndroidGroupFactory<AndroidGroup> {
 
-        override fun newInstance(addressBook: AndroidAddressBook<*, AndroidGroup>, id: Long, fileName: String?, eTag: String?) =
-                AndroidGroup(addressBook, id, fileName, eTag)
-
-        override fun newInstance(addressBook: AndroidAddressBook<*, AndroidGroup>, contact: Contact, fileName: String?, eTag: String?) =
-                AndroidGroup(addressBook, contact, fileName, eTag)
+        override fun fromProvider(addressBook: AndroidAddressBook<*, AndroidGroup>, values: ContentValues) =
+                AndroidGroup(addressBook, values)
 
     }
     

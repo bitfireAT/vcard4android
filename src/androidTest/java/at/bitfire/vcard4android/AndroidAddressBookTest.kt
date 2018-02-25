@@ -51,16 +51,16 @@ class AndroidAddressBookTest {
         var values = ContentValues()
         values.put(ContactsContract.Settings.SHOULD_SYNC, false)
         values.put(ContactsContract.Settings.UNGROUPED_VISIBLE, false)
-        addressBook.updateSettings(values)
-        values = addressBook.getSettings()
+        addressBook.settings = values
+        values = addressBook.settings
         assertFalse(values.getAsInteger(ContactsContract.Settings.SHOULD_SYNC) != 0)
         assertFalse(values.getAsInteger(ContactsContract.Settings.UNGROUPED_VISIBLE) != 0)
 
         values = ContentValues()
         values.put(ContactsContract.Settings.SHOULD_SYNC, true)
         values.put(ContactsContract.Settings.UNGROUPED_VISIBLE, true)
-        addressBook.updateSettings(values)
-        values = addressBook.getSettings()
+        addressBook.settings = values
+        values = addressBook.settings
         assertTrue(values.getAsInteger(ContactsContract.Settings.SHOULD_SYNC) != 0)
         assertTrue(values.getAsInteger(ContactsContract.Settings.UNGROUPED_VISIBLE) != 0)
     }
@@ -69,12 +69,12 @@ class AndroidAddressBookTest {
     fun testSyncState() {
 		val addressBook = TestAddressBook(testAccount, provider)
 
-        addressBook.writeSyncState(ByteArray(0))
-        assertEquals(0, addressBook.readSyncState()!!.size)
+        addressBook.syncState = ByteArray(0)
+        assertEquals(0, addressBook.syncState!!.size)
 
         val random = byteArrayOf(1, 2, 3, 4, 5)
-        addressBook.writeSyncState(random)
-        assertArrayEquals(random, addressBook.readSyncState())
+        addressBook.syncState = random
+        assertArrayEquals(random, addressBook.syncState)
     }
 
 }

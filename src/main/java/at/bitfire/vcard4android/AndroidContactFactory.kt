@@ -8,9 +8,10 @@
 
 package at.bitfire.vcard4android
 
+import android.content.ContentValues
+
 interface AndroidContactFactory<T: AndroidContact> {
 
-    fun newInstance(addressBook: AndroidAddressBook<T, out AndroidGroup>, id: Long, fileName: String?, eTag: String?): T
-    fun newInstance(addressBook: AndroidAddressBook<T, out AndroidGroup>, contact: Contact, fileName: String?, eTag: String?): T
+    fun fromProvider(addressBook: AndroidAddressBook<T, out AndroidGroup>, values: ContentValues): T
 
 }
