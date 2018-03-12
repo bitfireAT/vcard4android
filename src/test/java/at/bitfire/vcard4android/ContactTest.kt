@@ -18,6 +18,7 @@ import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
+import java.io.StringReader
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,6 +42,23 @@ class ContactTest {
         return os.toString()
     }
 
+
+    @Test
+    fun testDropEmptyProperties() {
+        val vcard = "BEGIN:VCARD\n" +
+                "VERSION:4.0\n" +
+                "FN:Sample with empty values\n" +
+                "TEL:12345\n" +
+                "TEL:\n" +
+                "EMAIL:test@example.com\n" +
+                "EMAIL:\n" +
+                "END:VCARD"
+        val c = Contact.fromReader(StringReader(vcard), null).first()
+        assertEquals(1, c.phoneNumbers.size)
+        assertEquals("12345", c.phoneNumbers.first.property.text)
+        assertEquals(1, c.emails.size)
+        assertEquals("test@example.com", c.emails.first.property.value)
+    }
 
     @Test
     fun testGenerateOrganizationOnly() {

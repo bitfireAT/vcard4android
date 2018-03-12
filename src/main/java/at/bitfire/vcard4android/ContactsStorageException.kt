@@ -8,4 +8,7 @@
 
 package at.bitfire.vcard4android
 
-class ContactsStorageException constructor(message: String?, ex: Throwable? = null): Exception(message, ex)
+class ContactsStorageException @JvmOverloads constructor(
+        message: String?,
+        ex: Throwable? = null
+): Exception(message, ex)

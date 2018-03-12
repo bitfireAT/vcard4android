@@ -16,7 +16,7 @@ data class LabeledProperty<out T: VCardProperty> @JvmOverloads constructor(
 ) {
 
     companion object {
-        val PROPERTY_AB_LABEL = "X-ABLabel"
+        const val PROPERTY_AB_LABEL = "X-ABLabel"
     }
 
 }

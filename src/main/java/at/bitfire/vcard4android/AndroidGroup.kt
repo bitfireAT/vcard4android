@@ -25,9 +25,9 @@ open class AndroidGroup(
 ) {
 
     companion object {
-        @JvmField val COLUMN_FILENAME = Groups.SOURCE_ID
-        @JvmField val COLUMN_UID = Groups.SYNC1
-        @JvmField val COLUMN_ETAG = Groups.SYNC2
+        const val COLUMN_FILENAME = Groups.SOURCE_ID
+        const val COLUMN_UID = Groups.SYNC1
+        const val COLUMN_ETAG = Groups.SYNC2
     }
 
     var id: Long? = null

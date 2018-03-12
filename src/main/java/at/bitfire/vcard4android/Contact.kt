@@ -75,15 +75,15 @@ class Contact {
     companion object {
         // productID (if set) will be used to generate a PRODID property.
         // You may set this statically from the calling application.
-        @JvmField var productID: String? = null
+        var productID: String? = null
 
-        val PROPERTY_ADDRESSBOOKSERVER_KIND = "X-ADDRESSBOOKSERVER-KIND"
-        val PROPERTY_ADDRESSBOOKSERVER_MEMBER = "X-ADDRESSBOOKSERVER-MEMBER"
+        const val PROPERTY_ADDRESSBOOKSERVER_KIND = "X-ADDRESSBOOKSERVER-KIND"
+        const val PROPERTY_ADDRESSBOOKSERVER_MEMBER = "X-ADDRESSBOOKSERVER-MEMBER"
 
-        val PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME"
-        val PROPERTY_PHONETIC_MIDDLE_NAME = "X-PHONETIC-MIDDLE-NAME"
-        val PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME"
-        val PROPERTY_SIP = "X-SIP"
+        const val PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME"
+        const val PROPERTY_PHONETIC_MIDDLE_NAME = "X-PHONETIC-MIDDLE-NAME"
+        const val PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME"
+        const val PROPERTY_SIP = "X-SIP"
 
         val PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback")!!
         val PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main")!!
@@ -93,18 +93,18 @@ class Contact {
 
         val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
 
-        val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
-        val NICKNAME_TYPE_SHORT_NAME = "x-short-name"
-        val NICKNAME_TYPE_INITIALS = "x-initials"
-        val NICKNAME_TYPE_OTHER_NAME = "x-other-name"
+        const val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
+        const val NICKNAME_TYPE_SHORT_NAME = "x-short-name"
+        const val NICKNAME_TYPE_INITIALS = "x-initials"
+        const val NICKNAME_TYPE_OTHER_NAME = "x-other-name"
 
-        val URL_TYPE_HOMEPAGE = "x-homepage"
-        val URL_TYPE_BLOG = "x-blog"
-        val URL_TYPE_PROFILE = "x-profile"
-        val URL_TYPE_FTP = "x-ftp"
+        const val URL_TYPE_HOMEPAGE = "x-homepage"
+        const val URL_TYPE_BLOG = "x-blog"
+        const val URL_TYPE_PROFILE = "x-profile"
+        const val URL_TYPE_FTP = "x-ftp"
 
-        val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
-        val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
+        const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
+        const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
 
 
         /**
@@ -115,8 +115,6 @@ class Contact {
          * @return list of filled Event data objects (may have size 0) – doesn't return null
          * @throws IOException on I/O errors when reading the stream
          */
-        @JvmStatic
-        @Throws(IOException::class)
         fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
             val vcards = Ezvcard.parse(reader).all()
             val contacts = LinkedList<Contact>()
@@ -124,7 +122,6 @@ class Contact {
             return contacts
         }
 
-        @JvmStatic
         private fun fromVCard(vCard: VCard, downloader: Downloader?): Contact {
             val c = Contact()
 
@@ -161,8 +158,10 @@ class Contact {
                     is Title -> c.jobTitle = StringUtils.trimToNull(prop.value)
                     is Role -> c.jobDescription = StringUtils.trimToNull(prop.value)
 
-                    is Telephone -> c.phoneNumbers += LabeledProperty(prop, findLabel(prop.group))
-                    is Email -> c.emails += LabeledProperty(prop, findLabel(prop.group))
+                    is Telephone -> if (!prop.text.isNullOrBlank())
+                        c.phoneNumbers += LabeledProperty(prop, findLabel(prop.group))
+                    is Email -> if (!prop.value.isNullOrBlank())
+                        c.emails += LabeledProperty(prop, findLabel(prop.group))
                     is Impp -> c.impps += LabeledProperty(prop, findLabel(prop.group))
                     is Address -> c.addresses += LabeledProperty(prop, findLabel(prop.group))
 

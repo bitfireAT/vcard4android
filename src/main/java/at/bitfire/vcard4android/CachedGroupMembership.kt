@@ -12,10 +12,10 @@ import android.provider.ContactsContract.RawContacts.Data
 
 object CachedGroupMembership {
 
-    @JvmField val CONTENT_ITEM_TYPE = "x.davdroid/cached-group-membership"
+    const val CONTENT_ITEM_TYPE = "x.davdroid/cached-group-membership"
 
-    @JvmField val MIMETYPE = Data.MIMETYPE
-    @JvmField val RAW_CONTACT_ID = Data.RAW_CONTACT_ID
-    @JvmField val GROUP_ID = Data.DATA1
+    const val MIMETYPE = Data.MIMETYPE
+    const val RAW_CONTACT_ID = Data.RAW_CONTACT_ID
+    const val GROUP_ID = Data.DATA1
 
 }
