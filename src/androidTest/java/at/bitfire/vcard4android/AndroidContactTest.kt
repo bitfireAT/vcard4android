@@ -76,7 +76,7 @@ class AndroidContactTest {
         vcard.photo = samplePhoto
 
         val contact = AndroidContact(addressBook, vcard, null, null)
-        contact.create()
+        contact.add()
 
         val contact2 = addressBook.findContactByID(contact.id!!)
         try {
@@ -108,7 +108,7 @@ class AndroidContactTest {
         val contacts = Contact.fromReader(StringReader(vCard), null)
 
         val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
-        dbContact.create()
+        dbContact.add()
 
         val dbContact2 = addressBook.findContactByID(dbContact.id!!)
         try {
@@ -130,7 +130,7 @@ class AndroidContactTest {
             vcard.emails += LabeledProperty<Email>(Email("test$i@example.com"))
 
         val contact = AndroidContact(addressBook, vcard, null, null)
-        contact.create()
+        contact.add()
 
         val contact2 = addressBook.findContactByID(contact.id!!)
         try {
@@ -151,7 +151,7 @@ class AndroidContactTest {
         val eTag = String(data)
 
         val contact = AndroidContact(addressBook, vcard, null, eTag)
-        contact.create()
+        contact.add()
     }
 
     @Test
@@ -189,7 +189,7 @@ class AndroidContactTest {
         vcard.birthDay = Birthday(PartialDate.parse("-04-16"))
 
         val contact = AndroidContact(addressBook, vcard, null, null)
-        contact.create()
+        contact.add()
 
         val contact2 = addressBook.findContactByID(contact.id!!)
         try {

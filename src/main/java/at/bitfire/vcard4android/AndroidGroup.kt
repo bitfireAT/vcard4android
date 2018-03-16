@@ -114,7 +114,7 @@ open class AndroidGroup(
      * @return number of affected rows
      * @throws RemoteException on contact provider errors
      */
-    fun create(): Uri {
+    fun add(): Uri {
         val values = contentValues()
 		values.put(Groups.ACCOUNT_TYPE, addressBook.account.type)
 		values.put(Groups.ACCOUNT_NAME, addressBook.account.name)
@@ -125,9 +125,6 @@ open class AndroidGroup(
         return uri
 	}
 
-    fun update(values: ContentValues) = addressBook.provider!!.update(groupSyncURI(), values, null, null)
-    fun delete() = addressBook.provider!!.delete(groupSyncURI(), null, null)
-
     /**
      * Updates a group from a [Contact], which represents a vCard received from the
      * CardDAV server.
@@ -135,10 +132,18 @@ open class AndroidGroup(
      * @return number of affected rows
      * @throws RemoteException on contact provider errors
      */
-    fun updateFromServer(contact: Contact): Int {
+    fun update(contact: Contact): Uri {
         this.contact = contact
         return update(contentValues())
     }
+
+    fun update(values: ContentValues): Uri {
+        val uri = groupSyncURI()
+        addressBook.provider!!.update(uri, values, null, null)
+        return uri
+    }
+
+    fun delete() = addressBook.provider!!.delete(groupSyncURI(), null, null)
 
 
     // helpers

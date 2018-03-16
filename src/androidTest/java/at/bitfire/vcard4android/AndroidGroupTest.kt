@@ -59,7 +59,7 @@ class AndroidGroupTest {
 
         // create group
         val group = AndroidGroup(addressBook, contact, null, null)
-        group.create()
+        group.add()
         val groups = addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!))
         assertEquals(1, groups.size)
         val contact2 = groups.first().contact

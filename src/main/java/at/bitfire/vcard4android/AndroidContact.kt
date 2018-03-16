@@ -544,7 +544,7 @@ open class AndroidContact(
     }
 
 
-    fun create(): Uri {
+    fun add(): Uri {
         val batch = BatchOperation(addressBook.provider!!)
 
         val builder = ContentProviderOperation.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI))
@@ -563,12 +563,12 @@ open class AndroidContact(
         return result.uri
     }
 
-    fun update(contact: Contact): Int {
+    fun update(contact: Contact): Uri {
         this.contact = contact
 
         val batch = BatchOperation(addressBook.provider!!)
-
-        val builder = ContentProviderOperation.newUpdate(rawContactSyncURI())
+        val uri = rawContactSyncURI()
+        val builder = ContentProviderOperation.newUpdate(uri)
         buildContact(builder, true)
         batch.enqueue(BatchOperation.Operation(builder))
 
@@ -583,7 +583,7 @@ open class AndroidContact(
 
         insertPhoto(contact.photo)
 
-        return results
+        return uri
     }
 
     fun delete() = addressBook.provider!!.delete(rawContactSyncURI(), null, null)
@@ -606,7 +606,7 @@ open class AndroidContact(
 
     /**
      * Inserts the data rows for a given raw contact.
-     * Override this (and call [super]!) to add custom data rows,
+     * Override this (and call the super class!) to add custom data rows,
      * for example generated from some properties of [contact].
      * @param  batch    batch operation used to insert the data rows
      * @throws RemoteException on contact provider errors
@@ -772,7 +772,7 @@ open class AndroidContact(
             types -= EmailType.PREF
         }
 
-        var typeCode: Int = 0
+        var typeCode = 0
         var typeLabel: String? = null
         if (labeledEmail.label != null) {
             typeCode = Email.TYPE_CUSTOM

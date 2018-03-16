@@ -12,7 +12,6 @@ import java.util.logging.Logger
 
 object Constants {
 
-    @JvmField
     val log = Logger.getLogger("davdroid.vcard4android")!!
 
 }

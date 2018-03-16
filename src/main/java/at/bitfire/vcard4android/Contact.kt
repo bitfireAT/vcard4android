@@ -118,7 +118,7 @@ class Contact {
         fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
             val vcards = Ezvcard.parse(reader).all()
             val contacts = LinkedList<Contact>()
-            vcards?.forEach { contacts.add(fromVCard(it, downloader)) }
+            vcards?.forEach { contacts += fromVCard(it, downloader) }
             return contacts
         }
 
