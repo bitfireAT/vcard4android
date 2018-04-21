@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.2.31'
+    ext.kotlin_version = '1.2.40'
     ext.dokka_version = '0.9.16'
 
     repositories {
@@ -11,7 +11,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:${dokka_version}"
+        classpath "org.jetbrains.dokka:dokka-android-gradle-plugin:$dokka_version"
     }
 }
 
@@ -54,7 +54,7 @@ android {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     compile 'org.apache.commons:commons-text:1.1'
     compile 'commons-io:commons-io:2.6'
