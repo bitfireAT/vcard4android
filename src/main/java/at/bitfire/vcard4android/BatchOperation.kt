@@ -29,9 +29,9 @@ class BatchOperation(
         var affected = 0
         if (!queue.isEmpty())
             try {
-                Constants.log.fine("Committing ${queue.size} operations …")
+                Constants.log.fine("Committing ${queue.size} operations")
 
-                results = Array(queue.size, { null })
+                results = arrayOfNulls(queue.size)
                 runBatch(0, queue.size)
 
                 for (result in results.filterNotNull())
@@ -59,24 +59,25 @@ class BatchOperation(
      * @param end   index of last operation which will be run (exclusive!)
      * @throws RemoteException on contact provider errors
      * @throws OperationApplicationException when the batch can't be processed
-     * @throws ContactsStorageException if the transaction is too large or if the batch operation failed partially
+     * @throws ContactsStorageException if the transaction is too large
      */
     private fun runBatch(start: Int, end: Int) {
         if (end == start)
             return     // nothing to do
 
         try {
-            Constants.log.fine("Running operations $start to ${end-1}")
-            val partResults = providerClient.applyBatch(toCPO(start, end))
+            val ops = toCPO(start, end)
+            Constants.log.fine("Running {${ops.size}} operations ($start .. ${end-1})")
+            val partResults = providerClient.applyBatch(ops)
 
             val n = end - start
             if (partResults.size != n)
-                throw ContactsStorageException("Batch operation failed partially (only ${partResults.size} of $n operations done)")
+                Constants.log.warning("Batch operation returned only ${partResults.size} instead of $n results")
 
-            System.arraycopy(partResults, 0, results, start, n)
+            System.arraycopy(partResults, 0, results, start, partResults.size)
         } catch(e: TransactionTooLargeException) {
             if (end <= start + 1)
-            // only one operation, can't be split
+                // only one operation, can't be split
                 throw ContactsStorageException("Can't transfer data to content provider (data row too large)")
 
             Constants.log.warning("Transaction too large, splitting (losing atomicity)")
@@ -93,13 +94,13 @@ class BatchOperation(
             val builder = op.builder
             op.backrefKey?.let { key ->
                 if (op.backrefIdx < start)
-                // back reference is outside of the current batch
+                    // back reference is outside of the current batch
                     results[op.backrefIdx]?.let { result ->
-                        builder.withValueBackReferences(null)
+                        builder .withValueBackReferences(null)
                                 .withValue(key, ContentUris.parseId(result.uri))
                     }
                 else
-                // back reference is in current batch, apply offset
+                    // back reference is in current batch, apply offset
                     builder.withValueBackReference(key, op.backrefIdx - start)
             }
 
