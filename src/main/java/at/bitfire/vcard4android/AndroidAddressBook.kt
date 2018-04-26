@@ -63,7 +63,7 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
     fun queryContacts(where: String?, whereArgs: Array<String>?): List<T1> {
         val contacts = LinkedList<T1>()
         provider!!.query(rawContactsSyncUri(),
-                null, where, whereArgs, null)?.let { cursor ->
+                null, where, whereArgs, null)?.use { cursor ->
             while (cursor.moveToNext()) {
                 val values = ContentValues(cursor.columnCount)
                 DatabaseUtils.cursorRowToContentValues(cursor, values)
