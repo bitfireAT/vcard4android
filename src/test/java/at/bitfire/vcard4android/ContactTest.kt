@@ -33,7 +33,7 @@ class ContactTest {
     private fun regenerate(c: Contact, vCardVersion: VCardVersion): Contact {
         val os = ByteArrayOutputStream()
         c.write(vCardVersion, GroupMethod.CATEGORIES, os)
-        return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), null).get(0)
+        return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), null).first()
     }
 
     private fun toString(c: Contact, groupMethod: GroupMethod, vCardVersion: VCardVersion): String {
@@ -156,11 +156,11 @@ class ContactTest {
         assertFalse(vCard.contains("\nN:"))
 
         // phone number available
-        c.phoneNumbers += LabeledProperty<Telephone>(Telephone("12345"))
+        c.phoneNumbers += LabeledProperty(Telephone("12345"))
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:12345\r\n"))
 
         // email address available
-        c.emails += LabeledProperty<Email>(Email("test@example.com"))
+        c.emails += LabeledProperty(Email("test@example.com"))
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:test@example.com\r\n"))
 
         // nick name available
@@ -173,7 +173,7 @@ class ContactTest {
     fun testGenerateLabeledProperty() {
         var c = Contact()
         c.uid = UUID.randomUUID().toString()
-        c.phoneNumbers += LabeledProperty<Telephone>(Telephone("12345"), "My Phone")
+        c.phoneNumbers += LabeledProperty(Telephone("12345"), "My Phone")
         val vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
         assertTrue(vCard.contains("\ndavdroid1.TEL:12345\r\n"))
         assertTrue(vCard.contains("\ndavdroid1.X-ABLabel:My Phone\r\n"))

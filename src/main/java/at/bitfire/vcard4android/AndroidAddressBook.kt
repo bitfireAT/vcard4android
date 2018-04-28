@@ -22,8 +22,8 @@ import java.util.*
 open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         var account: Account,
         val provider: ContentProviderClient?,
-        val contactFactory: AndroidContactFactory<T1>,
-        val groupFactory: AndroidGroupFactory<T2>
+        protected val contactFactory: AndroidContactFactory<T1>,
+        protected val groupFactory: AndroidGroupFactory<T2>
 ) {
 
     var settings: ContentValues
@@ -57,7 +57,7 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 
     var syncState: ByteArray?
         get() = ContactsContract.SyncState.get(provider, account)
-        set(data: ByteArray?) = ContactsContract.SyncState.set(provider, account, data)
+        set(data) = ContactsContract.SyncState.set(provider, account, data)
 
 
     fun queryContacts(where: String?, whereArgs: Array<String>?): List<T1> {

@@ -240,9 +240,9 @@ class Contact {
         private fun uriToUID(uriString: String?): String? {
             if (uriString == null)
                 return null
-            try {
+            return try {
                 val uri = URI(uriString)
-                return when {
+                when {
                     uri.scheme == null ->
                         uri.schemeSpecificPart
                     uri.scheme.equals("urn", true) && uri.schemeSpecificPart.startsWith("uuid:", true) ->
@@ -252,7 +252,7 @@ class Contact {
                 }
             } catch(e: URISyntaxException) {
                 Constants.log.warning("Invalid URI for UID: $uriString")
-                return uriString
+                uriString
             }
         }
 
@@ -285,7 +285,7 @@ class Contact {
 
     @Throws(IOException::class)
     fun write(vCardVersion: VCardVersion, groupMethod: GroupMethod, os: OutputStream) {
-        var vCard: VCard = VCard()
+        var vCard = VCard()
         try {
             unknownProperties?.let { vCard = Ezvcard.parse(unknownProperties).first() }
         } catch (e: Exception) {
@@ -426,16 +426,16 @@ class Contact {
             else prop.partialDate?.let { partial ->
                 // VCard 3: partial date with month and day, but without year
                 if (partial.date != null && partial.month != null) {
-                    if (partial.year != null)
+                    return if (partial.year != null)
                         // partial date is a complete date
-                        return prop
+                        prop
                     else {
                         // VCard 3: partial date with month and day, but without year
                         val fakeCal = GregorianCalendar.getInstance()
                         fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.month - 1, partial.date)
                         val fakeProp = generator(fakeCal.time)
                         fakeProp.addParameter(DATE_PARAMETER_OMIT_YEAR, Integer.toString(DATE_PARAMETER_OMIT_YEAR_DEFAULT))
-                        return fakeProp
+                        fakeProp
                     }
                 }
             }

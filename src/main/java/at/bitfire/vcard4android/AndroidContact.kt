@@ -6,7 +6,7 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.vcard4android;
+package at.bitfire.vcard4android
 
 import android.content.ContentProviderOperation
 import android.content.ContentUris

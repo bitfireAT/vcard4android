@@ -28,7 +28,7 @@ class AndroidGroupTest {
     @Rule
     val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-    private val testAccount = Account("AndroidContactGroupTest", "at.bitfire.vcard4android")!!
+    private val testAccount = Account("AndroidContactGroupTest", "at.bitfire.vcard4android")
 
     private lateinit var provider: ContentProviderClient
     private lateinit var addressBook: TestAddressBook

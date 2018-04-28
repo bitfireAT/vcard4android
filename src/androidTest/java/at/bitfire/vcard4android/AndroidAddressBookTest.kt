@@ -29,7 +29,7 @@ class AndroidAddressBookTest {
     val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
     private val testAccount = Account("AndroidAddressBookTest", "at.bitfire.vcard4android")
-    lateinit var provider: ContentProviderClient
+    private lateinit var provider: ContentProviderClient
 
 	@Before
 	fun connect() {

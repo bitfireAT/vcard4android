@@ -40,8 +40,8 @@ class AndroidContactTest {
 
     private val testAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
     
-    lateinit var provider: ContentProviderClient
-    lateinit var addressBook: TestAddressBook
+    private lateinit var provider: ContentProviderClient
+    private lateinit var addressBook: TestAddressBook
 
     @Before
     fun connect() {
@@ -127,7 +127,7 @@ class AndroidContactTest {
         val vcard = Contact()
         vcard.displayName = "Large Transaction (many rows)"
         for (i in 0 until 4000)
-            vcard.emails += LabeledProperty<Email>(Email("test$i@example.com"))
+            vcard.emails += LabeledProperty(Email("test$i@example.com"))
 
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.add()
@@ -160,7 +160,7 @@ class AndroidContactTest {
         address.label = "My \"Label\"\nLine 2"
         address.streetAddress = "Street \"Address\""
         val contact = Contact()
-        contact.addresses += LabeledProperty<Address>(address)
+        contact.addresses += LabeledProperty(address)
 
         /* label-param = "LABEL=" param-value
          * param-values must not contain DQUOTE and should be encoded as defined in RFC 6868
