@@ -441,8 +441,8 @@ class Contact {
             }
             return null
         }
-        anniversary?.let { vCard.anniversary = dateOrPartialDate(it, { time -> Anniversary(time, false) }) }
-        birthDay?.let { vCard.birthday = dateOrPartialDate(it, { time -> Birthday(time, false) }) }
+        anniversary?.let { vCard.anniversary = dateOrPartialDate(it) { time -> Anniversary(time, false) } }
+        birthDay?.let { vCard.birthday = dateOrPartialDate(it) { time -> Birthday(time, false) } }
 
         // RELATED
         relations.forEach { vCard.addRelated(it) }

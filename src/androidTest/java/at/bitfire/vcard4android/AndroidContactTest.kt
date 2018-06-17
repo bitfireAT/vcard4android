@@ -147,7 +147,7 @@ class AndroidContactTest {
         vcard.displayName = "Large Transaction (one row which is too large)"
 
         // 1 MB eTag ... have fun
-        val data = CharArray(1024*1024, { 'x' })
+        val data = CharArray(1024*1024) { 'x' }
         val eTag = String(data)
 
         val contact = AndroidContact(addressBook, vcard, null, eTag)
