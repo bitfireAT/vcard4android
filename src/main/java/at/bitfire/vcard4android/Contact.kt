@@ -226,6 +226,13 @@ class Contact {
                 c.uid = UUID.randomUUID().toString()
             }
 
+            // remove properties which
+            // - couldn't be parsed (and thus are treated as extended/unknown properties), and
+            // - must occur once max.
+            arrayOf("ANNIVERSARY", "BDAY", "KIND", "N", "PRODID", "REV", "UID").forEach {
+                vCard.removeExtendedProperty(it)
+            }
+
             // store all remaining properties into unknownProperties
             if (vCard.properties.isNotEmpty() || vCard.extendedProperties.isNotEmpty())
                 try {

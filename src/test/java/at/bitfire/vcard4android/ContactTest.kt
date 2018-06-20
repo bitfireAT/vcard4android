@@ -183,6 +183,12 @@ class ContactTest {
         assertEquals("My Phone", c.phoneNumbers.first.label)
     }
 
+    @Test
+    fun testInvalidREV() {
+        val c = parseContact("invalid-rev.vcf")
+        assertFalse(c.unknownProperties!!.contains("REV"))
+    }
+
 
     @Test
     fun testVCard3FieldsAsVCard3() {
