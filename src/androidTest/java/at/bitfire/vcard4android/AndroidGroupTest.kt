@@ -12,8 +12,8 @@ import android.Manifest
 import android.accounts.Account
 import android.content.ContentProviderClient
 import android.provider.ContactsContract
-import android.support.test.InstrumentationRegistry
-import android.support.test.rule.GrantPermissionRule
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -35,8 +35,8 @@ class AndroidGroupTest {
 
     @Before
     fun connect() {
-        val context = InstrumentationRegistry.getContext()
-        provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)
+        val context = InstrumentationRegistry.getInstrumentation().context
+        provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
         assertNotNull(provider)
 
         addressBook = TestAddressBook(testAccount, provider)
