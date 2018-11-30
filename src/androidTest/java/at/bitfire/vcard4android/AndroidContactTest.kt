@@ -54,6 +54,7 @@ class AndroidContactTest {
 
     @After
     fun disconnect() {
+        @Suppress("DEPRECATION")
         provider.release()
     }
 

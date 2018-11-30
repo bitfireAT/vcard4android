@@ -44,6 +44,7 @@ class AndroidGroupTest {
 
     @After
     fun disconnect() {
+        @Suppress("DEPRECATION")
         provider.release()
     }
 

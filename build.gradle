@@ -56,7 +56,7 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'org.apache.commons:commons-text:1.1'
+    implementation 'org.apache.commons:commons-text:1.6'
     implementation 'commons-io:commons-io:2.6'
 
     // ez-vcard to parse/generate VCards

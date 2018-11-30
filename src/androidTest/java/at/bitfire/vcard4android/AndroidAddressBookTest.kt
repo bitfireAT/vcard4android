@@ -40,7 +40,8 @@ class AndroidAddressBookTest {
 
 	@After
 	fun disconnect() {
-		provider.release()
+        @Suppress("DEPRECATION")
+        provider.release()
     }
 
 

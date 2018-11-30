@@ -32,7 +32,7 @@ import ezvcard.util.PartialDate
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.builder.ToStringBuilder
-import org.apache.commons.lang3.text.WordUtils
+import org.apache.commons.text.WordUtils
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -579,7 +579,7 @@ open class AndroidContact(
                         arrayOf(id.toString(), GroupMembership.CONTENT_ITEM_TYPE, CachedGroupMembership.CONTENT_ITEM_TYPE))
         ))
         insertDataRows(batch)
-        val results = batch.commit()
+        batch.commit()
 
         insertPhoto(contact.photo)
 

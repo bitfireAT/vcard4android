@@ -26,7 +26,7 @@ import java.util.*
 class ContactTest {
 
     private fun parseContact(fname: String, charset: Charset = Charsets.UTF_8) =
-            javaClass.classLoader.getResourceAsStream(fname).use { stream ->
+            javaClass.classLoader!!.getResourceAsStream(fname).use { stream ->
                 Contact.fromReader(InputStreamReader(stream, charset), null).first()
             }
 
@@ -336,7 +336,7 @@ class ContactTest {
         assertEquals("muuuum", rel.text)
 
         // PHOTO
-        javaClass.classLoader.getResourceAsStream("lol.jpg").use { photo ->
+        javaClass.classLoader!!.getResourceAsStream("lol.jpg").use { photo ->
             assertArrayEquals(IOUtils.toByteArray(photo), c.photo)
         }
     }
