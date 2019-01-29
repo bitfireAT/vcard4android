@@ -108,12 +108,13 @@ class Contact {
 
 
         /**
-         * Parses an InputStream that contains a VCard.
+         * Parses an InputStream that contains a vCard.
          *
-         * @param reader     reader for the input stream containing the VCard (pay attention to the charset)
+         * @param reader     reader for the input stream containing the vCard (pay attention to the charset)
          * @param downloader will be used to download external resources like contact photos (may be null)
          * @return list of filled Event data objects (may have size 0) – doesn't return null
          * @throws IOException on I/O errors when reading the stream
+         * @throws ezvcard.io.CannotParseException when the vCard can't be parsed
          */
         fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
             val vcards = Ezvcard.parse(reader).all()
@@ -222,7 +223,7 @@ class Contact {
             extToRemove.distinct().forEach { vCard.removeExtendedProperty(it.propertyName) }
 
             if (c.uid == null) {
-                Constants.log.warning("Received VCard without UID, generating new one")
+                Constants.log.warning("Received vCard without UID, generating new one")
                 c.uid = UUID.randomUUID().toString()
             }
 
@@ -296,7 +297,7 @@ class Contact {
         try {
             unknownProperties?.let { vCard = Ezvcard.parse(unknownProperties).first() }
         } catch (e: Exception) {
-            Constants.log.fine("Couldn't parse original VCard with retained properties")
+            Constants.log.fine("Couldn't parse original vCard with retained properties")
         }
 
         // UID
@@ -309,7 +310,7 @@ class Contact {
             if (vCardVersion == VCardVersion.V4_0) {
                 vCard.kind = Kind.group()
                 members.forEach { vCard.members += Member("urn:uuid:$it") }
-            } else {    // "VCard4 as VCard3" (Apple-style)
+            } else {    // "vCard4 as vCard3" (Apple-style)
                 vCard.setExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND, Kind.GROUP)
                 members.forEach { vCard.addExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_MEMBER, "urn:uuid:$it") }
             }
@@ -346,7 +347,7 @@ class Contact {
             vCard.structuredName = n
 
         } else if (vCardVersion == VCardVersion.V3_0) {
-            // (only) VCard 3 requires N [RFC 2426 3.1.2]
+            // (only) vCard 3 requires N [RFC 2426 3.1.2]
             if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
                 val n = StructuredName()
                 n.family = fn
@@ -431,13 +432,13 @@ class Contact {
             if (vCardVersion == VCardVersion.V4_0 || prop.date != null)
                 return prop
             else prop.partialDate?.let { partial ->
-                // VCard 3: partial date with month and day, but without year
+                // vCard 3: partial date with month and day, but without year
                 if (partial.date != null && partial.month != null) {
                     return if (partial.year != null)
                         // partial date is a complete date
                         prop
                     else {
-                        // VCard 3: partial date with month and day, but without year
+                        // vCard 3: partial date with month and day, but without year
                         val fakeCal = GregorianCalendar.getInstance()
                         fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.month - 1, partial.date)
                         val fakeProp = generator(fakeCal.time)
@@ -460,20 +461,20 @@ class Contact {
         // REV
         vCard.revision = Revision.now()
 
-        // validate VCard and log results
+        // validate vCard and log results
         val validation = vCard.validate(vCardVersion)
         if (!validation.isEmpty) {
             val msgs = LinkedList<String>()
             for ((key, warnings) in validation)
                 msgs += "  * " + key.javaClass.simpleName + " - " + warnings.joinToString(" | ")
-            Constants.log.log(Level.INFO, "Generating possibly invalid VCard", msgs.joinToString(","))
+            Constants.log.log(Level.INFO, "Generating possibly invalid vCard", msgs.joinToString(","))
         }
 
         // generate VCARD
         Ezvcard .write(vCard)
                 .version(vCardVersion)
-                .versionStrict(false)      // allow VCard4 properties in VCard3s
-                .caretEncoding(true)       // enable RFC 6868 support
+                .versionStrict(false)      // allow vCard4 properties in vCard3s
+                .caretEncoding(true)           // enable RFC 6868 support
                 .prodId(productID == null)
                 .go(os)
     }
