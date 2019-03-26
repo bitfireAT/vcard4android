@@ -26,6 +26,8 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         protected val groupFactory: AndroidGroupFactory<T2>
 ) {
 
+    open var readOnly: Boolean = false
+
     var settings: ContentValues
         /**
          * Retrieves [ContactsContract.Settings] for the current address book.

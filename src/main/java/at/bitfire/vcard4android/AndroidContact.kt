@@ -26,6 +26,7 @@ import android.provider.ContactsContract.CommonDataKinds.Organization
 import android.provider.ContactsContract.CommonDataKinds.Photo
 import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.RawContacts
+import android.provider.ContactsContract.RawContacts.Data
 import ezvcard.parameter.*
 import ezvcard.property.*
 import ezvcard.util.PartialDate
@@ -575,7 +576,7 @@ open class AndroidContact(
         // delete known data rows before adding the new ones; don't delete group memberships!
         batch.enqueue(BatchOperation.Operation(
                 ContentProviderOperation.newDelete(dataSyncURI())
-                .withSelection(RawContacts.Data.RAW_CONTACT_ID + "=? AND " + RawContacts.Data.MIMETYPE + " NOT IN (?,?)",
+                .withSelection(Data.RAW_CONTACT_ID + "=? AND " + Data.MIMETYPE + " NOT IN (?,?)",
                         arrayOf(id.toString(), GroupMembership.CONTENT_ITEM_TYPE, CachedGroupMembership.CONTENT_ITEM_TYPE))
         ))
         insertDataRows(batch)
@@ -599,6 +600,9 @@ open class AndroidContact(
                 .withValue(COLUMN_FILENAME, fileName)
                 .withValue(COLUMN_ETAG, eTag)
                 .withValue(COLUMN_UID, contact!!.uid)
+
+        if (addressBook.readOnly)
+            builder.withValue(RawContacts.RAW_CONTACT_IS_READ_ONLY, 1)
 
         Constants.log.log(Level.FINER, "Built RawContact data row", builder.build())
     }
@@ -648,7 +652,7 @@ open class AndroidContact(
             op = BatchOperation.Operation(builder)
             builder.withValue(StructuredName.RAW_CONTACT_ID, id)
         }
-        builder .withValue(RawContacts.Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+        builder .withValue(Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
                 .withValue(StructuredName.DISPLAY_NAME, contact.displayName)
                 .withValue(StructuredName.PREFIX, contact.prefix)
                 .withValue(StructuredName.GIVEN_NAME, contact.givenName)
@@ -658,6 +662,10 @@ open class AndroidContact(
                 .withValue(StructuredName.PHONETIC_GIVEN_NAME, contact.phoneticGivenName)
                 .withValue(StructuredName.PHONETIC_MIDDLE_NAME, contact.phoneticMiddleName)
                 .withValue(StructuredName.PHONETIC_FAMILY_NAME, contact.phoneticFamilyName)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built StructuredName data row", builder.build())
         batch.enqueue(op)
     }
@@ -750,6 +758,10 @@ open class AndroidContact(
                 .withValue(Phone.LABEL, typeLabel)
                 .withValue(Phone.IS_PRIMARY, if (is_primary) 1 else 0)
                 .withValue(Phone.IS_SUPER_PRIMARY, if (is_primary) 1 else 0)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Phone data row", builder.build())
         batch.enqueue(op)
     }
@@ -808,6 +820,10 @@ open class AndroidContact(
                 .withValue(Email.LABEL, typeLabel)
                 .withValue(Email.IS_PRIMARY, if (is_primary) 1 else 0)
                 .withValue(Phone.IS_SUPER_PRIMARY, if (is_primary) 1 else 0)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Email data row", builder.build())
         batch.enqueue(op)
     }
@@ -841,6 +857,10 @@ open class AndroidContact(
                 .withValue(Organization.DEPARTMENT, department)
                 .withValue(Organization.TITLE, contact.jobTitle)
                 .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Organization data row", builder.build())
         batch.enqueue(op)
     }
@@ -905,6 +925,10 @@ open class AndroidContact(
             op = BatchOperation.Operation(builder)
             builder.withValue(Im.RAW_CONTACT_ID, id)
         }
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         if (sipAddress) {
             // save as SIP address
             builder .withValue(SipAddress.MIMETYPE, SipAddress.CONTENT_ITEM_TYPE)
@@ -958,6 +982,10 @@ open class AndroidContact(
                 .withValue(Nickname.NAME, nick.values.first())
                 .withValue(Nickname.TYPE, typeCode)
                 .withValue(Nickname.LABEL, typeLabel)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Nickname data row", builder.build())
         batch.enqueue(op)
     }
@@ -977,6 +1005,10 @@ open class AndroidContact(
         }
         builder .withValue(Note.MIMETYPE, Note.CONTENT_ITEM_TYPE)
                 .withValue(Note.NOTE, contact.note)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Note data row", builder.build())
         batch.enqueue(op)
     }
@@ -1046,6 +1078,10 @@ open class AndroidContact(
                 .withValue(StructuredPostal.REGION, address.region)
                 .withValue(StructuredPostal.POSTCODE, address.postalCode)
                 .withValue(StructuredPostal.COUNTRY, address.country)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built StructuredPostal data row", builder.build())
         batch.enqueue(op)
     }
@@ -1087,6 +1123,10 @@ open class AndroidContact(
                 .withValue(Website.URL, url.value)
                 .withValue(Website.TYPE, typeCode)
                 .withValue(Website.LABEL, typeLabel)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Website data row", builder.build())
         batch.enqueue(op)
     }
@@ -1117,6 +1157,10 @@ open class AndroidContact(
         builder .withValue(Event.MIMETYPE, Event.CONTENT_ITEM_TYPE)
                 .withValue(Event.TYPE, type)
                 .withValue(Event.START_DATE, dateStr)
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         batch.enqueue(op)
         Constants.log.log(Level.FINER, "Built Event data row", builder.build())
     }
@@ -1150,6 +1194,10 @@ open class AndroidContact(
                 .withValue(Relation.NAME, related.text)
                 .withValue(Relation.TYPE, typeCode)
                 .withValue(Relation.LABEL, StringUtils.trimToNull(labels.joinToString(", ")))
+
+        if (addressBook.readOnly)
+            builder.withValue(Data.IS_READ_ONLY, 1)
+
         Constants.log.log(Level.FINER, "Built Relation data row", builder.build())
         batch.enqueue(op)
     }
@@ -1217,9 +1265,13 @@ open class AndroidContact(
             Constants.log.fine("Inserting photo BLOB for raw contact $id")
 
             val values = ContentValues(3)
-            values.put(RawContacts.Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE)
+            values.put(Data.MIMETYPE, Photo.CONTENT_ITEM_TYPE)
             values.put(Photo.RAW_CONTACT_ID, id)
             values.put(Photo.PHOTO, photo)
+
+            if (addressBook.readOnly)
+                values.put(Data.IS_READ_ONLY, 1)
+
             try {
                 addressBook.provider!!.insert(dataSyncURI(), values)
             } catch(e: RemoteException) {
