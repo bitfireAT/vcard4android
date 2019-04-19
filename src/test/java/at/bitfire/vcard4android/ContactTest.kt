@@ -175,8 +175,8 @@ class ContactTest {
         c.uid = UUID.randomUUID().toString()
         c.phoneNumbers += LabeledProperty(Telephone("12345"), "My Phone")
         val vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        assertTrue(vCard.contains("\ndavdroid1.TEL:12345\r\n"))
-        assertTrue(vCard.contains("\ndavdroid1.X-ABLabel:My Phone\r\n"))
+        assertTrue(vCard.contains("\ngroup1.TEL:12345\r\n"))
+        assertTrue(vCard.contains("\ngroup1.X-ABLabel:My Phone\r\n"))
 
         c = regenerate(c, VCardVersion.V4_0)
         assertEquals("12345", c.phoneNumbers.first.property.text)
