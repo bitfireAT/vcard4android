@@ -374,7 +374,7 @@ class Contact {
 
         fun addLabel(labeledProperty: LabeledProperty<VCardProperty>) {
             labeledProperty.label?.let {
-                val group = "davdroid${labelIterator.incrementAndGet()}"
+                val group = "group${labelIterator.incrementAndGet()}"
                 labeledProperty.property.group = group
 
                 val label = vCard.addExtendedProperty(LabeledProperty.PROPERTY_AB_LABEL, it)
