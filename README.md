@@ -11,9 +11,14 @@ It's a framework for
   from/into data classes that are compatible with the Android Contacts Provider, and
 * accessing the Android Contacts Provider by a unified API.
 
-It has been primarily developed for [DAVdroid](https://www.davdroid.com).
+It has been primarily developed for [DAVx⁵](https://www.davx5.com).
+
+_This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
+by Google LLC. Android is a trademark of Google LLC._
 
 Generated KDoc: https://bitfireAT.gitlab.io/vcard4android/dokka/vcard4android/
+
+Discussion: https://forums.bitfire.at/category/18/libraries
 
 
 ## Contact
@@ -25,9 +30,6 @@ Florastraße 27
 ```
 
 Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
-
-For questions, suggestions etc. please use the DAVdroid forum:
-https://www.davdroid.com/forums/
 
 
 ## License 
