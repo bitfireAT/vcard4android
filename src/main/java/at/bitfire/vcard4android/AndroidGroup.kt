@@ -113,6 +113,7 @@ open class AndroidGroup(
      * Creates a group with data taken from the constructor.
      * @return number of affected rows
      * @throws RemoteException on contact provider errors
+     * @throws ContactsStorageException when the group can't be added
      */
     fun add(): Uri {
         val values = contentValues()
@@ -121,6 +122,7 @@ open class AndroidGroup(
         values.put(Groups.SHOULD_SYNC, 1)
         // read-only: values.put(Groups.GROUP_VISIBLE, 1);
         val uri = addressBook.provider!!.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values)
+                ?: throw ContactsStorageException("Empty result from content provider when adding group")
         id = ContentUris.parseId(uri)
         return uri
 	}
