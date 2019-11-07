@@ -17,7 +17,6 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.RemoteException
 import android.provider.ContactsContract
-import android.provider.ContactsContract.CommonDataKinds
 import android.provider.ContactsContract.CommonDataKinds.*
 import android.provider.ContactsContract.CommonDataKinds.Email
 import android.provider.ContactsContract.CommonDataKinds.Nickname
@@ -41,6 +40,7 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Level
+import kotlin.math.min
 
 open class AndroidContact(
         val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
@@ -115,7 +115,7 @@ open class AndroidContact(
             try {
                 iter = RawContacts.newEntityIterator(addressBook.provider!!.query(
                         addressBook.syncAdapterURI(ContactsContract.RawContactsEntity.CONTENT_URI),
-                        null, ContactsContract.RawContacts._ID + "=?", arrayOf(id.toString()), null))
+                        null, RawContacts._ID + "=?", arrayOf(id.toString()), null))
 
                 if (iter.hasNext()) {
                     val e = iter.next()
@@ -135,8 +135,7 @@ open class AndroidContact(
                                 it.remove()
                         }
 
-                        val mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE)
-                        when (mimeType) {
+                        when (val mimeType = values.getAsString(ContactsContract.RawContactsEntity.MIMETYPE)) {
                             StructuredName.CONTENT_ITEM_TYPE ->
                                 populateStructuredName(values)
                             Phone.CONTENT_ITEM_TYPE ->
@@ -252,13 +251,13 @@ open class AndroidContact(
             Phone.TYPE_MMS ->
                 number.types += Contact.PHONE_TYPE_MMS
             Phone.TYPE_CUSTOM -> {
-                    row.getAsString(CommonDataKinds.Phone.LABEL)?.let {
+                    row.getAsString(Phone.LABEL)?.let {
                         labeledNumber.label = it
                         number.types += TelephoneType.get(labelToXName(it))
                     }
                 }
         }
-        if (row.getAsInteger(CommonDataKinds.Phone.IS_PRIMARY) != 0)
+        if (row.getAsInteger(Phone.IS_PRIMARY) != 0)
             number.pref = 1
 
         contact!!.phoneNumbers += labeledNumber
@@ -454,7 +453,7 @@ open class AndroidContact(
     }
 
     protected open fun populateEvent(row: ContentValues) {
-        val dateStr = row.getAsString(CommonDataKinds.Event.START_DATE)
+        val dateStr = row.getAsString(Event.START_DATE)
         var full: Date? = null
         var partial: PartialDate? = null
         val fullFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
@@ -652,7 +651,7 @@ open class AndroidContact(
             op = BatchOperation.Operation(builder)
             builder.withValue(StructuredName.RAW_CONTACT_ID, id)
         }
-        builder .withValue(Data.MIMETYPE, CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+        builder .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
                 .withValue(StructuredName.DISPLAY_NAME, contact.displayName)
                 .withValue(StructuredName.PREFIX, contact.prefix)
                 .withValue(StructuredName.GIVEN_NAME, contact.givenName)
@@ -682,9 +681,9 @@ open class AndroidContact(
         } catch(e: IllegalStateException) {
             Constants.log.log(Level.FINER, "Can't understand phone number PREF", e)
         }
-        var is_primary = pref != null
+        var isPrimary = pref != null
         if (types.contains(TelephoneType.PREF)) {
-            is_primary = true
+            isPrimary = true
             types -= TelephoneType.PREF
         }
 
@@ -756,8 +755,8 @@ open class AndroidContact(
                 .withValue(Phone.NUMBER, number.text)
                 .withValue(Phone.TYPE, typeCode)
                 .withValue(Phone.LABEL, typeLabel)
-                .withValue(Phone.IS_PRIMARY, if (is_primary) 1 else 0)
-                .withValue(Phone.IS_SUPER_PRIMARY, if (is_primary) 1 else 0)
+                .withValue(Phone.IS_PRIMARY, if (isPrimary) 1 else 0)
+                .withValue(Phone.IS_SUPER_PRIMARY, if (isPrimary) 1 else 0)
 
         if (addressBook.readOnly)
             builder.withValue(Data.IS_READ_ONLY, 1)
@@ -778,9 +777,9 @@ open class AndroidContact(
         } catch(e: IllegalStateException) {
             Constants.log.log(Level.FINER, "Can't understand email PREF", e)
         }
-        var is_primary = pref != null
+        var isPrimary = pref != null
         if (types.contains(EmailType.PREF)) {
-            is_primary = true
+            isPrimary = true
             types -= EmailType.PREF
         }
 
@@ -818,8 +817,8 @@ open class AndroidContact(
                 .withValue(Email.ADDRESS, email.value)
                 .withValue(Email.TYPE, typeCode)
                 .withValue(Email.LABEL, typeLabel)
-                .withValue(Email.IS_PRIMARY, if (is_primary) 1 else 0)
-                .withValue(Phone.IS_SUPER_PRIMARY, if (is_primary) 1 else 0)
+                .withValue(Email.IS_PRIMARY, if (isPrimary) 1 else 0)
+                .withValue(Phone.IS_SUPER_PRIMARY, if (isPrimary) 1 else 0)
 
         if (addressBook.readOnly)
             builder.withValue(Data.IS_READ_ONLY, 1)
@@ -1030,9 +1029,9 @@ open class AndroidContact(
             val lineLocality = arrayOf(address.postalCode, address.locality).filterNot { it.isNullOrEmpty() }.joinToString(" ")
 
             val lines = LinkedList<String>()
-            if (!lineStreet.isEmpty())
+            if (lineStreet.isNotEmpty())
                 lines += lineStreet
-            if (!lineLocality.isEmpty())
+            if (lineLocality.isNotEmpty())
                 lines += lineLocality
             if (!address.region.isNullOrEmpty())
                 lines += address.region
@@ -1241,7 +1240,7 @@ open class AndroidContact(
             if (width > max || height > max) {
                 val scaleWidth = max/width
                 val scaleHeight = max/height
-                val scale = Math.min(scaleWidth, scaleHeight)
+                val scale = min(scaleWidth, scaleHeight)
                 val newWidth = (width * scale).toInt()
                 val newHeight = (height * scale).toInt()
 
@@ -1298,7 +1297,7 @@ open class AndroidContact(
 
     protected fun rawContactSyncURI(): Uri {
         val id = requireNotNull(id)
-        return addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.RawContacts.CONTENT_URI, id))
+        return addressBook.syncAdapterURI(ContentUris.withAppendedId(RawContacts.CONTENT_URI, id))
     }
 
     protected fun dataSyncURI() = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)

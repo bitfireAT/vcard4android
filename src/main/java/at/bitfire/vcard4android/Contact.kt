@@ -442,7 +442,7 @@ class Contact {
                         val fakeCal = GregorianCalendar.getInstance()
                         fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.month - 1, partial.date)
                         val fakeProp = generator(fakeCal.time)
-                        fakeProp.addParameter(DATE_PARAMETER_OMIT_YEAR, Integer.toString(DATE_PARAMETER_OMIT_YEAR_DEFAULT))
+                        fakeProp.addParameter(DATE_PARAMETER_OMIT_YEAR, DATE_PARAMETER_OMIT_YEAR_DEFAULT.toString())
                         fakeProp
                     }
                 }

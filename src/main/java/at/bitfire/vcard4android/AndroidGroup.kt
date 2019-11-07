@@ -150,7 +150,7 @@ open class AndroidGroup(
 
     private fun groupSyncURI(): Uri {
         val id = requireNotNull(id)
-        return addressBook.syncAdapterURI(ContentUris.withAppendedId(ContactsContract.Groups.CONTENT_URI, id))
+        return addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id))
     }
 
     override fun toString() = ToStringBuilder.reflectionToString(this)!!
