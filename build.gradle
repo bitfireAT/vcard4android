@@ -59,6 +59,14 @@ android {
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    dokka.configuration {
+        sourceLink {
+            url = "https://gitlab.com/bitfireAT/vcard4android/tree/master/"
+            lineSuffix = "#L"
+        }
+        jdkVersion = 7
+    }
 }
 
 dependencies {
