@@ -467,7 +467,7 @@ class Contact {
             val msgs = LinkedList<String>()
             for ((key, warnings) in validation)
                 msgs += "  * " + key.javaClass.simpleName + " - " + warnings.joinToString(" | ")
-            Constants.log.log(Level.INFO, "Generating possibly invalid vCard", msgs.joinToString(","))
+            Constants.log.log(Level.WARNING, "vCard validation warnings", msgs.joinToString(","))
         }
 
         // generate VCARD
