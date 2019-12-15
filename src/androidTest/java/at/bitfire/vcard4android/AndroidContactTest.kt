@@ -19,6 +19,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
 import ezvcard.VCardVersion
+import ezvcard.parameter.EmailType
 import ezvcard.property.Address
 import ezvcard.property.Birthday
 import ezvcard.property.Email
@@ -199,6 +200,50 @@ class AndroidContactTest {
             assertEquals(vcard.birthDay, vcard2.birthDay)
         } finally {
             contact2.delete()
+        }
+    }
+
+    @Test
+    @SmallTest
+    fun testEmailTypes() {
+        val vCard = "BEGIN:VCARD\r\n" +
+                "VERSION:4.0\r\n" +
+                "FN:Test\r\n" +
+                "EMAIL;TYPE=internet;TYPE=work:work@example.com\r\n" +
+                "EMAIL;TYPE=home:home@example.com\r\n" +
+                "EMAIL;TYPE=internet,pref:other1@example.com\r\n" +
+                "EMAIL;TYPE=x400,other:other2@example.com\r\n" +
+                "EMAIL;TYPE=x-mobile:mobile@example.com\r\n" +
+                "END:VCARD\r\n"
+        val contacts = Contact.fromReader(StringReader(vCard), null)
+
+        val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
+        dbContact.add()
+
+        val dbContact2 = addressBook.findContactByID(dbContact.id!!)
+        try {
+            val contact2 = dbContact2.contact!!
+            assertEquals("work@example.com", contact2.emails[0].property.value)
+            assertArrayEquals(arrayOf(EmailType.WORK), contact2.emails[0].property.types.toTypedArray())
+            assertNull(contact2.emails[0].property.pref)
+
+            assertEquals("home@example.com", contact2.emails[1].property.value)
+            assertArrayEquals(arrayOf(EmailType.HOME), contact2.emails[1].property.types.toTypedArray())
+            assertNull(contact2.emails[1].property.pref)
+
+            assertEquals("other1@example.com", contact2.emails[2].property.value)
+            assertTrue(contact2.emails[2].property.types.isEmpty())
+            assertNotEquals(0, contact2.emails[2].property.pref)
+
+            assertEquals("other2@example.com", contact2.emails[3].property.value)
+            assertTrue(contact2.emails[3].property.types.isEmpty())
+            assertNull(contact2.emails[3].property.pref)
+
+            assertEquals("mobile@example.com", contact2.emails[4].property.value)
+            assertArrayEquals(arrayOf(Contact.EMAIL_TYPE_MOBILE), contact2.emails[4].property.types.toTypedArray())
+            assertNull(contact2.emails[4].property.pref)
+        } finally {
+            dbContact2.delete()
         }
     }
 

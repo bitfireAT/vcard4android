@@ -91,7 +91,10 @@ class Contact {
         val PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant")!!
         val PHONE_TYPE_MMS = TelephoneType.get("x-mms")!!
 
+        /** Custom email type to denote "mobile" email addresses. */
         val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
+        /** Sometimes used to denote an "other" email address. Only for compatibility – don't use it yourself! */
+        val EMAIL_TYPE_OTHER = EmailType.get("other")!!
 
         const val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
         const val NICKNAME_TYPE_SHORT_NAME = "x-short-name"

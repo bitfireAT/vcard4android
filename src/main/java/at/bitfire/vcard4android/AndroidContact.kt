@@ -768,7 +768,9 @@ open class AndroidContact(
     protected open fun insertEmail(batch: BatchOperation, labeledEmail: LabeledProperty<ezvcard.property.Email>) {
         val email = labeledEmail.property
 
+        // drop TYPE=internet and TYPE=x400 because Android only knows Internet email addresses
         val types = email.types
+        types.removeAll(arrayOf(EmailType.INTERNET, EmailType.X400))
 
         // preferred email address?
         var pref: Int? = null
@@ -794,8 +796,9 @@ open class AndroidContact(
                     EmailType.HOME -> typeCode = Email.TYPE_HOME
                     EmailType.WORK -> typeCode = Email.TYPE_WORK
                     Contact.EMAIL_TYPE_MOBILE -> typeCode = Email.TYPE_MOBILE
+                    Contact.EMAIL_TYPE_OTHER -> typeCode = Email.TYPE_OTHER
                 }
-            if (typeCode == 0) {
+            if (typeCode == 0) {    // we still didn't find a known type
                 if (email.types.isEmpty())
                     typeCode = Email.TYPE_OTHER
                 else {
