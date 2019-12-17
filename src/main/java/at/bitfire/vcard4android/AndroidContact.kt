@@ -732,6 +732,7 @@ open class AndroidContact(
                 types.contains(Contact.PHONE_TYPE_MMS) ->
                     typeCode = Phone.TYPE_MMS
 
+                types.contains(Contact.PHONE_TYPE_OTHER) ||
                 types.contains(TelephoneType.VOICE) ||
                 types.contains(TelephoneType.TEXT) -> {}
 
@@ -769,8 +770,9 @@ open class AndroidContact(
         val email = labeledEmail.property
 
         // drop TYPE=internet and TYPE=x400 because Android only knows Internet email addresses
+        // drop TYPE=other for compatibility, too (non-standard type which is only used by some clients and not useful as an explicit value)
         val types = email.types
-        types.removeAll(arrayOf(EmailType.INTERNET, EmailType.X400))
+        types.removeAll(arrayOf(EmailType.INTERNET, EmailType.X400, Contact.EMAIL_TYPE_OTHER))
 
         // preferred email address?
         var pref: Int? = null
@@ -796,7 +798,6 @@ open class AndroidContact(
                     EmailType.HOME -> typeCode = Email.TYPE_HOME
                     EmailType.WORK -> typeCode = Email.TYPE_WORK
                     Contact.EMAIL_TYPE_MOBILE -> typeCode = Email.TYPE_MOBILE
-                    Contact.EMAIL_TYPE_OTHER -> typeCode = Email.TYPE_OTHER
                 }
             if (typeCode == 0) {    // we still didn't find a known type
                 if (email.types.isEmpty())
@@ -872,7 +873,6 @@ open class AndroidContact(
 
         var typeCode: Int = Im.TYPE_OTHER
         var typeLabel: String? = null
-
         if (labeledImpp.label != null) {
             typeCode = Im.TYPE_CUSTOM
             typeLabel = labeledImpp.label
@@ -1044,20 +1044,21 @@ open class AndroidContact(
             formattedAddress = lines.joinToString("\n")
         }
 
+        val types = address.types
         var typeCode = StructuredPostal.TYPE_OTHER
         var typeLabel: String? = null
         if (labeledAddress.label != null) {
             typeCode = StructuredPostal.TYPE_CUSTOM
             typeLabel = labeledAddress.label
         } else {
-            for (type in address.types)
-                when (type) {
-                    AddressType.HOME -> typeCode = StructuredPostal.TYPE_HOME
-                    AddressType.WORK -> typeCode = StructuredPostal.TYPE_WORK
+            when {
+                types.contains(AddressType.HOME) -> typeCode = StructuredPostal.TYPE_HOME
+                types.contains(AddressType.WORK) -> typeCode = StructuredPostal.TYPE_WORK
+                types.contains(Contact.ADDRESS_TYPE_OTHER) -> {}
+                types.isNotEmpty() -> {
+                    typeCode = StructuredPostal.TYPE_CUSTOM
+                    typeLabel = xNameToLabel(address.types.first().value)
                 }
-            if (typeCode == StructuredPostal.TYPE_OTHER && address.types.isNotEmpty()) {
-                typeCode = StructuredPostal.TYPE_CUSTOM
-                typeLabel = xNameToLabel(address.types.first().value)
             }
         }
 

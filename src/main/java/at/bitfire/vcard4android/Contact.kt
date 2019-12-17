@@ -11,6 +11,7 @@ package at.bitfire.vcard4android
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
+import ezvcard.parameter.AddressType
 import ezvcard.parameter.EmailType
 import ezvcard.parameter.ImageType
 import ezvcard.parameter.TelephoneType
@@ -90,11 +91,16 @@ class Contact {
         val PHONE_TYPE_RADIO = TelephoneType.get("x-radio")!!
         val PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant")!!
         val PHONE_TYPE_MMS = TelephoneType.get("x-mms")!!
+        /** Sometimes used to denote an "other" phone numbers. Only for compatibility – don't use it yourself! */
+        val PHONE_TYPE_OTHER = TelephoneType.get("other")!!
 
         /** Custom email type to denote "mobile" email addresses. */
         val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
         /** Sometimes used to denote an "other" email address. Only for compatibility – don't use it yourself! */
         val EMAIL_TYPE_OTHER = EmailType.get("other")!!
+
+        /** Sometimes used to denote an "other" postal address. Only for compatibility – don't use it yourself! */
+        val ADDRESS_TYPE_OTHER = AddressType.get("other")!!
 
         const val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
         const val NICKNAME_TYPE_SHORT_NAME = "x-short-name"
