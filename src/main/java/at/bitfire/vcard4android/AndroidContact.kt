@@ -572,11 +572,28 @@ open class AndroidContact(
         buildContact(builder, true)
         batch.enqueue(BatchOperation.Operation(builder))
 
-        // delete known data rows before adding the new ones; don't delete group memberships!
+        // Delete known data rows before adding the new ones.
+        // - We don't delete group memberships.
+        // - We'll only delete rows we have inserted so that unknown rows like
+        //   vnd.android.cursor.item/important_people (= contact is in Samsung "edge panel") remain untouched.
         batch.enqueue(BatchOperation.Operation(
                 ContentProviderOperation.newDelete(dataSyncURI())
-                .withSelection(Data.RAW_CONTACT_ID + "=? AND " + Data.MIMETYPE + " NOT IN (?,?)",
-                        arrayOf(id.toString(), GroupMembership.CONTENT_ITEM_TYPE, CachedGroupMembership.CONTENT_ITEM_TYPE))
+                .withSelection(Data.RAW_CONTACT_ID + "=? AND " +
+                        Data.MIMETYPE + " IN (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        arrayOf(id.toString(),
+                                StructuredName.CONTENT_ITEM_TYPE,
+                                Phone.CONTENT_ITEM_TYPE,
+                                Email.CONTENT_ITEM_TYPE,
+                                Photo.CONTENT_ITEM_TYPE,
+                                Organization.CONTENT_ITEM_TYPE,
+                                Im.CONTENT_ITEM_TYPE,
+                                Nickname.CONTENT_ITEM_TYPE,
+                                Note.CONTENT_ITEM_TYPE,
+                                StructuredPostal.CONTENT_ITEM_TYPE,
+                                Website.CONTENT_ITEM_TYPE,
+                                Event.CONTENT_ITEM_TYPE,
+                                Relation.CONTENT_ITEM_TYPE,
+                                SipAddress.CONTENT_ITEM_TYPE))
         ))
         insertDataRows(batch)
         batch.commit()
