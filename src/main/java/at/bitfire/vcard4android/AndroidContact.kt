@@ -55,15 +55,15 @@ open class AndroidContact(
         fun labelToXName(label: String) = "X-" + label
                 .replace(" ","_")
                 .replace(Regex("[^\\p{L}\\p{Nd}\\-_]"), "")
-                .toUpperCase()
+                .toUpperCase(Locale.getDefault())
 
         fun xNameToLabel(xname: String): String {
             // "X-MY_PROPERTY"
-            var s = xname.toLowerCase()     // 1. ensure lower case -> "x-my_property"
-            if (s.startsWith("x-"))         // 2. remove x- from beginning -> "my_property"
+            var s = xname.toLowerCase(Locale.getDefault())    // 1. ensure lower case -> "x-my_property"
+            if (s.startsWith("x-"))                     // 2. remove x- from beginning -> "my_property"
                 s = s.substring(2)
-            s = s.replace('_', ' ')         // 3. replace "_" by " " -> "my property"
-            return WordUtils.capitalize(s)  // 4. capitalize -> "My Property"
+            s = s.replace('_', ' ')          // 3. replace "_" by " " -> "my property"
+            return WordUtils.capitalize(s)                    // 4. capitalize -> "My Property"
         }
 
         fun toURIScheme(s: String?) =
@@ -1056,7 +1056,7 @@ open class AndroidContact(
             if (!address.region.isNullOrEmpty())
                 lines += address.region
             if (!address.country.isNullOrEmpty())
-                lines += address.country.toUpperCase()
+                lines += address.country.toUpperCase(Locale.getDefault())
 
             formattedAddress = lines.joinToString("\n")
         }

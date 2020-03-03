@@ -348,11 +348,11 @@ class Contact {
         // N
         if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
             val n = StructuredName()
-            prefix?.let { it.split(' ').forEach { n.prefixes += it } }
+            prefix?.let { it.split(' ').forEach { singlePrefix -> n.prefixes += singlePrefix } }
             n.given = givenName
-            middleName?.let { it.split(' ').forEach { n.additionalNames += it } }
+            middleName?.let { it.split(' ').forEach { singleName -> n.additionalNames += singleName } }
             n.family = familyName
-            suffix?.let { it.split(' ').forEach { n.suffixes += it } }
+            suffix?.let { it.split(' ').forEach { singleSuffix -> n.suffixes += singleSuffix } }
             vCard.structuredName = n
 
         } else if (vCardVersion == VCardVersion.V3_0) {
