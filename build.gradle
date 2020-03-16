@@ -1,7 +1,7 @@
 
 buildscript {
     ext.versions = [
-        kotlin: '1.3.61',
+        kotlin: '1.3.70',
         dokka: '0.10.0'
     ]
 
@@ -76,7 +76,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.6'
 
     // ez-vcard to parse/generate VCards
-    api('com.googlecode.ez-vcard:ez-vcard:0.10.5') {
+    api('com.googlecode.ez-vcard:ez-vcard:0.10.6') {
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'
