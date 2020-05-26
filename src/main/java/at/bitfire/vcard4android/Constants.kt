@@ -12,6 +12,6 @@ import java.util.logging.Logger
 
 object Constants {
 
-    val log: Logger = Logger.getLogger("davdroid.vcard4android")
+    val log: Logger = Logger.getLogger("vcard4android")
 
 }
