@@ -17,6 +17,7 @@ import android.provider.ContactsContract.CommonDataKinds.GroupMembership
 import android.provider.ContactsContract.Groups
 import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
+import androidx.annotation.CallSuper
 import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
 
@@ -97,6 +98,7 @@ open class AndroidGroup(
         }
 
 
+    @CallSuper
     protected open fun contentValues(): ContentValues {
         val values = ContentValues()
         values.put(COLUMN_FILENAME, fileName)

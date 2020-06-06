@@ -26,6 +26,7 @@ import android.provider.ContactsContract.CommonDataKinds.Photo
 import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
+import androidx.annotation.CallSuper
 import ezvcard.parameter.*
 import ezvcard.property.*
 import ezvcard.util.PartialDate
@@ -177,6 +178,7 @@ open class AndroidContact(
             }
         }
 
+    @CallSuper
     protected open fun populateContact(row: ContentValues) {
         fileName = row.getAsString(COLUMN_FILENAME)
         eTag = row.getAsString(COLUMN_ETAG)
@@ -606,6 +608,7 @@ open class AndroidContact(
     fun delete() = addressBook.provider!!.delete(rawContactSyncURI(), null, null)
 
 
+    @CallSuper
     protected open fun buildContact(builder: ContentProviderOperation.Builder, update: Boolean) {
         if (!update)
             builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.account.name)
@@ -631,6 +634,7 @@ open class AndroidContact(
      * @param  batch    batch operation used to insert the data rows
      * @throws RemoteException on contact provider errors
      */
+    @CallSuper
     protected open fun insertDataRows(batch: BatchOperation) {
         val contact = requireNotNull(contact)
 
