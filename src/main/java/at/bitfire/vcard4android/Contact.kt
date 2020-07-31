@@ -195,7 +195,12 @@ class Contact {
                     is Logo, is Sound -> { /* remove = true */ }
 
                     // remove properties that don't apply anymore
-                    is ProductId, is Revision, is Source -> { /* remove = true */ }
+                    is ProductId,
+                    is Revision,
+                    is SortString,
+                    is Source -> {
+                        /* remove = true */
+                    }
 
                     else -> remove = false      // don't remove unknown properties
                 }
