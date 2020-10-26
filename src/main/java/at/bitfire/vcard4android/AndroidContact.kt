@@ -457,7 +457,7 @@ open class AndroidContact(
         val dateStr = row.getAsString(Event.START_DATE)
         var full: Date? = null
         var partial: PartialDate? = null
-        val fullFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val fullFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         try {
             full = fullFormat.parse(dateStr)
         } catch(e: ParseException) {
@@ -1069,7 +1069,7 @@ open class AndroidContact(
         val dateStr: String
         dateStr = when {
             dateOrTime.date != null -> {
-                val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val format = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
                 format.format(dateOrTime.date)
             }
             dateOrTime.partialDate != null ->

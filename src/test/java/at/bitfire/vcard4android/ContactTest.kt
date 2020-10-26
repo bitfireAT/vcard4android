@@ -320,7 +320,7 @@ class ContactTest {
         assertTrue(url1 && url2)
 
         // BDAY
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         assertEquals("1996-04-15", dateFormat.format(c.birthDay!!.date))
         // ANNIVERSARY
         assertEquals("2014-08-12", dateFormat.format(c.anniversary!!.date))
