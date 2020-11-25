@@ -621,8 +621,6 @@ open class AndroidContact(
 
         if (addressBook.readOnly)
             builder.withValue(RawContacts.RAW_CONTACT_IS_READ_ONLY, 1)
-
-        Constants.log.log(Level.FINER, "Built RawContact data row", builder.build())
     }
 
 
@@ -674,8 +672,6 @@ open class AndroidContact(
                 .withValue(StructuredName.PHONETIC_GIVEN_NAME, contact.phoneticGivenName)
                 .withValue(StructuredName.PHONETIC_MIDDLE_NAME, contact.phoneticMiddleName)
                 .withValue(StructuredName.PHONETIC_FAMILY_NAME, contact.phoneticFamilyName)
-
-        Constants.log.log(Level.FINER, "Built StructuredName data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -761,8 +757,6 @@ open class AndroidContact(
                 .withValue(Phone.LABEL, typeLabel)
                 .withValue(Phone.IS_PRIMARY, if (isPrimary) 1 else 0)
                 .withValue(Phone.IS_SUPER_PRIMARY, if (isPrimary) 1 else 0)
-
-        Constants.log.log(Level.FINER, "Built Phone data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -816,8 +810,6 @@ open class AndroidContact(
                 .withValue(Email.LABEL, typeLabel)
                 .withValue(Email.IS_PRIMARY, if (isPrimary) 1 else 0)
                 .withValue(Phone.IS_SUPER_PRIMARY, if (isPrimary) 1 else 0)
-
-        Constants.log.log(Level.FINER, "Built Email data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -843,8 +835,6 @@ open class AndroidContact(
                 .withValue(Organization.DEPARTMENT, department)
                 .withValue(Organization.TITLE, contact.jobTitle)
                 .withValue(Organization.JOB_DESCRIPTION, contact.jobDescription)
-
-        Constants.log.log(Level.FINER, "Built Organization data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -899,26 +889,22 @@ open class AndroidContact(
             }
         }
 
-        val builder: BatchOperation.CpoBuilder
-        if (sipAddress) {
+        val builder = if (sipAddress)
             // save as SIP address
-            builder = insertDataBuilder(SipAddress.RAW_CONTACT_ID)
+            insertDataBuilder(SipAddress.RAW_CONTACT_ID)
                     .withValue(SipAddress.MIMETYPE, SipAddress.CONTENT_ITEM_TYPE)
                     .withValue(SipAddress.DATA, impp.handle)
                     .withValue(SipAddress.TYPE, typeCode)
                     .withValue(SipAddress.LABEL, typeLabel)
-            Constants.log.log(Level.FINER, "Built SipAddress data row", builder.build())
-        } else {
+        else
             // save as IM address
-            builder = insertDataBuilder(Im.RAW_CONTACT_ID)
+            insertDataBuilder(Im.RAW_CONTACT_ID)
                     .withValue(Im.MIMETYPE, Im.CONTENT_ITEM_TYPE)
                     .withValue(Im.DATA, impp.handle)
                     .withValue(Im.TYPE, typeCode)
                     .withValue(Im.LABEL, typeLabel)
                     .withValue(Im.PROTOCOL, protocolCode)
                     .withValue(Im.CUSTOM_PROTOCOL, protocolLabel)
-            Constants.log.log(Level.FINER, "Built Im data row", builder.build())
-        }
         batch.enqueue(builder)
     }
 
@@ -948,8 +934,6 @@ open class AndroidContact(
                 .withValue(Nickname.NAME, nick.values.first())
                 .withValue(Nickname.TYPE, typeCode)
                 .withValue(Nickname.LABEL, typeLabel)
-
-        Constants.log.log(Level.FINER, "Built Nickname data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -961,8 +945,6 @@ open class AndroidContact(
         val builder = insertDataBuilder(Note.RAW_CONTACT_ID)
                 .withValue(Note.MIMETYPE, Note.CONTENT_ITEM_TYPE)
                 .withValue(Note.NOTE, contact.note)
-
-        Constants.log.log(Level.FINER, "Built Note data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -1025,8 +1007,6 @@ open class AndroidContact(
                 .withValue(StructuredPostal.REGION, address.region)
                 .withValue(StructuredPostal.POSTCODE, address.postalCode)
                 .withValue(StructuredPostal.COUNTRY, address.country)
-
-        Constants.log.log(Level.FINER, "Built StructuredPostal data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -1060,8 +1040,6 @@ open class AndroidContact(
                 .withValue(Website.URL, url.value)
                 .withValue(Website.TYPE, typeCode)
                 .withValue(Website.LABEL, typeLabel)
-
-        Constants.log.log(Level.FINER, "Built Website data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -1084,8 +1062,6 @@ open class AndroidContact(
                 .withValue(Event.MIMETYPE, Event.CONTENT_ITEM_TYPE)
                 .withValue(Event.TYPE, type)
                 .withValue(Event.START_DATE, dateStr)
-
-        Constants.log.log(Level.FINER, "Built Event data row", builder.build())
         batch.enqueue(builder)
     }
 
@@ -1111,8 +1087,6 @@ open class AndroidContact(
                 .withValue(Relation.NAME, related.text)
                 .withValue(Relation.TYPE, typeCode)
                 .withValue(Relation.LABEL, StringUtils.trimToNull(labels.joinToString(", ")))
-
-        Constants.log.log(Level.FINER, "Built Relation data row", builder.build())
         batch.enqueue(builder)
     }
 
