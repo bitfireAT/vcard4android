@@ -102,6 +102,7 @@ class BatchOperation(
 
             Constants.log.warning("Transaction too large, splitting (losing atomicity)")
             val mid = start + (end - start)/2
+
             runBatch(start, mid)
             runBatch(mid, end)
         }
@@ -110,18 +111,25 @@ class BatchOperation(
     private fun toCPO(start: Int, end: Int): ArrayList<ContentProviderOperation> {
         val cpo = ArrayList<ContentProviderOperation>(end - start)
 
+        /* Fix back references:
+         * 1. If a back reference points to a row between start and end,
+         *    adapt the reference.
+         * 2. If a back reference points to a row outside of start/end,
+         *    replace it by the actual result, which has already been calculated. */
+
         for ((i, cpoBuilder) in queue.subList(start, end).withIndex()) {
-            for ((backrefKey, backrefIdx) in cpoBuilder.valueBackrefs) {
-                if (backrefIdx < start) {
+            for ((backrefKey, backref) in cpoBuilder.valueBackrefs) {
+                val originalIdx = backref.originalIndex
+                if (originalIdx < start) {
                     // back reference is outside of the current batch, get result from previous execution ...
-                    val resultUri = results[backrefIdx]?.uri ?: throw ContactsStorageException("Referenced operation didn't produce a valid result")
+                    val resultUri = results[originalIdx]?.uri ?: throw ContactsStorageException("Referenced operation didn't produce a valid result")
                     val resultId = ContentUris.parseId(resultUri)
                     // ... and use result directly instead of using a back reference
                     cpoBuilder  .removeValueBackReference(backrefKey)
                                 .withValue(backrefKey, resultId)
                 } else
                     // back reference is in current batch, shift index
-                    cpoBuilder.withValueBackReference(backrefKey, backrefIdx - start)
+                    backref.setIndex(originalIdx - start)
             }
 
             if (i % MAX_OPERATIONS_PER_YIELD_POINT == MAX_OPERATIONS_PER_YIELD_POINT - 1)
@@ -130,6 +138,29 @@ class BatchOperation(
             cpo += cpoBuilder.build()
         }
         return cpo
+    }
+
+
+    class BackReference(
+            /** index of the referenced row in the original, nonsplitted transaction */
+            val originalIndex: Int
+    ) {
+        /** overriden index, i.e. index within the splitted transaction */
+        private var index: Int? = null
+
+        /**
+         * Sets the index to use in the splitted transaction.
+         * @param newIndex index to be used instead of [originalIndex]
+         */
+        fun setIndex(newIndex: Int) {
+            index = newIndex
+        }
+
+        /**
+         * Gets the index to use in the splitted transaction.
+         * @return [index] if it has been set, [originalIndex] otherwise
+         */
+        fun getIndex() = index ?: originalIndex
     }
 
 
@@ -157,7 +188,7 @@ class BatchOperation(
         var selectionArguments: Array<String>? = null
 
         val values = mutableMapOf<String, Any?>()
-        val valueBackrefs = mutableMapOf<String, Int>()
+        val valueBackrefs = mutableMapOf<String, BackReference>()
 
         var yieldAllowed = false
 
@@ -169,7 +200,7 @@ class BatchOperation(
         }
 
         fun withValueBackReference(key: String, index: Int): CpoBuilder {
-            valueBackrefs[key] = index
+            valueBackrefs[key] = BackReference(index)
             return this
         }
 
@@ -197,8 +228,8 @@ class BatchOperation(
 
             for ((key, value) in values)
                 builder.withValue(key, value)
-            for ((key, index) in valueBackrefs)
-                builder.withValueBackReference(key, index)
+            for ((key, backref) in valueBackrefs)
+                builder.withValueBackReference(key, backref.getIndex())
 
             if (yieldAllowed)
                 builder.withYieldAllowed(true)
