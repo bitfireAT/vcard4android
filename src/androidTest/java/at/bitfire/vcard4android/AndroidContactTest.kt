@@ -204,16 +204,17 @@ class AndroidContactTest {
     }
 
     @Test
-    @SmallTest
     fun testEmailTypes() {
         val vCard = "BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
                 "FN:Test\r\n" +
                 "EMAIL;TYPE=internet;TYPE=work:work@example.com\r\n" +
-                "EMAIL;TYPE=home:home@example.com\r\n" +
+                "EMAIL;TYPE=HOME:home@example.com\r\n" +
                 "EMAIL;TYPE=internet,pref:other1@example.com\r\n" +
-                "EMAIL;TYPE=x400,other:other2@example.com\r\n" +
+                "EMAIL;TYPE=x400,oTHer:other2@example.com\r\n" +
                 "EMAIL;TYPE=x-mobile:mobile@example.com\r\n" +
+                "group1.EMAIL;TYPE=x-with-label:withlabel@example.com\r\n" +
+                "group1.X-ABLABEL:With label and x-type\r\n" +
                 "END:VCARD\r\n"
         val contacts = Contact.fromReader(StringReader(vCard), null)
 
@@ -223,25 +224,89 @@ class AndroidContactTest {
         val dbContact2 = addressBook.findContactByID(dbContact.id!!)
         try {
             val contact2 = dbContact2.contact!!
-            assertEquals("work@example.com", contact2.emails[0].property.value)
-            assertArrayEquals(arrayOf(EmailType.WORK), contact2.emails[0].property.types.toTypedArray())
-            assertNull(contact2.emails[0].property.pref)
+            assertEquals(6, contact2.emails.size)
 
-            assertEquals("home@example.com", contact2.emails[1].property.value)
-            assertArrayEquals(arrayOf(EmailType.HOME), contact2.emails[1].property.types.toTypedArray())
-            assertNull(contact2.emails[1].property.pref)
+            contact2.emails[0].property.let { email ->
+                assertEquals("work@example.com", email.value)
+                assertArrayEquals(arrayOf(EmailType.WORK), email.types.toTypedArray())
+                assertNull(email.pref)
+            }
 
-            assertEquals("other1@example.com", contact2.emails[2].property.value)
-            assertTrue(contact2.emails[2].property.types.isEmpty())
-            assertNotEquals(0, contact2.emails[2].property.pref)
+            contact2.emails[1].property.let { email ->
+                assertEquals("home@example.com", email.value)
+                assertArrayEquals(arrayOf(EmailType.HOME), email.types.toTypedArray())
+                assertNull(email.pref)
+            }
 
-            assertEquals("other2@example.com", contact2.emails[3].property.value)
-            assertTrue(contact2.emails[3].property.types.isEmpty())
-            assertNull(contact2.emails[3].property.pref)
+            contact2.emails[2].property.let { email ->
+                assertEquals("other1@example.com", email.value)
+                assertTrue(email.types.isEmpty())
+                assertNotEquals(0, email.pref)
+            }
 
-            assertEquals("mobile@example.com", contact2.emails[4].property.value)
-            assertArrayEquals(arrayOf(Contact.EMAIL_TYPE_MOBILE), contact2.emails[4].property.types.toTypedArray())
-            assertNull(contact2.emails[4].property.pref)
+            contact2.emails[3].property.let { email ->
+                assertEquals("other2@example.com", email.value)
+                assertTrue(email.types.isEmpty())
+                assertNull(email.pref)
+            }
+
+            contact2.emails[4].property.let { email ->
+                assertEquals("mobile@example.com", email.value)
+                assertArrayEquals(arrayOf(Contact.EMAIL_TYPE_MOBILE), email.types.toTypedArray())
+                assertNull(email.pref)
+            }
+
+            contact2.emails[5].let { email ->
+                assertEquals("withlabel@example.com", email.property.value)
+                assertEquals(EmailType.get("x-with-label-and-x-type"), email.property.types.first())
+                assertEquals("With label and x-type", email.label)
+            }
+        } finally {
+            dbContact2.delete()
+        }
+    }
+
+    @Test
+    fun testWebsiteTypes() {
+        val vCard = "BEGIN:VCARD\r\n" +
+                "VERSION:4.0\r\n" +
+                "FN:Test\r\n" +
+                "URL;TYPE=home:http://home.example\r\n" +
+                "URL;TYPE=WORK:http://WORK.example\r\n" +
+                "URL;TYPE=Custom:http://Custom.example\r\n" +
+                "group1.URL;TYPE=x-custom-with-label:http://Custom.example\r\n" +
+                "group1.X-ABLABEL:Custom (with label)\r\n" +
+                "END:VCARD\r\n"
+        val contacts = Contact.fromReader(StringReader(vCard), null)
+
+        val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
+        dbContact.add()
+
+        val dbContact2 = addressBook.findContactByID(dbContact.id!!)
+        try {
+            val contact2 = dbContact2.contact!!
+            assertEquals(4, contact2.urls.size)
+
+            contact2.urls[0].property.let { url ->
+                assertEquals("http://home.example", url.value)
+                assertEquals("home", url.type)
+            }
+
+            contact2.urls[1].property.let { url ->
+                assertEquals("http://WORK.example", url.value)
+                assertEquals("work", url.type)
+            }
+
+            contact2.urls[2].property.let { url ->
+                assertEquals("http://Custom.example", url.value)
+                assertEquals("x-custom", url.type)
+            }
+
+            contact2.urls[3].let { url ->
+                assertEquals("http://Custom.example", url.property.value)
+                assertEquals("x-custom-with-label", url.property.type)
+                assertEquals("Custom (with label)", url.label)
+            }
         } finally {
             dbContact2.delete()
         }
@@ -250,7 +315,7 @@ class AndroidContactTest {
 
     @Test
     fun testLabelToXName() {
-        assertEquals("X-AUNTIES_HOME", AndroidContact.labelToXName("auntie's home"))
+        assertEquals("x-aunties-home", AndroidContact.labelToXName("auntie's home"))
     }
 
     @Test
@@ -262,6 +327,7 @@ class AndroidContactTest {
 
     @Test
     fun testXNameToLabel() {
+        assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES-HOME"))
         assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES_HOME"))
     }
 

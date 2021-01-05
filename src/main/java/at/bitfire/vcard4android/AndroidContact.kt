@@ -52,18 +52,19 @@ open class AndroidContact(
         const val COLUMN_UID = RawContacts.SYNC1
         const val COLUMN_ETAG = RawContacts.SYNC2
 
-        fun labelToXName(label: String) = "X-" + label
-                .replace(" ","_")
+        fun labelToXName(label: String) = "x-" + label
+                .replace(' ','-')
                 .replace(Regex("[^\\p{L}\\p{Nd}\\-_]"), "")
-                .toUpperCase(Locale.getDefault())
+                .toLowerCase()
 
         fun xNameToLabel(xname: String): String {
-            // "X-MY_PROPERTY"
+            // "x-my_property"
             var s = xname.toLowerCase(Locale.getDefault())    // 1. ensure lower case -> "x-my_property"
-            if (s.startsWith("x-"))                     // 2. remove x- from beginning -> "my_property"
+            if (s.startsWith("x-"))                    // 2. remove x- from beginning -> "my_property"
                 s = s.substring(2)
-            s = s.replace('_', ' ')          // 3. replace "_" by " " -> "my property"
-            return WordUtils.capitalize(s)                    // 4. capitalize -> "My Property"
+            s = s   .replace('_', ' ')       // 3. replace "_" and "-" by " " -> "my property"
+                    .replace('-', ' ')
+            return WordUtils.capitalize(s)                   // 4. capitalize -> "My Property"
         }
 
         fun toURIScheme(s: String?) =
@@ -916,7 +917,7 @@ open class AndroidContact(
         val typeCode: Int
         var typeLabel: String? = null
 
-        val type = nick.type
+        val type = nick.type?.toLowerCase()
         typeCode = when (type) {
             Contact.NICKNAME_TYPE_MAIDEN_NAME -> Nickname.TYPE_MAIDEN_NAME
             Contact.NICKNAME_TYPE_SHORT_NAME ->  Nickname.TYPE_SHORT_NAME
@@ -1019,7 +1020,7 @@ open class AndroidContact(
             typeCode = Website.TYPE_CUSTOM
             typeLabel = labeledUrl.label
         } else {
-            val type = url.type
+            val type = url.type?.toLowerCase()
             typeCode = when (type) {
                 Contact.URL_TYPE_HOMEPAGE -> Website.TYPE_HOMEPAGE
                 Contact.URL_TYPE_BLOG ->     Website.TYPE_BLOG
