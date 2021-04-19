@@ -32,7 +32,6 @@ import ezvcard.util.PartialDate
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.builder.ToStringBuilder
-import org.apache.commons.text.WordUtils
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -51,21 +50,6 @@ open class AndroidContact(
         const val COLUMN_FILENAME = RawContacts.SOURCE_ID
         const val COLUMN_UID = RawContacts.SYNC1
         const val COLUMN_ETAG = RawContacts.SYNC2
-
-        fun labelToXName(label: String) = "x-" + label
-                .replace(' ','-')
-                .replace(Regex("[^\\p{L}\\p{Nd}\\-_]"), "")
-                .toLowerCase()
-
-        fun xNameToLabel(xname: String): String {
-            // "x-my_property"
-            var s = xname.toLowerCase(Locale.getDefault())    // 1. ensure lower case -> "x-my_property"
-            if (s.startsWith("x-"))                    // 2. remove x- from beginning -> "my_property"
-                s = s.substring(2)
-            s = s   .replace('_', ' ')       // 3. replace "_" and "-" by " " -> "my property"
-                    .replace('-', ' ')
-            return WordUtils.capitalize(s)                   // 4. capitalize -> "My Property"
-        }
 
         fun toURIScheme(s: String?) =
                 // RFC 3986 3.1
@@ -255,7 +239,6 @@ open class AndroidContact(
             Phone.TYPE_CUSTOM -> {
                     row.getAsString(Phone.LABEL)?.let {
                         labeledNumber.label = it
-                        number.types += TelephoneType.get(labelToXName(it))
                     }
                 }
         }
@@ -279,7 +262,6 @@ open class AndroidContact(
             Email.TYPE_CUSTOM ->
                 row.getAsString(Email.LABEL)?.let {
                     labeledEmail.label = it
-                    email.types += EmailType.get(labelToXName(it))
                 }
         }
         if (row.getAsInteger(Email.IS_PRIMARY) != 0)
@@ -356,28 +338,29 @@ open class AndroidContact(
                 }
         }
 
-        impp?.let { impp ->
-            val labeledImpp = LabeledProperty(impp)
+        if (impp == null)
+            return
+        val labeledImpp = LabeledProperty(impp)
 
-            when (row.getAsInteger(Im.TYPE)) {
-                Im.TYPE_HOME ->
-                    impp.types += ImppType.HOME
-                Im.TYPE_WORK ->
-                    impp.types += ImppType.WORK
-                Im.TYPE_CUSTOM ->
-                    row.getAsString(Im.LABEL)?.let {
-                        labeledImpp.label = it
-                        impp.types.add(ImppType.get(labelToXName(it)))
-                    }
-            }
-
-            contact!!.impps += labeledImpp
+        when (row.getAsInteger(Im.TYPE)) {
+            Im.TYPE_HOME ->
+                impp.types += ImppType.HOME
+            Im.TYPE_WORK ->
+                impp.types += ImppType.WORK
+            Im.TYPE_CUSTOM ->
+                row.getAsString(Im.LABEL)?.let {
+                    labeledImpp.label = it
+                }
         }
+
+        contact!!.impps += labeledImpp
     }
 
     protected open fun populateNickname(row: ContentValues) {
         row.getAsString(Nickname.NAME)?.let { name ->
             val nick = ezvcard.property.Nickname()
+            val labeledNick = LabeledProperty(nick)
+
             nick.values += name
 
             when (row.getAsInteger(Nickname.TYPE)) {
@@ -390,10 +373,10 @@ open class AndroidContact(
                 Nickname.TYPE_OTHER_NAME ->
                     nick.type = Contact.NICKNAME_TYPE_OTHER_NAME
                 Nickname.TYPE_CUSTOM ->
-                    row.getAsString(Nickname.LABEL)?.let { nick.type = labelToXName(it) }
+                    row.getAsString(Nickname.LABEL)?.let { labeledNick.label = it }
             }
 
-            contact!!.nickName = nick
+            contact!!.nickName = labeledNick
         }
     }
 
@@ -414,7 +397,6 @@ open class AndroidContact(
             StructuredPostal.TYPE_CUSTOM -> {
                 row.getAsString(StructuredPostal.LABEL)?.let {
                     labeledAddress.label = it
-                    address.types += AddressType.get(labelToXName(it))
                 }
             }
         }
@@ -447,7 +429,6 @@ open class AndroidContact(
                 url.type = Contact.URL_TYPE_FTP
             Website.TYPE_CUSTOM ->
                 row.getAsString(Website.LABEL)?.let {
-                    url.type = labelToXName(it)
                     labeledUrl.label = it
                 }
         }
@@ -527,7 +508,6 @@ open class AndroidContact(
                 SipAddress.TYPE_CUSTOM ->
                     row.getAsString(SipAddress.LABEL)?.let {
                         labeledImpp.label = it
-                        impp.types += ImppType.get(labelToXName(it))
                     }
             }
             contact!!.impps.add(labeledImpp)
@@ -701,7 +681,7 @@ open class AndroidContact(
             typeLabel = labeledNumber.label
         } else {
             when {
-                // 1 Android type <-> 2 VCard types: fax, cell, pager
+                // 1 Android type <-> 2 vCard types: fax, cell, pager
                 types.contains(TelephoneType.FAX) ->
                     typeCode = when {
                         types.contains(TelephoneType.HOME) -> Phone.TYPE_FAX_HOME
@@ -738,16 +718,6 @@ open class AndroidContact(
                     typeCode = Phone.TYPE_ASSISTANT
                 types.contains(Contact.PHONE_TYPE_MMS) ->
                     typeCode = Phone.TYPE_MMS
-
-                types.contains(Contact.PHONE_TYPE_OTHER) ||
-                types.contains(TelephoneType.VOICE) ||
-                types.contains(TelephoneType.TEXT) -> {}
-
-                types.isNotEmpty() -> {
-                    val type = types.first()
-                    typeCode = Phone.TYPE_CUSTOM
-                    typeLabel = xNameToLabel(type.value)
-                }
             }
         }
 
@@ -763,11 +733,7 @@ open class AndroidContact(
 
     protected open fun insertEmail(batch: BatchOperation, labeledEmail: LabeledProperty<ezvcard.property.Email>) {
         val email = labeledEmail.property
-
-        // drop TYPE=internet and TYPE=x400 because Android only knows Internet email addresses
-        // drop TYPE=other for compatibility, too (non-standard type which is only used by some clients and not useful as an explicit value)
         val types = email.types
-        types.removeAll(arrayOf(EmailType.INTERNET, EmailType.X400, Contact.EMAIL_TYPE_OTHER))
 
         // preferred email address?
         var pref: Int? = null
@@ -782,7 +748,7 @@ open class AndroidContact(
             types -= EmailType.PREF
         }
 
-        var typeCode = 0
+        var typeCode = Email.TYPE_OTHER
         var typeLabel: String? = null
         if (labeledEmail.label != null) {
             typeCode = Email.TYPE_CUSTOM
@@ -794,14 +760,6 @@ open class AndroidContact(
                     EmailType.WORK -> typeCode = Email.TYPE_WORK
                     Contact.EMAIL_TYPE_MOBILE -> typeCode = Email.TYPE_MOBILE
                 }
-            if (typeCode == 0) {    // we still didn't find a known type
-                if (email.types.isEmpty())
-                    typeCode = Email.TYPE_OTHER
-                else {
-                    typeCode = Email.TYPE_CUSTOM
-                    typeLabel = xNameToLabel(types.first().value)
-                }
-            }
         }
 
         val builder = insertDataBuilder(Email.RAW_CONTACT_ID)
@@ -855,10 +813,6 @@ open class AndroidContact(
                     ImppType.WORK,
                     ImppType.BUSINESS -> typeCode = Im.TYPE_WORK
                 }
-            if (typeCode == Im.TYPE_OTHER && impp.types.isNotEmpty()) {
-                typeCode = Im.TYPE_CUSTOM
-                typeLabel = xNameToLabel(impp.types.first().value)
-            }
         }
 
         val protocol = impp.protocol
@@ -910,23 +864,25 @@ open class AndroidContact(
     }
 
     protected open fun insertNickname(batch: BatchOperation) {
-        val nick = contact!!.nickName
-        if (nick == null || nick.values.isEmpty())
+        val labeledNick = contact!!.nickName ?: return
+        val nick = labeledNick.property
+        if (nick.values.isEmpty())
             return
 
         val typeCode: Int
         var typeLabel: String? = null
 
-        val type = nick.type?.toLowerCase()
-        typeCode = when (type) {
-            Contact.NICKNAME_TYPE_MAIDEN_NAME -> Nickname.TYPE_MAIDEN_NAME
-            Contact.NICKNAME_TYPE_SHORT_NAME ->  Nickname.TYPE_SHORT_NAME
-            Contact.NICKNAME_TYPE_INITIALS ->    Nickname.TYPE_INITIALS
-            Contact.NICKNAME_TYPE_OTHER_NAME ->  Nickname.TYPE_OTHER_NAME
-            null                             ->  Nickname.TYPE_DEFAULT
-            else -> {
-                typeLabel = xNameToLabel(type)
-                Nickname.TYPE_CUSTOM
+        if (labeledNick.label != null) {
+            typeCode = Nickname.TYPE_CUSTOM
+            typeLabel = labeledNick.label
+        } else {
+            val type = nick.type?.toLowerCase()
+            typeCode = when (type) {
+                Contact.NICKNAME_TYPE_MAIDEN_NAME -> Nickname.TYPE_MAIDEN_NAME
+                Contact.NICKNAME_TYPE_SHORT_NAME ->  Nickname.TYPE_SHORT_NAME
+                Contact.NICKNAME_TYPE_INITIALS ->    Nickname.TYPE_INITIALS
+                null ->                              Nickname.TYPE_DEFAULT
+                else ->                              Nickname.TYPE_OTHER_NAME
             }
         }
 
@@ -979,22 +935,17 @@ open class AndroidContact(
         }
 
         val types = address.types
-        var typeCode = StructuredPostal.TYPE_OTHER
+        val typeCode: Int
         var typeLabel: String? = null
         if (labeledAddress.label != null) {
             typeCode = StructuredPostal.TYPE_CUSTOM
             typeLabel = labeledAddress.label
-        } else {
-            when {
-                types.contains(AddressType.HOME) -> typeCode = StructuredPostal.TYPE_HOME
-                types.contains(AddressType.WORK) -> typeCode = StructuredPostal.TYPE_WORK
-                types.contains(Contact.ADDRESS_TYPE_OTHER) -> {}
-                types.isNotEmpty() -> {
-                    typeCode = StructuredPostal.TYPE_CUSTOM
-                    typeLabel = xNameToLabel(address.types.first().value)
-                }
+        } else
+            typeCode = when {
+                types.contains(AddressType.HOME) -> StructuredPostal.TYPE_HOME
+                types.contains(AddressType.WORK) -> StructuredPostal.TYPE_WORK
+                else -> StructuredPostal.TYPE_OTHER
             }
-        }
 
         val builder = insertDataBuilder(StructuredPostal.RAW_CONTACT_ID)
                 .withValue(StructuredPostal.MIMETYPE, StructuredPostal.CONTENT_ITEM_TYPE)
@@ -1028,11 +979,7 @@ open class AndroidContact(
                 "home" ->                    Website.TYPE_HOME
                 "work" ->                    Website.TYPE_WORK
                 Contact.URL_TYPE_FTP ->      Website.TYPE_FTP
-                null ->                      Website.TYPE_OTHER
-                else -> {
-                    typeLabel = xNameToLabel(type)
-                    Website.TYPE_CUSTOM
-                }
+                else ->                      Website.TYPE_OTHER
             }
         }
 

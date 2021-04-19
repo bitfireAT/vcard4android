@@ -164,8 +164,9 @@ class ContactTest {
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:test@example.com\r\n"))
 
         // nick name available
-        c.nickName = Nickname()
-        c.nickName!!.values += "Nikki"
+        c.nickName = LabeledProperty(Nickname().apply {
+            values += "Nikki"
+        })
         assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:Nikki\r\n"))
     }
 
@@ -268,7 +269,7 @@ class ContactTest {
         // NICKNAME
         assertEquals(
                 listOf("Nick1", "Nick2"),
-                c.nickName!!.values
+                c.nickName!!.property.values
         )
 
         // ADR

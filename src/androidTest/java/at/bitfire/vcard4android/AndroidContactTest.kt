@@ -258,7 +258,7 @@ class AndroidContactTest {
 
             contact2.emails[5].let { email ->
                 assertEquals("withlabel@example.com", email.property.value)
-                assertEquals(EmailType.get("x-with-label-and-x-type"), email.property.types.first())
+                assertTrue(email.property.types.isEmpty())
                 assertEquals("With label and x-type", email.label)
             }
         } finally {
@@ -297,14 +297,15 @@ class AndroidContactTest {
                 assertEquals("work", url.type)
             }
 
-            contact2.urls[2].property.let { url ->
-                assertEquals("http://Custom.example", url.value)
-                assertEquals("x-custom", url.type)
+            contact2.urls[2].let { url ->
+                assertEquals("http://Custom.example", url.property.value)
+                assertNull(url.property.type)
+                assertNull(url.label)
             }
 
             contact2.urls[3].let { url ->
                 assertEquals("http://Custom.example", url.property.value)
-                assertEquals("x-custom-with-label", url.property.type)
+                assertEquals(null, url.property.type)
                 assertEquals("Custom (with label)", url.label)
             }
         } finally {
@@ -312,23 +313,11 @@ class AndroidContactTest {
         }
     }
 
-
-    @Test
-    fun testLabelToXName() {
-        assertEquals("x-aunties-home", AndroidContact.labelToXName("auntie's home"))
-    }
-
     @Test
     fun testToURIScheme() {
         assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"))
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod Forum"))
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"))
-    }
-
-    @Test
-    fun testXNameToLabel() {
-        assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES-HOME"))
-        assertEquals("Aunties Home", AndroidContact.xNameToLabel("X-AUNTIES_HOME"))
     }
 
 }

@@ -48,11 +48,12 @@ class Contact {
     var phoneticMiddleName: String? = null
     var phoneticFamilyName: String? = null
 
-    var nickName: Nickname? = null
+    /** vCard NICKNAME – Android only supports one nickname **/
+    var nickName: LabeledProperty<Nickname>? = null
 
     var organization: Organization? = null
-    var jobTitle: String? = null           // VCard TITLE
-    var jobDescription: String? = null     // VCard ROLE
+    var jobTitle: String? = null           // vCard TITLE
+    var jobDescription: String? = null     // vCard ROLE
 
     val phoneNumbers = LinkedList<LabeledProperty<Telephone>>()
     val emails = LinkedList<LabeledProperty<Email>>()
@@ -69,7 +70,7 @@ class Contact {
 
     var photo: ByteArray? = null
 
-    /** unknown properties in text VCARD format */
+    /** unknown properties in text vCard format */
     var unknownProperties: String? = null
 
 
@@ -86,21 +87,15 @@ class Contact {
         const val PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME"
         const val PROPERTY_SIP = "X-SIP"
 
+        // TEL x-types to store Android types
         val PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback")!!
         val PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main")!!
         val PHONE_TYPE_RADIO = TelephoneType.get("x-radio")!!
         val PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant")!!
         val PHONE_TYPE_MMS = TelephoneType.get("x-mms")!!
-        /** Sometimes used to denote an "other" phone numbers. Only for compatibility – don't use it yourself! */
-        val PHONE_TYPE_OTHER = TelephoneType.get("other")!!
 
-        /** Custom email type to denote "mobile" email addresses. */
+        // EMAIL x-types to store Android types
         val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
-        /** Sometimes used to denote an "other" email address. Only for compatibility – don't use it yourself! */
-        val EMAIL_TYPE_OTHER = EmailType.get("other")!!
-
-        /** Sometimes used to denote an "other" postal address. Only for compatibility – don't use it yourself! */
-        val ADDRESS_TYPE_OTHER = AddressType.get("other")!!
 
         const val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
         const val NICKNAME_TYPE_SHORT_NAME = "x-short-name"
@@ -162,7 +157,7 @@ class Contact {
                         c.familyName = StringUtils.trimToNull(prop.family)
                         c.suffix = StringUtils.trimToNull(prop.suffixes.joinToString(" "))
                     }
-                    is Nickname -> c.nickName = prop
+                    is Nickname -> c.nickName = LabeledProperty(prop, findLabel(prop.group))
 
                     is Organization -> c.organization = prop
                     is Title -> c.jobTitle = StringUtils.trimToNull(prop.value)
@@ -341,7 +336,7 @@ class Contact {
                 }
             }
         if (fn.isNullOrEmpty())
-            nickName?.let { fn = it.values.firstOrNull() }
+            nickName?.let { fn = it.property.values.firstOrNull() }
         if (fn.isNullOrEmpty())
             emails.firstOrNull()?.let { fn = it.property.value }
         if (fn.isNullOrEmpty())
@@ -370,9 +365,6 @@ class Contact {
                 vCard.structuredName = StructuredName()
         }
 
-        // NICKNAME
-        nickName?.let { vCard.nickname = it }
-
         // phonetic names
         phoneticGivenName?.let { vCard.addExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME, it) }
         phoneticMiddleName?.let { vCard.addExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME, it) }
@@ -385,7 +377,7 @@ class Contact {
 
         // will be used to count "davdroidXX." property groups
         val labelIterator = AtomicInteger()
-
+        // TODO outside function outside; make clear that it modifies labeledProperty.property
         fun addLabel(labeledProperty: LabeledProperty<VCardProperty>) {
             labeledProperty.label?.let {
                 val group = "group${labelIterator.incrementAndGet()}"
@@ -396,24 +388,27 @@ class Contact {
             }
         }
 
+        // NICKNAME
+        nickName?.let { labeledNickName ->
+            vCard.addNickname(labeledNickName.property)
+            addLabel(labeledNickName)
+        }
+
         // TEL
         for (labeledPhone in phoneNumbers) {
-            val phone = labeledPhone.property
-            vCard.addTelephoneNumber(phone)
+            vCard.addTelephoneNumber(labeledPhone.property)
             addLabel(labeledPhone)
         }
 
         // EMAIL
         for (labeledEmail in emails) {
-            val email = labeledEmail.property
-            vCard.addEmail(email)
+            vCard.addEmail(labeledEmail.property)
             addLabel(labeledEmail)
         }
 
         // IMPP
         for (labeledImpp in impps) {
-            val impp = labeledImpp.property
-            vCard.addImpp(impp)
+            vCard.addImpp(labeledImpp.property)
             addLabel(labeledImpp)
         }
 
