@@ -1,7 +1,7 @@
 
 buildscript {
     ext.versions = [
-        kotlin: '1.4.31',
+        kotlin: '1.4.32',
         dokka: '0.10.1',
         // latest Apache Commons versions that don't require Java 8 (Android 7)
         commonsIO: '2.6',
@@ -9,20 +9,20 @@ buildscript {
     ]
 
     repositories {
-        jcenter()
         google()
+        mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.3'
+        classpath 'com.android.tools.build:gradle:4.2.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
 }
 
 repositories {
-    jcenter()
     google()
+    mavenCentral()
 }
 
 apply plugin: 'com.android.library'
