@@ -519,6 +519,7 @@ open class AndroidContact(
     /**
      * Override this to handle custom data rows, for example to add additional
      * information to [contact].
+     *
      * @param mimeType    MIME type of the row
      * @param row         values of the row
      */
@@ -585,6 +586,13 @@ open class AndroidContact(
         return uri
     }
 
+    /**
+     * Deletes an existing contact from the contacts provider.
+     *
+     * @return number of affected rows
+     *
+     * @throws RemoteException on contacts provider errors
+     */
     fun delete() = addressBook.provider!!.delete(rawContactSyncURI(), null, null)
 
 
@@ -609,7 +617,9 @@ open class AndroidContact(
      * Inserts the data rows for a given raw contact.
      * Override this (and call the super class!) to add custom data rows,
      * for example generated from some properties of [contact].
+     *
      * @param  batch    batch operation used to insert the data rows
+     *
      * @throws RemoteException on contact provider errors
      */
     @CallSuper
