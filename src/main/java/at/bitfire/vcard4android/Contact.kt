@@ -131,13 +131,20 @@ class Contact {
             val c = Contact()
 
             // get X-ABLabels
-            val labels = vCard.getExtendedProperties(LabeledProperty.PROPERTY_AB_LABEL)!!
-            vCard.removeExtendedProperty(LabeledProperty.PROPERTY_AB_LABEL)
+            val labels = vCard.getExtendedProperties(LabeledProperty.PROPERTY_AB_LABEL)
 
-            fun findLabel(group: String?): String? {
+            fun findAndRemoveLabel(group: String?): String? {
                 if (group == null)
                     return null
-                return labels.firstOrNull { it.group.equals(group, true) }?.value
+
+                for (label in labels) {
+                    if (label.group.equals(group, true)) {
+                        vCard.extendedProperties.remove(label)
+                        return label.value
+                    }
+                }
+
+                return null
             }
 
             // process standard properties
@@ -157,21 +164,21 @@ class Contact {
                         c.familyName = StringUtils.trimToNull(prop.family)
                         c.suffix = StringUtils.trimToNull(prop.suffixes.joinToString(" "))
                     }
-                    is Nickname -> c.nickName = LabeledProperty(prop, findLabel(prop.group))
+                    is Nickname -> c.nickName = LabeledProperty(prop, findAndRemoveLabel(prop.group))
 
                     is Organization -> c.organization = prop
                     is Title -> c.jobTitle = StringUtils.trimToNull(prop.value)
                     is Role -> c.jobDescription = StringUtils.trimToNull(prop.value)
 
                     is Telephone -> if (!prop.text.isNullOrBlank())
-                        c.phoneNumbers += LabeledProperty(prop, findLabel(prop.group))
+                        c.phoneNumbers += LabeledProperty(prop, findAndRemoveLabel(prop.group))
                     is Email -> if (!prop.value.isNullOrBlank())
-                        c.emails += LabeledProperty(prop, findLabel(prop.group))
-                    is Impp -> c.impps += LabeledProperty(prop, findLabel(prop.group))
-                    is Address -> c.addresses += LabeledProperty(prop, findLabel(prop.group))
+                        c.emails += LabeledProperty(prop, findAndRemoveLabel(prop.group))
+                    is Impp -> c.impps += LabeledProperty(prop, findAndRemoveLabel(prop.group))
+                    is Address -> c.addresses += LabeledProperty(prop, findAndRemoveLabel(prop.group))
 
                     is Note -> c.note = if (c.note.isNullOrEmpty()) prop.value else "${c.note}\n\n\n${prop.value}"
-                    is Url -> c.urls += LabeledProperty(prop, findLabel(prop.group))
+                    is Url -> c.urls += LabeledProperty(prop, findAndRemoveLabel(prop.group))
                     is Categories -> c.categories.addAll(prop.values)
 
                     is Birthday -> c.birthDay = checkVCard3PartialDate(prop)
@@ -221,7 +228,7 @@ class Contact {
                     PROPERTY_PHONETIC_MIDDLE_NAME -> c.phoneticMiddleName = StringUtils.trimToNull(prop.value)
                     PROPERTY_PHONETIC_LAST_NAME   -> c.phoneticFamilyName = StringUtils.trimToNull(prop.value)
 
-                    PROPERTY_SIP -> c.impps += LabeledProperty(Impp("sip", prop.value), findLabel(prop.group))
+                    PROPERTY_SIP -> c.impps += LabeledProperty(Impp("sip", prop.value), findAndRemoveLabel(prop.group))
 
                     else -> remove = false      // don't remove unknown extended properties
                 }
@@ -375,7 +382,7 @@ class Contact {
         jobTitle?.let { vCard.addTitle(it) }
         jobDescription?.let { vCard.addRole(it) }
 
-        // will be used to count "davdroidXX." property groups
+        // will be used to count "itemXX." property groups
         val labelIterator = AtomicInteger()
         // TODO outside function outside; make clear that it modifies labeledProperty.property
         fun addLabel(labeledProperty: LabeledProperty<VCardProperty>) {

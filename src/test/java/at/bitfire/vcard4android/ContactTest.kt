@@ -190,6 +190,15 @@ class ContactTest {
         assertFalse(c.unknownProperties!!.contains("REV"))
     }
 
+    @Test
+    fun testUnknownPropertiesLabels() {
+        // X-ABLabels belonging to unknown properties shouldn't be dropped
+        val c = parseContact("unknown-properties-with-labels.vcf")
+        assertEquals("Unknown property with label", c.displayName)
+        assertTrue(c.unknownProperties!!.contains("item1.X-Unknown:TestValue"))
+        assertTrue(c.unknownProperties!!.contains("item1.X-ABLabel:TestLabel"))
+    }
+
 
     @Test
     fun testVCard3FieldsAsVCard3() {
@@ -298,6 +307,11 @@ class ContactTest {
         assertNull(addr.property.region)
         assertEquals("4043", addr.property.postalCode)
         assertEquals("Klöster-Reich", addr.property.country)
+        assertEquals("BEGIN:VCARD\r\n" +
+                "VERSION:3.0\r\n" +
+                "PRODID:ez-vcard 0.11.2\r\n" +
+                "X-TEST;A=B:Value\r\n" +
+                "END:VCARD\r\n", c.unknownProperties)
 
         // NOTE
         assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.note)
