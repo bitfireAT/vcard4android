@@ -214,6 +214,9 @@ class ContactTest {
         assertEquals("Firstname", c.givenName)
         assertEquals("Middlename1 Middlename2", c.middleName)
         assertEquals("Lastname", c.familyName)
+        assertEquals("Förstnehm", c.phoneticGivenName)
+        assertEquals("Mittelnehm", c.phoneticMiddleName)
+        assertEquals("Laastnehm", c.phoneticFamilyName)
 
         // phonetic names
         assertEquals("Förstnehm", c.phoneticGivenName)

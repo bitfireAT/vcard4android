@@ -13,10 +13,4 @@ import ezvcard.property.VCardProperty
 data class LabeledProperty<out T: VCardProperty> @JvmOverloads constructor(
         val property: T,
         var label: String? = null
-) {
-
-    companion object {
-        const val PROPERTY_AB_LABEL = "X-ABLabel"
-    }
-
-}
+)

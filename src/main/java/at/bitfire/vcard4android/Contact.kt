@@ -8,10 +8,12 @@
 
 package at.bitfire.vcard4android
 
+import at.bitfire.vcard4android.property.*
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
-import ezvcard.parameter.AddressType
+import ezvcard.io.text.VCardReader
+import ezvcard.io.text.VCardWriter
 import ezvcard.parameter.EmailType
 import ezvcard.parameter.ImageType
 import ezvcard.parameter.TelephoneType
@@ -67,6 +69,7 @@ class Contact {
 
     var anniversary: Anniversary? = null
     var birthDay: Birthday? = null
+    val customDates = LinkedList<LabeledProperty<DateOrTimeProperty>>()
 
     var photo: ByteArray? = null
 
@@ -75,16 +78,21 @@ class Contact {
 
 
     companion object {
+
+        /** list of all custom scribes (will be registered to readers/writers) **/
+        val customScribes = arrayOf(
+            AbLabel.Scribe,
+            AddressBookServerKind.Scribe,
+            AddressBookServerMember.Scribe,
+            PhoneticFirstName.Scribe,
+            PhoneticMiddleName.Scribe,
+            PhoneticLastName.Scribe
+        )
+
         // productID (if set) will be used to generate a PRODID property.
         // You may set this statically from the calling application.
         var productID: String? = null
 
-        const val PROPERTY_ADDRESSBOOKSERVER_KIND = "X-ADDRESSBOOKSERVER-KIND"
-        const val PROPERTY_ADDRESSBOOKSERVER_MEMBER = "X-ADDRESSBOOKSERVER-MEMBER"
-
-        const val PROPERTY_PHONETIC_FIRST_NAME = "X-PHONETIC-FIRST-NAME"
-        const val PROPERTY_PHONETIC_MIDDLE_NAME = "X-PHONETIC-MIDDLE-NAME"
-        const val PROPERTY_PHONETIC_LAST_NAME = "X-PHONETIC-LAST-NAME"
         const val PROPERTY_SIP = "X-SIP"
 
         // TEL x-types to store Android types
@@ -121,7 +129,12 @@ class Contact {
          * @throws ezvcard.io.CannotParseException when the vCard can't be parsed
          */
         fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
-            val vcards = Ezvcard.parse(reader).all()
+            // create new vCard reader and add custom scribes to tell the reader how to read custom properties
+            val vCardReader = VCardReader(reader, VCardVersion.V3_0)        // CardDAV requires vCard 3 or newer
+            for (scribe in customScribes)
+                vCardReader.scribeIndex.register(scribe)
+
+            val vcards = vCardReader.readAll()
             val contacts = LinkedList<Contact>()
             vcards?.forEach { contacts += fromVCard(it, downloader) }
             return contacts
@@ -131,7 +144,7 @@ class Contact {
             val c = Contact()
 
             // get X-ABLabels
-            val labels = vCard.getExtendedProperties(LabeledProperty.PROPERTY_AB_LABEL)
+            val labels = vCard.getProperties(AbLabel::class.java)
 
             fun findAndRemoveLabel(group: String?): String? {
                 if (group == null)
@@ -139,7 +152,7 @@ class Contact {
 
                 for (label in labels) {
                     if (label.group.equals(group, true)) {
-                        vCard.extendedProperties.remove(label)
+                        vCard.removeProperty(label)
                         return label.value
                     }
                 }
@@ -153,10 +166,20 @@ class Contact {
                 var remove = true
                 when (prop) {
                     is Uid -> c.uid = uriToUID(prop.value)
-                    is Kind -> c.group = prop.isGroup
-                    is Member -> uriToUID(prop.uri)?.let { c.members += it }
+
+                    is Kind, is AddressBookServerKind -> {
+                        val kindProp = prop as Kind
+                        c.group = kindProp.isGroup
+                    }
+                    is Member, is AddressBookServerMember -> {
+                        val uriProp = prop as Member
+                        uriToUID(uriProp.uri)?.let { c.members += it }
+                    }
 
                     is FormattedName -> c.displayName = prop.value.trim()
+                    is PhoneticFirstName -> c.phoneticGivenName = StringUtils.trimToNull(prop.value)
+                    is PhoneticMiddleName -> c.phoneticMiddleName = StringUtils.trimToNull(prop.value)
+                    is PhoneticLastName -> c.phoneticFamilyName = StringUtils.trimToNull(prop.value)
                     is StructuredName -> {
                         c.prefix = StringUtils.trimToNull(prop.prefixes.joinToString(" "))
                         c.givenName = StringUtils.trimToNull(prop.given)
@@ -217,19 +240,7 @@ class Contact {
             for (prop in vCard.extendedProperties) {
                 var remove = true
                 when (prop.propertyName) {
-                    PROPERTY_ADDRESSBOOKSERVER_KIND ->
-                        if (prop.value.equals(Kind.GROUP, true))
-                            c.group = true
-
-                    PROPERTY_ADDRESSBOOKSERVER_MEMBER ->
-                        uriToUID(prop.value)?.let { c.members += it }
-
-                    PROPERTY_PHONETIC_FIRST_NAME  -> c.phoneticGivenName = StringUtils.trimToNull(prop.value)
-                    PROPERTY_PHONETIC_MIDDLE_NAME -> c.phoneticMiddleName = StringUtils.trimToNull(prop.value)
-                    PROPERTY_PHONETIC_LAST_NAME   -> c.phoneticFamilyName = StringUtils.trimToNull(prop.value)
-
                     PROPERTY_SIP -> c.impps += LabeledProperty(Impp("sip", prop.value), findAndRemoveLabel(prop.group))
-
                     else -> remove = false      // don't remove unknown extended properties
                 }
 
@@ -253,9 +264,12 @@ class Contact {
             // store all remaining properties into unknownProperties
             if (vCard.properties.isNotEmpty() || vCard.extendedProperties.isNotEmpty())
                 try {
-                    c.unknownProperties = vCard.write()
+                    val writer = Ezvcard.write(vCard)
+                    for (scribe in customScribes)       // unknwown properties may contain custom scribes like an unmatched X-ABLabel
+                        writer.register(scribe)
+                    c.unknownProperties = writer.go()
                 } catch(e: Exception) {
-                    Constants.log.warning("Couldn't serialize unknown properties, dropping them")
+                    Constants.log.log(Level.WARNING, "Couldn't serialize unknown properties, dropping them", e)
                 }
 
             return c
@@ -327,8 +341,8 @@ class Contact {
                 vCard.kind = Kind.group()
                 members.forEach { vCard.members += Member("urn:uuid:$it") }
             } else {    // "vCard4 as vCard3" (Apple-style)
-                vCard.setExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_KIND, Kind.GROUP)
-                members.forEach { vCard.addExtendedProperty(PROPERTY_ADDRESSBOOKSERVER_MEMBER, "urn:uuid:$it") }
+                vCard.setProperty(AddressBookServerKind(Kind.GROUP))
+                members.forEach { vCard.addProperty(AddressBookServerMember("urn:uuid:$it")) }
             }
         }
 
@@ -373,9 +387,9 @@ class Contact {
         }
 
         // phonetic names
-        phoneticGivenName?.let { vCard.addExtendedProperty(PROPERTY_PHONETIC_FIRST_NAME, it) }
-        phoneticMiddleName?.let { vCard.addExtendedProperty(PROPERTY_PHONETIC_MIDDLE_NAME, it) }
-        phoneticFamilyName?.let { vCard.addExtendedProperty(PROPERTY_PHONETIC_LAST_NAME, it) }
+        phoneticGivenName?.let { vCard.addProperty(PhoneticFirstName(it)) }
+        phoneticMiddleName?.let { vCard.addProperty(PhoneticMiddleName(it)) }
+        phoneticFamilyName?.let { vCard.addProperty(PhoneticLastName(it)) }
 
         // ORG, TITLE, ROLE
         organization?.let { vCard.organization = it }
@@ -384,14 +398,15 @@ class Contact {
 
         // will be used to count "itemXX." property groups
         val labelIterator = AtomicInteger()
-        // TODO outside function outside; make clear that it modifies labeledProperty.property
+        // TODO move function outside; make clear that it modifies labeledProperty.property
         fun addLabel(labeledProperty: LabeledProperty<VCardProperty>) {
-            labeledProperty.label?.let {
+            labeledProperty.label?.let { label ->
                 val group = "group${labelIterator.incrementAndGet()}"
                 labeledProperty.property.group = group
 
-                val label = vCard.addExtendedProperty(LabeledProperty.PROPERTY_AB_LABEL, it)
-                label.group = group
+                val abLabel = AbLabel(label)
+                abLabel.group = group
+                vCard.addProperty(abLabel)
             }
         }
 
@@ -487,12 +502,18 @@ class Contact {
         }
 
         // generate VCARD
-        Ezvcard .write(vCard)
+        val writer = Ezvcard
+                .write(vCard)
                 .version(vCardVersion)
                 .versionStrict(false)      // allow vCard4 properties in vCard3s
                 .caretEncoding(true)           // enable RFC 6868 support
                 .prodId(productID == null)
-                .go(os)
+
+        // tell the writer how to write custom properties
+        for (scribe in customScribes)
+            writer.register(scribe)
+
+        return writer .go(os)
     }
 
 
