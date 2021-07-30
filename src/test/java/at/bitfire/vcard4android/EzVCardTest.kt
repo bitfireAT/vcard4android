@@ -9,6 +9,9 @@
 package at.bitfire.vcard4android
 
 import ezvcard.Ezvcard
+import ezvcard.VCard
+import ezvcard.VCardVersion
+import ezvcard.property.Address
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -60,6 +63,22 @@ class EzVCardTest {
                 "REV:20161218T201900-0530\r\n" +
                 "END:VCARD").first()
         assertNotNull(vCard.revision)
+    }
+
+    @Test
+    fun testGenerateCaretNewline() {
+        val vCard = VCard()
+        vCard.addAddress(Address().apply {
+            label = "Li^ne 1,1\n- \" -"
+            streetAddress = "Line 1"
+            country = "Line 2"
+        })
+        val str = Ezvcard .write(vCard)
+                .version(VCardVersion.V4_0)
+                .caretEncoding(true)
+                .go().lines().filter { it.startsWith("ADR") }.first()
+        //assertEquals("ADR;LABEL=\"Li^^ne 1,1^n- ^' -\":;;Line 1;;;;Line 2", str)
+        assertEquals("ADR;LABEL=\"Li^^ne 1,1\\n- ^' -\":;;Line 1;;;;Line 2", str)
     }
 
 }

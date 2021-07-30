@@ -18,23 +18,23 @@ by Google LLC. Android is a trademark of Google LLC._
 
 Generated KDoc: https://bitfireAT.gitlab.io/vcard4android/dokka/vcard4android/
 
-Discussion: https://forums.bitfire.at/category/18/libraries
-
 
 ## Contact
 
 ```
-bitfire web engineering – Stockmann, Hirner GesnbR
+bitfire web engineering GmbH
 Florastraße 27
 2540 Bad Vöslau, AUSTRIA
 ```
 
-Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
+Email: [play@bitfire.at](mailto:play@bitfire.at) (please do not use this)
+
+Discussion: https://forums.bitfire.at/category/18/libraries
 
 
 ## License 
 
-Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).
+Copyright (C) Ricki Hirner (bitfire web engineering GmbH) and contributors.
 
 This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome
 to redistribute it under the conditions of the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html).

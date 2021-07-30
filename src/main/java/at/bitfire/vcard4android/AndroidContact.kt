@@ -26,6 +26,7 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
+import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.parameter.*
 import ezvcard.property.*
 import ezvcard.util.PartialDate
@@ -456,6 +457,12 @@ open class AndroidContact(
                     contact!!.anniversary = if (full != null) Anniversary(full) else Anniversary(partial)
                 Event.TYPE_BIRTHDAY ->
                     contact!!.birthDay = if (full != null) Birthday(full) else Birthday(partial)
+                Event.TYPE_OTHER,
+                Event.TYPE_CUSTOM -> {
+                    val abDate = if (full != null) XAbDate(full) else XAbDate(partial)
+                    val label = StringUtils.trimToNull(row.getAsString(Event.LABEL))
+                    contact!!.customDates += LabeledProperty(abDate, label)
+                }
             }
     }
 
@@ -641,6 +648,11 @@ open class AndroidContact(
 
         contact.anniversary?.let { insertEvent(batch, Event.TYPE_ANNIVERSARY, it) }
         contact.birthDay?.let { insertEvent(batch, Event.TYPE_BIRTHDAY, it) }
+        for (customDate in contact.customDates)
+            if (customDate.label == null)
+                insertEvent(batch, Event.TYPE_OTHER, customDate.property)
+            else
+                insertEvent(batch, Event.TYPE_CUSTOM, customDate.property, label = customDate.label)
     }
 
     protected open fun insertStructuredName(batch: BatchOperation) {
@@ -1001,7 +1013,7 @@ open class AndroidContact(
         batch.enqueue(builder)
     }
 
-    protected open fun insertEvent(batch: BatchOperation, type: Int, dateOrTime: DateOrTimeProperty) {
+    protected open fun insertEvent(batch: BatchOperation, type: Int, dateOrTime: DateOrTimeProperty, label: String? = null) {
         val dateStr: String
         dateStr = when {
             dateOrTime.date != null -> {
@@ -1020,6 +1032,10 @@ open class AndroidContact(
                 .withValue(Event.MIMETYPE, Event.CONTENT_ITEM_TYPE)
                 .withValue(Event.TYPE, type)
                 .withValue(Event.START_DATE, dateStr)
+
+        if (label != null)
+            builder.withValue(Event.LABEL, label)
+
         batch.enqueue(builder)
     }
 

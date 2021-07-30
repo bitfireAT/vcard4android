@@ -10,7 +10,7 @@ package at.bitfire.vcard4android
 
 import ezvcard.VCardVersion
 import ezvcard.parameter.*
-import ezvcard.property.*
+import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
 import org.apache.commons.io.IOUtils
 import org.junit.Assert.*
@@ -18,9 +18,10 @@ import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
-import java.io.StringReader
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 
 class ContactTest {
@@ -32,171 +33,14 @@ class ContactTest {
 
     private fun regenerate(c: Contact, vCardVersion: VCardVersion): Contact {
         val os = ByteArrayOutputStream()
-        c.write(vCardVersion, GroupMethod.CATEGORIES, os)
+        c.writeVCard(vCardVersion, GroupMethod.CATEGORIES, os)
         return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), null).first()
     }
 
     private fun toString(c: Contact, groupMethod: GroupMethod, vCardVersion: VCardVersion): String {
         val os = ByteArrayOutputStream()
-        c.write(vCardVersion, groupMethod, os)
+        c.writeVCard(vCardVersion, groupMethod, os)
         return os.toString()
-    }
-
-
-    @Test
-    fun testDropEmptyProperties() {
-        val vcard = "BEGIN:VCARD\n" +
-                "VERSION:4.0\n" +
-                "FN:Sample with empty values\n" +
-                "TEL:12345\n" +
-                "TEL:\n" +
-                "EMAIL:test@example.com\n" +
-                "EMAIL:\n" +
-                "END:VCARD"
-        val c = Contact.fromReader(StringReader(vcard), null).first()
-        assertEquals(1, c.phoneNumbers.size)
-        assertEquals("12345", c.phoneNumbers.first.property.text)
-        assertEquals(1, c.emails.size)
-        assertEquals("test@example.com", c.emails.first.property.value)
-    }
-
-    @Test
-    fun testGenerateOrganizationOnly() {
-        val c = Contact()
-        c.uid = UUID.randomUUID().toString()
-        val org = Organization()
-        org.values.add("My Organization")
-        org.values.add("My Department")
-        c.organization = org
-
-        // vCard 3 needs FN and N
-        var vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        assertTrue(vCard.contains("\nORG:My Organization;My Department\r\n"))
-        assertTrue(vCard.contains("\nFN:My Organization\r\n"))
-        assertTrue(vCard.contains("\nN:\r\n"))
-
-        // vCard 4 only needs FN
-        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0)
-        assertTrue(vCard.contains("\nORG:My Organization;My Department\r\n"))
-        assertTrue(vCard.contains("\nFN:My Organization\r\n"))
-        assertFalse(vCard.contains("\nN:"))
-    }
-
-    @Test
-    fun testGenerateOrgDepartmentOnly() {
-        val c = Contact()
-        c.uid = UUID.randomUUID().toString()
-        val org = Organization()
-        org.values.add("")
-        org.values.add("My Department")
-        c.organization = org
-
-        // vCard 3 needs FN and N
-        var vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        assertTrue(vCard.contains("\nORG:;My Department\r\n"))
-        assertTrue(vCard.contains("\nFN:My Department\r\n"))
-        assertTrue(vCard.contains("\nN:\r\n"))
-
-        // vCard 4 only needs FN
-        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0)
-        assertTrue(vCard.contains("\nORG:;My Department\r\n"))
-        assertTrue(vCard.contains("\nFN:My Department\r\n"))
-        assertFalse(vCard.contains("\nN:"))
-    }
-
-    @Test
-    fun testGenerateGroup() {
-        val c = Contact()
-        c.uid = UUID.randomUUID().toString()
-        c.displayName = "My Group"
-        c.group = true
-        c.members += "member1"
-        c.members += "member2"
-
-        // vCard 3 needs FN and N
-        // exception for Apple: "N:<group name>"
-        var vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        assertTrue(vCard.contains("\nX-ADDRESSBOOKSERVER-KIND:group\r\n"))
-        assertTrue(vCard.contains("\nFN:My Group\r\n"))
-        assertTrue(vCard.contains("\nN:My Group\r\n"))
-        assertTrue(vCard.contains("\nX-ADDRESSBOOKSERVER-MEMBER:urn:uuid:member1\r\n"))
-        assertTrue(vCard.contains("\nX-ADDRESSBOOKSERVER-MEMBER:urn:uuid:member2\r\n"))
-
-        // vCard 4 only needs FN
-        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0)
-        assertTrue(vCard.contains("\nKIND:group\r\n"))
-        assertTrue(vCard.contains("\nFN:My Group\r\n"))
-        assertFalse(vCard.contains("\nN:"))
-        assertTrue(vCard.contains("\nMEMBER:urn:uuid:member1\r\n"))
-        assertTrue(vCard.contains("\nMEMBER:urn:uuid:member2\r\n"))
-    }
-
-    @Test
-    fun testGenerateWithoutName() {
-        /* no data */
-        val c = Contact()
-        // vCard 3 needs FN and N
-        var vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        assertTrue(vCard.contains("\nFN:\r\n"))
-        assertTrue(vCard.contains("\nN:\r\n"))
-        // vCard 4 only needs FN
-        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0)
-        assertTrue(vCard.contains("\nFN:\r\n"))
-        assertFalse(vCard.contains("\nN:"))
-
-        /* only UID */
-        c.uid = UUID.randomUUID().toString()
-        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        // vCard 3 needs FN and N
-        assertTrue(vCard.contains("\nFN:${c.uid}\r\n"))
-        assertTrue(vCard.contains("\nN:\r\n"))
-        // vCard 4 only needs FN
-        vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V4_0)
-        assertTrue(vCard.contains("\nFN:${c.uid}\r\n"))
-        assertFalse(vCard.contains("\nN:"))
-
-        // phone number available
-        c.phoneNumbers += LabeledProperty(Telephone("12345"))
-        assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:12345\r\n"))
-
-        // email address available
-        c.emails += LabeledProperty(Email("test@example.com"))
-        assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:test@example.com\r\n"))
-
-        // nick name available
-        c.nickName = LabeledProperty(Nickname().apply {
-            values += "Nikki"
-        })
-        assertTrue(toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0).contains("\nFN:Nikki\r\n"))
-    }
-
-    @Test
-    fun testGenerateLabeledProperty() {
-        var c = Contact()
-        c.uid = UUID.randomUUID().toString()
-        c.phoneNumbers += LabeledProperty(Telephone("12345"), "My Phone")
-        val vCard = toString(c, GroupMethod.GROUP_VCARDS, VCardVersion.V3_0)
-        assertTrue(vCard.contains("\ngroup1.TEL:12345\r\n"))
-        assertTrue(vCard.contains("\ngroup1.X-ABLabel:My Phone\r\n"))
-
-        c = regenerate(c, VCardVersion.V4_0)
-        assertEquals("12345", c.phoneNumbers.first.property.text)
-        assertEquals("My Phone", c.phoneNumbers.first.label)
-    }
-
-    @Test
-    fun testInvalidREV() {
-        val c = parseContact("invalid-rev.vcf")
-        assertFalse(c.unknownProperties!!.contains("REV"))
-    }
-
-    @Test
-    fun testUnknownPropertiesLabels() {
-        // X-ABLabels belonging to unknown properties shouldn't be dropped
-        val c = parseContact("unknown-properties-with-labels.vcf")
-        assertEquals("Unknown property with label", c.displayName)
-        assertTrue(c.unknownProperties!!.contains("item1.X-Unknown:TestValue"))
-        assertTrue(c.unknownProperties!!.contains("item1.X-ABLabel:TestLabel"))
     }
 
 
@@ -312,7 +156,6 @@ class ContactTest {
         assertEquals("Klöster-Reich", addr.property.country)
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:3.0\r\n" +
-                "PRODID:ez-vcard 0.11.2\r\n" +
                 "X-TEST;A=B:Value\r\n" +
                 "END:VCARD\r\n", c.unknownProperties)
 
@@ -330,7 +173,7 @@ class ContactTest {
         var url1 = false
         var url2 = false
         for (url in c.urls) {
-            if ("https://davdroid.bitfire.at/" == url.property.value && url.property.type == null && url.label == null)
+            if ("https://www.davx5.com/" == url.property.value && url.property.type == null && url.label == null)
                 url1 = true
             if ("http://www.swbyps.restaurant.french/~chezchic.html" == url.property.value && "x-blog" == url.property.type && "blog" == url.label)
                 url2 = true
@@ -342,6 +185,12 @@ class ContactTest {
         assertEquals("1996-04-15", dateFormat.format(c.birthDay!!.date))
         // ANNIVERSARY
         assertEquals("2014-08-12", dateFormat.format(c.anniversary!!.date))
+        // X-ABDATE
+        assertEquals(1, c.customDates.size)
+        c.customDates.first.also { date ->
+            assertEquals("Custom Date", date.label)
+            assertEquals(ZonedDateTime.of(2021, 7, 29, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant(), date.property.date.toInstant())
+        }
 
         // RELATED
         assertEquals(2, c.relations.size)
@@ -351,7 +200,7 @@ class ContactTest {
         assertEquals("Ägidius", rel.text)
         rel = c.relations[1]
         assertTrue(rel.types.contains(RelatedType.PARENT))
-        assertEquals("muuuum", rel.text)
+        assertEquals("muuum@example.com", rel.uri)
 
         // PHOTO
         javaClass.classLoader!!.getResourceAsStream("lol.jpg").use { photo ->

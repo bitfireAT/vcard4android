@@ -18,6 +18,7 @@ import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
+import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
 import ezvcard.parameter.EmailType
 import ezvcard.property.Address
@@ -75,6 +76,7 @@ class AndroidContactTest {
         vcard.phoneticMiddleName = "Mittelerde"
         vcard.phoneticFamilyName = "Fämilie"
         vcard.birthDay = Birthday(SimpleDateFormat("yyyy-MM-dd").parse("1980-04-16"))
+        vcard.customDates += LabeledProperty(XAbDate(PartialDate.parse("--0102")), "Custom Date")
         vcard.photo = samplePhoto
 
         val contact = AndroidContact(addressBook, vcard, null, null)
@@ -92,6 +94,7 @@ class AndroidContactTest {
             assertEquals(vcard.phoneticMiddleName, vcard2.phoneticMiddleName)
             assertEquals(vcard.phoneticFamilyName, vcard2.phoneticFamilyName)
             assertEquals(vcard.birthDay, vcard2.birthDay)
+            assertArrayEquals(vcard.customDates.toArray(), vcard2.customDates.toArray())
             assertNotNull(vcard.photo)
         } finally {
             contact2.delete()
@@ -179,8 +182,7 @@ class AndroidContactTest {
          * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
 
         val os = ByteArrayOutputStream()
-        contact.write(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, os)
-        Constants.log.info(os.toString())
+        contact.writeVCard(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, os)
         assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'\\nLine 2:;;Street \"Address\";;;;"))
     }
 

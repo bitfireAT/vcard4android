@@ -8,29 +8,32 @@
 
 package at.bitfire.vcard4android
 
-import at.bitfire.vcard4android.property.*
-import ezvcard.Ezvcard
-import ezvcard.VCard
+import at.bitfire.vcard4android.property.CustomScribes
+import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
 import ezvcard.io.text.VCardReader
-import ezvcard.io.text.VCardWriter
 import ezvcard.parameter.EmailType
-import ezvcard.parameter.ImageType
 import ezvcard.parameter.TelephoneType
 import ezvcard.property.*
-import ezvcard.util.PartialDate
-import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder
 import java.io.IOException
 import java.io.OutputStream
 import java.io.Reader
-import java.net.URI
-import java.net.URISyntaxException
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.logging.Level
 
+/**
+ * Data class for a contact; between vCards and the Android contacts provider.
+ *
+ * Data shall be stored without workarounds in the most appropriate form. For instance,
+ * an anniversary should be stored as [anniversary] and not in [customDates] with a
+ * proprietary label ([Contact.DATE_LABEL_ANNIVERSARY]).
+ *
+ * vCards are parsed to [Contact]s by [ContactReader].
+ * [Contact]s are written to vCards by [ContactWriter].
+ *
+ * [Contact]s are written to and read from the Android storage by [AndroidContact].
+ */
 class Contact {
 
     var uid: String? = null
@@ -69,7 +72,7 @@ class Contact {
 
     var anniversary: Anniversary? = null
     var birthDay: Birthday? = null
-    val customDates = LinkedList<LabeledProperty<DateOrTimeProperty>>()
+    val customDates = LinkedList<LabeledProperty<XAbDate>>()
 
     var photo: ByteArray? = null
 
@@ -78,22 +81,11 @@ class Contact {
 
 
     companion object {
-
-        /** list of all custom scribes (will be registered to readers/writers) **/
-        val customScribes = arrayOf(
-            AbLabel.Scribe,
-            AddressBookServerKind.Scribe,
-            AddressBookServerMember.Scribe,
-            PhoneticFirstName.Scribe,
-            PhoneticMiddleName.Scribe,
-            PhoneticLastName.Scribe
-        )
-
         // productID (if set) will be used to generate a PRODID property.
         // You may set this statically from the calling application.
         var productID: String? = null
 
-        const val PROPERTY_SIP = "X-SIP"
+        const val LABEL_GROUP_PREFIX = "item"
 
         // TEL x-types to store Android types
         val PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback")!!
@@ -118,6 +110,9 @@ class Contact {
         const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
         const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
 
+        const val DATE_LABEL_ANNIVERSARY = "_\$!<Anniversary>!\$_"
+        const val DATE_LABEL_OTHER = "_\$!<Other>!\$_"
+
 
         /**
          * Parses an InputStream that contains a vCard.
@@ -129,391 +124,24 @@ class Contact {
          * @throws ezvcard.io.CannotParseException when the vCard can't be parsed
          */
         fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
-            // create new vCard reader and add custom scribes to tell the reader how to read custom properties
+            // create new vCard reader and add custom scribes
             val vCardReader = VCardReader(reader, VCardVersion.V3_0)        // CardDAV requires vCard 3 or newer
-            for (scribe in customScribes)
-                vCardReader.scribeIndex.register(scribe)
+            CustomScribes.registerAt(vCardReader)
+            val vCards = vCardReader.readAll()
 
-            val vcards = vCardReader.readAll()
-            val contacts = LinkedList<Contact>()
-            vcards?.forEach { contacts += fromVCard(it, downloader) }
-            return contacts
-        }
-
-        private fun fromVCard(vCard: VCard, downloader: Downloader?): Contact {
-            val c = Contact()
-
-            // get X-ABLabels
-            val labels = vCard.getProperties(AbLabel::class.java)
-
-            fun findAndRemoveLabel(group: String?): String? {
-                if (group == null)
-                    return null
-
-                for (label in labels) {
-                    if (label.group.equals(group, true)) {
-                        vCard.removeProperty(label)
-                        return label.value
-                    }
-                }
-
-                return null
+            return vCards.map { vCard ->
+                // convert every vCard to a Contact data object
+                ContactReader.fromVCard(vCard, downloader)
             }
-
-            // process standard properties
-            val toRemove = LinkedList<VCardProperty>()
-            for (prop in vCard.properties) {
-                var remove = true
-                when (prop) {
-                    is Uid -> c.uid = uriToUID(prop.value)
-
-                    is Kind, is AddressBookServerKind -> {
-                        val kindProp = prop as Kind
-                        c.group = kindProp.isGroup
-                    }
-                    is Member, is AddressBookServerMember -> {
-                        val uriProp = prop as Member
-                        uriToUID(uriProp.uri)?.let { c.members += it }
-                    }
-
-                    is FormattedName -> c.displayName = prop.value.trim()
-                    is PhoneticFirstName -> c.phoneticGivenName = StringUtils.trimToNull(prop.value)
-                    is PhoneticMiddleName -> c.phoneticMiddleName = StringUtils.trimToNull(prop.value)
-                    is PhoneticLastName -> c.phoneticFamilyName = StringUtils.trimToNull(prop.value)
-                    is StructuredName -> {
-                        c.prefix = StringUtils.trimToNull(prop.prefixes.joinToString(" "))
-                        c.givenName = StringUtils.trimToNull(prop.given)
-                        c.middleName = StringUtils.trimToNull(prop.additionalNames.joinToString(" "))
-                        c.familyName = StringUtils.trimToNull(prop.family)
-                        c.suffix = StringUtils.trimToNull(prop.suffixes.joinToString(" "))
-                    }
-                    is Nickname -> c.nickName = LabeledProperty(prop, findAndRemoveLabel(prop.group))
-
-                    is Organization -> c.organization = prop
-                    is Title -> c.jobTitle = StringUtils.trimToNull(prop.value)
-                    is Role -> c.jobDescription = StringUtils.trimToNull(prop.value)
-
-                    is Telephone -> if (!prop.text.isNullOrBlank())
-                        c.phoneNumbers += LabeledProperty(prop, findAndRemoveLabel(prop.group))
-                    is Email -> if (!prop.value.isNullOrBlank())
-                        c.emails += LabeledProperty(prop, findAndRemoveLabel(prop.group))
-                    is Impp -> c.impps += LabeledProperty(prop, findAndRemoveLabel(prop.group))
-                    is Address -> c.addresses += LabeledProperty(prop, findAndRemoveLabel(prop.group))
-
-                    is Note -> c.note = if (c.note.isNullOrEmpty()) prop.value else "${c.note}\n\n\n${prop.value}"
-                    is Url -> c.urls += LabeledProperty(prop, findAndRemoveLabel(prop.group))
-                    is Categories -> c.categories.addAll(prop.values)
-
-                    is Birthday -> c.birthDay = checkVCard3PartialDate(prop)
-                    is Anniversary -> c.anniversary = checkVCard3PartialDate(prop)
-
-                    is Related -> StringUtils.trimToNull(prop.text)?.let { c.relations += prop }
-                    is Photo ->
-                        c.photo = prop.data ?: prop.url?.let { url ->
-                            downloader?.let {
-                                Constants.log.info("Downloading photo from $url")
-                                it.download(url, "image/*")
-                            }
-                        }
-
-                    // remove binary properties because of potential OutOfMemory / TransactionTooLarge exceptions
-                    is Logo, is Sound -> { /* remove = true */ }
-
-                    // remove properties that don't apply anymore
-                    is ProductId,
-                    is Revision,
-                    is SortString,
-                    is Source -> {
-                        /* remove = true */
-                    }
-
-                    else -> remove = false      // don't remove unknown properties
-                }
-
-                if (remove)
-                    toRemove += prop
-            }
-            toRemove.forEach { vCard.removeProperty(it) }
-
-            // process extended properties
-            val extToRemove = LinkedList<RawProperty>()
-            for (prop in vCard.extendedProperties) {
-                var remove = true
-                when (prop.propertyName) {
-                    PROPERTY_SIP -> c.impps += LabeledProperty(Impp("sip", prop.value), findAndRemoveLabel(prop.group))
-                    else -> remove = false      // don't remove unknown extended properties
-                }
-
-                if (remove)
-                    extToRemove += prop
-            }
-            extToRemove.distinct().forEach { vCard.removeExtendedProperty(it.propertyName) }
-
-            if (c.uid == null) {
-                Constants.log.warning("Received vCard without UID, generating new one")
-                c.uid = UUID.randomUUID().toString()
-            }
-
-            // remove properties which
-            // - couldn't be parsed (and thus are treated as extended/unknown properties), and
-            // - must occur once max.
-            arrayOf("ANNIVERSARY", "BDAY", "KIND", "N", "PRODID", "REV", "UID").forEach {
-                vCard.removeExtendedProperty(it)
-            }
-
-            // store all remaining properties into unknownProperties
-            if (vCard.properties.isNotEmpty() || vCard.extendedProperties.isNotEmpty())
-                try {
-                    val writer = Ezvcard.write(vCard)
-                    for (scribe in customScribes)       // unknwown properties may contain custom scribes like an unmatched X-ABLabel
-                        writer.register(scribe)
-                    c.unknownProperties = writer.go()
-                } catch(e: Exception) {
-                    Constants.log.log(Level.WARNING, "Couldn't serialize unknown properties, dropping them", e)
-                }
-
-            return c
-        }
-
-        private fun uriToUID(uriString: String?): String? {
-            if (uriString == null)
-                return null
-            return try {
-                val uri = URI(uriString)
-                when {
-                    uri.scheme == null ->
-                        uri.schemeSpecificPart
-                    uri.scheme.equals("urn", true) && uri.schemeSpecificPart.startsWith("uuid:", true) ->
-                        uri.schemeSpecificPart.substring(5)
-                    else ->
-                        null
-                }
-            } catch(e: URISyntaxException) {
-                Constants.log.warning("Invalid URI for UID: $uriString")
-                uriString
-            }
-        }
-
-        private fun<T: DateOrTimeProperty> checkVCard3PartialDate(property: T): T {
-            property.date?.let { date ->
-                property.getParameter(DATE_PARAMETER_OMIT_YEAR)?.let { omitYearStr ->
-                    try {
-                        val omitYear = Integer.parseInt(omitYearStr)
-                        val cal = GregorianCalendar.getInstance()
-                        cal.time = date
-                        if (cal.get(GregorianCalendar.YEAR) == omitYear) {
-                            val partial = PartialDate.builder()
-                                    .date(cal.get(GregorianCalendar.DAY_OF_MONTH))
-                                    .month(cal.get(GregorianCalendar.MONTH) + 1)
-                                    .build()
-                            property.partialDate = partial
-                        }
-                    } catch(e: NumberFormatException) {
-                        Constants.log.log(Level.WARNING, "Unparseable $DATE_PARAMETER_OMIT_YEAR")
-                    } finally {
-                        property.removeParameter(DATE_PARAMETER_OMIT_YEAR)
-                    }
-                }
-            }
-            return property
         }
 
     }
 
 
     @Throws(IOException::class)
-    fun write(vCardVersion: VCardVersion, groupMethod: GroupMethod, os: OutputStream) {
-        var vCard = VCard()
-        try {
-            unknownProperties?.let { vCard = Ezvcard.parse(unknownProperties).first() }
-        } catch (e: Exception) {
-            Constants.log.fine("Couldn't parse original vCard with retained properties")
-        }
-
-        // UID
-        uid?.let { vCard.uid = Uid(it) }
-        // PRODID
-        productID?.let { vCard.setProductId(it) }
-
-        // group support
-        if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
-            if (vCardVersion == VCardVersion.V4_0) {
-                vCard.kind = Kind.group()
-                members.forEach { vCard.members += Member("urn:uuid:$it") }
-            } else {    // "vCard4 as vCard3" (Apple-style)
-                vCard.setProperty(AddressBookServerKind(Kind.GROUP))
-                members.forEach { vCard.addProperty(AddressBookServerMember("urn:uuid:$it")) }
-            }
-        }
-
-        // FN
-        var fn = displayName
-        if (fn.isNullOrEmpty())
-            organization?.let {
-                for (part in it.values) {
-                    fn = part
-                    if (!fn.isNullOrEmpty())
-                        break
-                }
-            }
-        if (fn.isNullOrEmpty())
-            nickName?.let { fn = it.property.values.firstOrNull() }
-        if (fn.isNullOrEmpty())
-            emails.firstOrNull()?.let { fn = it.property.value }
-        if (fn.isNullOrEmpty())
-            phoneNumbers.firstOrNull()?.let { fn = it.property.text }
-        if (fn.isNullOrEmpty())
-            fn = uid ?: ""
-        vCard.setFormattedName(fn)
-
-        // N
-        if (prefix != null || familyName != null || middleName != null || givenName != null || suffix != null) {
-            val n = StructuredName()
-            prefix?.let { it.split(' ').forEach { singlePrefix -> n.prefixes += singlePrefix } }
-            n.given = givenName
-            middleName?.let { it.split(' ').forEach { singleName -> n.additionalNames += singleName } }
-            n.family = familyName
-            suffix?.let { it.split(' ').forEach { singleSuffix -> n.suffixes += singleSuffix } }
-            vCard.structuredName = n
-
-        } else if (vCardVersion == VCardVersion.V3_0) {
-            // (only) vCard 3 requires N [RFC 2426 3.1.2]
-            if (group && groupMethod == GroupMethod.GROUP_VCARDS) {
-                val n = StructuredName()
-                n.family = fn
-                vCard.structuredName = n
-            } else
-                vCard.structuredName = StructuredName()
-        }
-
-        // phonetic names
-        phoneticGivenName?.let { vCard.addProperty(PhoneticFirstName(it)) }
-        phoneticMiddleName?.let { vCard.addProperty(PhoneticMiddleName(it)) }
-        phoneticFamilyName?.let { vCard.addProperty(PhoneticLastName(it)) }
-
-        // ORG, TITLE, ROLE
-        organization?.let { vCard.organization = it }
-        jobTitle?.let { vCard.addTitle(it) }
-        jobDescription?.let { vCard.addRole(it) }
-
-        // will be used to count "itemXX." property groups
-        val labelIterator = AtomicInteger()
-        // TODO move function outside; make clear that it modifies labeledProperty.property
-        fun addLabel(labeledProperty: LabeledProperty<VCardProperty>) {
-            labeledProperty.label?.let { label ->
-                val group = "group${labelIterator.incrementAndGet()}"
-                labeledProperty.property.group = group
-
-                val abLabel = AbLabel(label)
-                abLabel.group = group
-                vCard.addProperty(abLabel)
-            }
-        }
-
-        // NICKNAME
-        nickName?.let { labeledNickName ->
-            vCard.addNickname(labeledNickName.property)
-            addLabel(labeledNickName)
-        }
-
-        // TEL
-        for (labeledPhone in phoneNumbers) {
-            vCard.addTelephoneNumber(labeledPhone.property)
-            addLabel(labeledPhone)
-        }
-
-        // EMAIL
-        for (labeledEmail in emails) {
-            vCard.addEmail(labeledEmail.property)
-            addLabel(labeledEmail)
-        }
-
-        // IMPP
-        for (labeledImpp in impps) {
-            vCard.addImpp(labeledImpp.property)
-            addLabel(labeledImpp)
-        }
-
-        // ADR
-        for (labeledAddress in addresses) {
-            val address = labeledAddress.property
-            vCard.addAddress(address)
-            addLabel(labeledAddress)
-        }
-
-        // NOTE
-        note?.let { vCard.addNote(it) }
-
-        // URL
-        for (labeledUrl in urls) {
-            val url = labeledUrl.property
-            vCard.addUrl(url)
-            addLabel(labeledUrl)
-        }
-
-        // CATEGORIES
-        if (!categories.isEmpty()) {
-            val cat = Categories()
-            cat.values.addAll(categories)
-            vCard.categories = cat
-        }
-
-        // ANNIVERSARY, BDAY
-        fun<T: DateOrTimeProperty> dateOrPartialDate(prop: T, generator: (Date) -> T): T? {
-            if (vCardVersion == VCardVersion.V4_0 || prop.date != null)
-                return prop
-            else prop.partialDate?.let { partial ->
-                // vCard 3: partial date with month and day, but without year
-                if (partial.date != null && partial.month != null) {
-                    return if (partial.year != null)
-                        // partial date is a complete date
-                        prop
-                    else {
-                        // vCard 3: partial date with month and day, but without year
-                        val fakeCal = GregorianCalendar.getInstance()
-                        fakeCal.set(DATE_PARAMETER_OMIT_YEAR_DEFAULT, partial.month - 1, partial.date)
-                        val fakeProp = generator(fakeCal.time)
-                        fakeProp.addParameter(DATE_PARAMETER_OMIT_YEAR, DATE_PARAMETER_OMIT_YEAR_DEFAULT.toString())
-                        fakeProp
-                    }
-                }
-            }
-            return null
-        }
-        anniversary?.let { vCard.anniversary = dateOrPartialDate(it) { time -> Anniversary(time, false) } }
-        birthDay?.let { vCard.birthday = dateOrPartialDate(it) { time -> Birthday(time, false) } }
-
-        // RELATED
-        relations.forEach { vCard.addRelated(it) }
-
-        // PHOTO
-        photo?.let { vCard.addPhoto(Photo(photo, ImageType.JPEG)) }
-
-        // REV
-        vCard.revision = Revision.now()
-
-        // validate vCard and log results
-        val validation = vCard.validate(vCardVersion)
-        if (!validation.isEmpty) {
-            val msgs = LinkedList<String>()
-            for ((key, warnings) in validation)
-                msgs += "  * " + key.javaClass.simpleName + " - " + warnings.joinToString(" | ")
-            Constants.log.log(Level.WARNING, "vCard validation warnings", msgs.joinToString(","))
-        }
-
-        // generate VCARD
-        val writer = Ezvcard
-                .write(vCard)
-                .version(vCardVersion)
-                .versionStrict(false)      // allow vCard4 properties in vCard3s
-                .caretEncoding(true)           // enable RFC 6868 support
-                .prodId(productID == null)
-
-        // tell the writer how to write custom properties
-        for (scribe in customScribes)
-            writer.register(scribe)
-
-        return writer .go(os)
+    fun writeVCard(vCardVersion: VCardVersion, groupMethod: GroupMethod, os: OutputStream) {
+        val generator = ContactWriter.fromContact(this, vCardVersion, groupMethod)
+        generator.writeVCard(os)
     }
 
 
@@ -525,9 +153,8 @@ class Contact {
         phoneticGivenName, phoneticMiddleName, phoneticFamilyName,
         nickName,
         organization, jobTitle, jobDescription,
-        phoneNumbers, emails, impps, addresses,
-        /* categories, */ urls, relations,
-        note, anniversary, birthDay,
+        phoneNumbers, emails, impps, addresses, /* categories, */ urls, relations,
+        note, anniversary, birthDay, customDates,
         photo
         /* unknownProperties */
     )
