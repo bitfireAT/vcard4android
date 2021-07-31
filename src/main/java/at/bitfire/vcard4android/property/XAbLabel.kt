@@ -5,6 +5,13 @@ import ezvcard.property.TextProperty
 
 class XAbLabel(value: String?): TextProperty(value) {
 
+    companion object {
+
+        const val APPLE_ANNIVERSARY = "_\$!<Anniversary>!\$_"
+        const val APPLE_OTHER = "_\$!<Other>!\$_"
+
+    }
+
     object Scribe :
         StringPropertyScribe<XAbLabel>(XAbLabel::class.java, "X-ABLABEL") {
 

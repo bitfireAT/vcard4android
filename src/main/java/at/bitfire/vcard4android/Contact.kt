@@ -8,7 +8,7 @@
 
 package at.bitfire.vcard4android
 
-import at.bitfire.vcard4android.property.CustomScribes
+import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
 import ezvcard.io.text.VCardReader
@@ -110,9 +110,6 @@ class Contact {
         const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
         const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
 
-        const val DATE_LABEL_ANNIVERSARY = "_\$!<Anniversary>!\$_"
-        const val DATE_LABEL_OTHER = "_\$!<Other>!\$_"
-
 
         /**
          * Parses an InputStream that contains a vCard.
@@ -125,9 +122,9 @@ class Contact {
          */
         fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
             // create new vCard reader and add custom scribes
-            val vCardReader = VCardReader(reader, VCardVersion.V3_0)        // CardDAV requires vCard 3 or newer
-            CustomScribes.registerAt(vCardReader)
-            val vCards = vCardReader.readAll()
+            val vCards = VCardReader(reader, VCardVersion.V3_0)        // CardDAV requires vCard 3 or newer
+                    .registerCustomScribes()
+                    .readAll()
 
             return vCards.map { vCard ->
                 // convert every vCard to a Contact data object

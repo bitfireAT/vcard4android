@@ -1,8 +1,10 @@
 package at.bitfire.vcard4android
 
 import at.bitfire.vcard4android.property.*
+import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import ezvcard.Ezvcard
 import ezvcard.VCard
+import ezvcard.parameter.RelatedType
 import ezvcard.property.*
 import ezvcard.util.PartialDate
 import org.apache.commons.lang3.StringUtils
@@ -157,10 +159,10 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is XAbDate -> {
                     checkPartialDate(prop)
                     var label = findAndRemoveLabel(prop.group)
-                    if (label == Contact.DATE_LABEL_OTHER)              // drop Apple "Other" label
+                    if (label == XAbLabel.APPLE_OTHER)              // drop Apple "Other" label
                         label = null
 
-                    if (label == Contact.DATE_LABEL_ANNIVERSARY) {      // convert custom date with Apple "Anniversary" label to real anniversary
+                    if (label == XAbLabel.APPLE_ANNIVERSARY) {      // convert custom date with Apple "Anniversary" label to real anniversary
                         if (prop.date != null)
                             c.anniversary = Anniversary(prop.date)
                         else if (prop.partialDate != null)
@@ -172,6 +174,54 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is Related ->
                     if (!prop.uri.isNullOrBlank() || !prop.text.isNullOrBlank())
                         c.relations += prop
+                is XAbRelatedNames -> {
+                    val relation = Related()
+                    relation.text = prop.value
+
+                    val labelStr = findAndRemoveLabel(prop.group)
+                    when (labelStr) {
+                        XAbRelatedNames.APPLE_ASSISTANT -> {
+                            relation.types.add(CustomRelatedType.ASSISTANT)
+                            relation.types.add(RelatedType.CO_WORKER)
+                        }
+                        XAbRelatedNames.APPLE_BROTHER -> {
+                            relation.types.add(CustomRelatedType.BROTHER)
+                            relation.types.add(RelatedType.SIBLING)
+                        }
+                        XAbRelatedNames.APPLE_CHILD ->
+                            relation.types.add(RelatedType.CHILD)
+                        XAbRelatedNames.APPLE_FATHER -> {
+                            relation.types.add(CustomRelatedType.FATHER)
+                            relation.types.add(RelatedType.PARENT)
+                        }
+                        XAbRelatedNames.APPLE_FRIEND ->
+                            relation.types.add(RelatedType.FRIEND)
+                        XAbRelatedNames.APPLE_MANAGER -> {
+                            relation.types.add(CustomRelatedType.MANAGER)
+                            relation.types.add(RelatedType.CO_WORKER)
+                        }
+                        XAbRelatedNames.APPLE_MOTHER -> {
+                            relation.types.add(CustomRelatedType.MOTHER)
+                            relation.types.add(RelatedType.PARENT)
+                        }
+                        XAbRelatedNames.APPLE_SISTER -> {
+                            relation.types.add(CustomRelatedType.SISTER)
+                            relation.types.add(RelatedType.SIBLING)
+                        }
+                        XAbRelatedNames.APPLE_PARENT ->
+                            relation.types.add(RelatedType.PARENT)
+                        XAbRelatedNames.APPLE_PARTNER ->
+                            relation.types.add(CustomRelatedType.PARTNER)
+                        XAbRelatedNames.APPLE_SPOUSE ->
+                            relation.types.add(RelatedType.SPOUSE)
+
+                        is String /* label != null */ -> {
+                            for (label in labelStr.split(','))
+                                relation.types.add(RelatedType.get(label.trim().lowercase()))
+                        }
+                    }
+                    c.relations += relation
+                }
 
                 is Note -> {
                     StringUtils.trimToNull(prop.value)?.let { note ->
@@ -223,12 +273,12 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
 
         if (vCard.properties.isNotEmpty() || vCard.extendedProperties.isNotEmpty())
             try {
-                val writer = Ezvcard
+                c.unknownProperties = Ezvcard
                         .write(vCard)
                         .prodId(false)
                         .version(vCard.version)
-                CustomScribes.registerAt(writer)
-                c.unknownProperties = writer.go()
+                        .registerCustomScribes()
+                        .go()
             } catch(e: Exception) {
                 Constants.log.log(Level.WARNING, "Couldn't serialize unknown properties, dropping them", e)
             }

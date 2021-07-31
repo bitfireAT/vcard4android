@@ -200,7 +200,7 @@ class ContactTest {
         assertEquals("Ägidius", rel.text)
         rel = c.relations[1]
         assertTrue(rel.types.contains(RelatedType.PARENT))
-        assertEquals("muuum@example.com", rel.uri)
+        assertEquals("muuum@example.com", rel.text)
 
         // PHOTO
         javaClass.classLoader!!.getResourceAsStream("lol.jpg").use { photo ->

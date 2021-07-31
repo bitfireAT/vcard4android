@@ -1,13 +1,16 @@
 package at.bitfire.vcard4android
 
 import at.bitfire.vcard4android.property.*
+import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
 import ezvcard.io.text.VCardWriter
 import ezvcard.parameter.ImageType
+import ezvcard.parameter.RelatedType
 import ezvcard.property.*
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.WordUtils
 import java.io.OutputStream
 import java.util.*
 import java.util.logging.Level
@@ -71,7 +74,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
         addDates()
 
         for (relation in contact.relations)
-            vCard.addRelated(relation)
+            addRelation(relation)
 
         contact.note?.let { note -> vCard.addNote(note) }
 
@@ -99,8 +102,8 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
             } else /* version == VCardVersion.V3_0 */ {
                 // vCard3 doesn't support partial dates
                 rewritePartialDate(anniversary)
-                // vCard3 doesn't support ANNIVERSARY, rewrite to X-ABDate
-                addLabeledProperty(LabeledProperty(XAbDate(anniversary.date), Contact.DATE_LABEL_ANNIVERSARY))
+                // vCard3 doesn't support ANNIVERSARY, rewrite to X-ABDATE
+                addLabeledProperty(LabeledProperty(XAbDate(anniversary.date), XAbLabel.APPLE_ANNIVERSARY))
                 vCard.anniversary = null
             }
         }
@@ -155,6 +158,53 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
         contact.organization?.let { vCard.organization = it }
         contact.jobTitle?.let { vCard.addTitle(it) }
         contact.jobDescription?.let { vCard.addRole(it) }
+    }
+
+    private fun addRelation(relation: Related) {
+        if (version == VCardVersion.V4_0)
+            vCard.addRelated(relation)
+
+        else /* version == VCardVersion.V3_0 */ {
+            val name = XAbRelatedNames(relation.text ?: relation.uri)
+            var label: String? = null
+
+            val types = LinkedList(relation.types)
+            types.remove(CustomRelatedType.OTHER)       // ignore this type (has to be inserted by ContactReader when no type is set)
+
+            when {
+                types.contains(CustomRelatedType.ASSISTANT) ->
+                    label = XAbRelatedNames.APPLE_ASSISTANT
+                types.contains(CustomRelatedType.BROTHER) ->
+                    label = XAbRelatedNames.APPLE_BROTHER
+                types.contains(RelatedType.CHILD) ->
+                    label = XAbRelatedNames.APPLE_CHILD
+                types.contains(CustomRelatedType.FATHER) ->
+                    label = XAbRelatedNames.APPLE_FATHER
+                types.contains(RelatedType.FRIEND) ->
+                    label = XAbRelatedNames.APPLE_FRIEND
+                types.contains(CustomRelatedType.MANAGER) ->
+                    label = XAbRelatedNames.APPLE_MANAGER
+                types.contains(CustomRelatedType.MOTHER) ->
+                    label = XAbRelatedNames.APPLE_MOTHER
+                types.contains(RelatedType.PARENT) ->
+                    label = XAbRelatedNames.APPLE_PARENT
+                types.contains(CustomRelatedType.PARTNER) ->
+                    label = XAbRelatedNames.APPLE_PARTNER
+                types.contains(CustomRelatedType.SISTER) ->
+                    label = XAbRelatedNames.APPLE_SISTER
+                types.contains(RelatedType.SPOUSE) ->
+                    label = XAbRelatedNames.APPLE_SPOUSE
+
+                else -> {
+                    if (relation.types.isEmpty())
+                        name.addParameter("TYPE", "other")
+                    else
+                        label = relation.types.map { type -> WordUtils.capitalize(type.value) }.joinToString(", ")
+                }
+            }
+
+            addLabeledProperty(LabeledProperty(name, label))
+        }
     }
 
     private fun addStructuredName() {
@@ -278,7 +328,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
 
         val writer = VCardWriter(stream, version).apply {
             isAddProdId = Contact.productID == null
-            CustomScribes.registerAt(scribeIndex)
+            registerCustomScribes()
 
             // include trailing semicolons for maximum compatibility
             isIncludeTrailingSemicolons = true

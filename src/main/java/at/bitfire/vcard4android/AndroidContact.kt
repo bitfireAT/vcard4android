@@ -26,6 +26,7 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
+import at.bitfire.vcard4android.property.CustomRelatedType
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.parameter.*
 import ezvcard.property.*
@@ -33,6 +34,7 @@ import ezvcard.util.PartialDate
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.builder.ToStringBuilder
+import org.apache.commons.text.WordUtils
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -472,29 +474,52 @@ open class AndroidContact(
             related.text = name
 
             when (row.getAsInteger(Relation.TYPE)) {
-                Relation.TYPE_ASSISTANT,
-                Relation.TYPE_MANAGER ->
+                Relation.TYPE_ASSISTANT -> {
+                    related.types += CustomRelatedType.ASSISTANT
                     related.types += RelatedType.CO_WORKER
-                Relation.TYPE_BROTHER,
-                Relation.TYPE_SISTER ->
+                }
+                Relation.TYPE_BROTHER -> {
+                    related.types += CustomRelatedType.BROTHER
                     related.types += RelatedType.SIBLING
+                }
                 Relation.TYPE_CHILD ->
                     related.types += RelatedType.CHILD
+                Relation.TYPE_DOMESTIC_PARTNER -> {
+                    related.types += CustomRelatedType.DOMESTIC_PARTNER
+                    related.types += RelatedType.SPOUSE
+                }
+                Relation.TYPE_FATHER -> {
+                    related.types += CustomRelatedType.FATHER
+                    related.types += RelatedType.PARENT
+                }
                 Relation.TYPE_FRIEND ->
                     related.types += RelatedType.FRIEND
-                Relation.TYPE_FATHER,
-                Relation.TYPE_MOTHER,
+                Relation.TYPE_MANAGER -> {
+                    related.types += CustomRelatedType.MANAGER
+                    related.types += RelatedType.CO_WORKER
+                }
+                Relation.TYPE_MOTHER -> {
+                    related.types += CustomRelatedType.MOTHER
+                    related.types += RelatedType.PARENT
+                }
                 Relation.TYPE_PARENT ->
                     related.types += RelatedType.PARENT
-                Relation.TYPE_DOMESTIC_PARTNER,
-                Relation.TYPE_PARTNER,
-                Relation.TYPE_SPOUSE ->
-                    related.types += RelatedType.SPOUSE
+                Relation.TYPE_PARTNER ->
+                    related.types += CustomRelatedType.PARTNER
+                Relation.TYPE_REFERRED_BY ->
+                    related.types += CustomRelatedType.REFERRED_BY
                 Relation.TYPE_RELATIVE ->
                     related.types += RelatedType.KIN
+                Relation.TYPE_SISTER -> {
+                    related.types += CustomRelatedType.SISTER
+                    related.types += RelatedType.SIBLING
+                }
+                Relation.TYPE_SPOUSE ->
+                    related.types += RelatedType.SPOUSE
                 Relation.TYPE_CUSTOM ->
-                    row.getAsString(Relation.LABEL)?.split(",")?.forEach {
-                        related.types += RelatedType.get(it.trim())
+                    StringUtils.trimToNull(row.getAsString(Relation.LABEL))?.let { typeStr ->
+                        for (type in typeStr.split(','))
+                            related.types += RelatedType.get(type.lowercase().trim())
                     }
             }
 
@@ -1039,28 +1064,47 @@ open class AndroidContact(
         batch.enqueue(builder)
     }
 
-    protected open fun insertRelation(batch: BatchOperation, related: Related) {
-        if (related.text.isNullOrEmpty())
+    internal open fun insertRelation(batch: BatchOperation, related: Related) {
+        val name = StringUtils.trimToNull(related.text) ?: StringUtils.trimToNull(related.uri)
+        if (name.isNullOrEmpty())
             return
 
-        var typeCode = Relation.TYPE_CUSTOM
+        var typeCode = when {
+            // specific Android types (not defined in RFC 6350)
+            related.types.contains(CustomRelatedType.ASSISTANT) -> Relation.TYPE_ASSISTANT
+            related.types.contains(CustomRelatedType.BROTHER) -> Relation.TYPE_BROTHER
+            related.types.contains(CustomRelatedType.DOMESTIC_PARTNER) -> Relation.TYPE_DOMESTIC_PARTNER
+            related.types.contains(CustomRelatedType.FATHER) -> Relation.TYPE_FATHER
+            related.types.contains(CustomRelatedType.MANAGER) -> Relation.TYPE_MANAGER
+            related.types.contains(CustomRelatedType.MOTHER) -> Relation.TYPE_MOTHER
+            related.types.contains(CustomRelatedType.PARTNER) -> Relation.TYPE_PARTNER
+            related.types.contains(CustomRelatedType.REFERRED_BY) -> Relation.TYPE_REFERRED_BY
+            related.types.contains(CustomRelatedType.SISTER) -> Relation.TYPE_SISTER
 
-        val labels = LinkedList<String>()
-        for (type in related.types)
-            when (type) {
-                RelatedType.CHILD  -> typeCode = Relation.TYPE_CHILD
-                RelatedType.SPOUSE -> typeCode = Relation.TYPE_PARTNER
-                RelatedType.FRIEND -> typeCode = Relation.TYPE_FRIEND
-                RelatedType.KIN    -> typeCode = Relation.TYPE_RELATIVE
-                RelatedType.PARENT -> typeCode = Relation.TYPE_PARENT
-                else               -> labels += type.value
-            }
+            // standard types (defined in RFC 6350) supported by Android
+            related.types.contains(RelatedType.FRIEND) -> Relation.TYPE_FRIEND
+            related.types.contains(RelatedType.KIN) -> Relation.TYPE_RELATIVE
+            related.types.contains(RelatedType.PARENT) -> Relation.TYPE_PARENT
+            related.types.contains(RelatedType.SPOUSE) -> Relation.TYPE_SPOUSE
+
+            // other standard types are set as TYPE_CUSTOM
+            else -> Relation.TYPE_CUSTOM
+        }
 
         val builder = insertDataBuilder(Relation.RAW_CONTACT_ID)
                 .withValue(Relation.MIMETYPE, Relation.CONTENT_ITEM_TYPE)
-                .withValue(Relation.NAME, related.text)
+                .withValue(Relation.NAME, name)
                 .withValue(Relation.TYPE, typeCode)
-                .withValue(Relation.LABEL, StringUtils.trimToNull(labels.joinToString(", ")))
+
+        if (typeCode == Relation.TYPE_CUSTOM) {
+            if (related.types.isEmpty())
+                related.types += CustomRelatedType.OTHER
+
+            val types = related.types.map { type -> WordUtils.capitalize(type.value) }
+            val typesStr = types.joinToString(", ")
+            builder.withValue(Relation.LABEL, typesStr)
+        }
+
         batch.enqueue(builder)
     }
 

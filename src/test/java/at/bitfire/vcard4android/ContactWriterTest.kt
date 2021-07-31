@@ -2,9 +2,9 @@ package at.bitfire.vcard4android
 
 import at.bitfire.vcard4android.property.*
 import ezvcard.VCard
-import ezvcard.VCardDataType
 import ezvcard.VCardVersion
 import ezvcard.parameter.ImageType
+import ezvcard.parameter.RelatedType
 import ezvcard.property.*
 import ezvcard.util.PartialDate
 import org.junit.Assert.*
@@ -278,9 +278,98 @@ class ContactWriterTest {
 
 
     @Test
-    fun testRelation() {
+    fun testRelation_vCard3_Assistant() {   // combination of custom type (assistant) and vCard4 standard type (co-worker)
+        val vCard = generate(version = VCardVersion.V3_0) {
+            relations += Related().apply {
+                text = "My Assistant"
+                types.add(CustomRelatedType.ASSISTANT)
+                types.add(RelatedType.CO_WORKER)
+            }
+        }
+        vCard.getProperty(XAbRelatedNames::class.java).apply {
+            assertEquals("My Assistant", value)
+            assertEquals("item1", group)
+        }
+        vCard.getProperty(XAbLabel::class.java).apply {
+            assertEquals(XAbRelatedNames.APPLE_ASSISTANT, value)
+            assertEquals("item1", group)
+        }
+        assertTrue(vCard.relations.isEmpty())
+    }
+
+    @Test
+    fun testRelation_vCard3_Child() {       // vCard4 standard type
+        val vCard = generate(version = VCardVersion.V3_0) {
+            relations += Related().apply {
+                text = "My Child"
+                types.add(RelatedType.CHILD)
+            }
+        }
+        vCard.getProperty(XAbRelatedNames::class.java).apply {
+            assertEquals("My Child", value)
+            assertEquals("item1", group)
+        }
+        vCard.getProperty(XAbLabel::class.java).apply {
+            assertEquals(XAbRelatedNames.APPLE_CHILD, value)
+            assertEquals("item1", group)
+        }
+        assertTrue(vCard.relations.isEmpty())
+    }
+
+    @Test
+    fun testRelation_vCard3_Custom() {
+        val vCard = generate(version = VCardVersion.V3_0) {
+            relations += Related().apply {
+                text = "Someone"
+                types.add(RelatedType.get("Custom Relationship"))
+            }
+        }
+        vCard.getProperty(XAbRelatedNames::class.java).apply {
+            assertEquals("Someone", value)
+            assertEquals("item1", group)
+        }
+        vCard.getProperty(XAbLabel::class.java).apply {
+            assertEquals("Custom Relationship", value)
+            assertEquals("item1", group)
+        }
+        assertTrue(vCard.relations.isEmpty())
+    }
+
+    @Test
+    fun testRelation_vCard3_Other() {
         val rel = Related.email("bigbrother@example.com")
-        val vCard = generate { relations += rel }
+        val vCard = generate(version = VCardVersion.V3_0) { relations += rel }
+        vCard.getProperty(XAbRelatedNames::class.java).apply {
+            assertEquals("mailto:bigbrother@example.com", value)
+            assertEquals("other", getParameter("TYPE"))
+            assertNull(group)
+        }
+        assertTrue(vCard.relations.isEmpty())
+    }
+
+    @Test
+    fun testRelation_vCard3_Partner() {       // custom type
+        val vCard = generate(version = VCardVersion.V3_0) {
+            relations += Related().apply {
+                text = "My Partner"
+                types.add(CustomRelatedType.PARTNER)
+            }
+        }
+        vCard.getProperty(XAbRelatedNames::class.java).apply {
+            assertEquals("My Partner", value)
+            assertEquals("item1", group)
+        }
+        vCard.getProperty(XAbLabel::class.java).apply {
+            assertEquals(XAbRelatedNames.APPLE_PARTNER, value)
+            assertEquals("item1", group)
+        }
+        assertTrue(vCard.relations.isEmpty())
+    }
+
+    @Test
+    fun testRelation_vCard4() {
+        val rel = Related.email("bigbrother@example.com")
+        val vCard = generate(version = VCardVersion.V4_0) { relations += rel }
         assertEquals(rel, vCard.relations.first())
     }
 

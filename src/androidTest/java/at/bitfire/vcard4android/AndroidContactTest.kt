@@ -12,18 +12,22 @@ import android.Manifest
 import android.accounts.Account
 import android.content.ContentProviderClient
 import android.provider.ContactsContract
+import android.provider.ContactsContract.CommonDataKinds.Relation
 import android.util.Base64
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
+import at.bitfire.vcard4android.property.CustomRelatedType
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
 import ezvcard.parameter.EmailType
+import ezvcard.parameter.RelatedType
 import ezvcard.property.Address
 import ezvcard.property.Birthday
 import ezvcard.property.Email
+import ezvcard.property.Related
 import ezvcard.util.PartialDate
 import org.junit.After
 import org.junit.Assert.*
@@ -320,6 +324,59 @@ class AndroidContactTest {
         assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"))
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod Forum"))
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"))
+    }
+
+
+    // specific data rows
+
+    @Test
+    fun testInsertRelation_Assistant() {
+        val batch = BatchOperation(provider)
+        AndroidContact(addressBook).insertRelation(batch, Related().apply {
+            text = "My Assistant"
+            types.add(RelatedType.CO_WORKER)
+            types.add(CustomRelatedType.ASSISTANT)
+        })
+        assertEquals(1, batch.queue.size)
+        assertEquals("My Assistant", batch.queue[0].values[Relation.NAME])
+        assertEquals(Relation.TYPE_ASSISTANT, batch.queue[0].values[Relation.TYPE])
+    }
+
+    @Test
+    fun testInsertRelation_Custom() {
+        val batch = BatchOperation(provider)
+        AndroidContact(addressBook).insertRelation(batch, Related().apply {
+            text = "Someone"
+            types.add(RelatedType.get("Some Relationship"))
+        })
+        assertEquals(1, batch.queue.size)
+        assertEquals("Someone", batch.queue[0].values[Relation.NAME])
+        assertEquals(Relation.TYPE_CUSTOM, batch.queue[0].values[Relation.TYPE])
+        assertEquals("Some Relationship", batch.queue[0].values[Relation.LABEL])
+    }
+
+    @Test
+    fun testInsertRelation_Custom_TwoValues() {
+        val batch = BatchOperation(provider)
+        AndroidContact(addressBook).insertRelation(batch, Related().apply {
+            text = "Someone"
+            types.add(RelatedType.get("type1"))
+            types.add(RelatedType.get("type2"))
+        })
+        assertEquals(1, batch.queue.size)
+        assertEquals("Someone", batch.queue[0].values[Relation.NAME])
+        assertEquals(Relation.TYPE_CUSTOM, batch.queue[0].values[Relation.TYPE])
+        assertEquals("Type1, Type2", batch.queue[0].values[Relation.LABEL])
+    }
+
+    @Test
+    fun testInsertRelation_NoType_Email() {
+        val batch = BatchOperation(provider)
+        AndroidContact(addressBook).insertRelation(batch, Related.email("test@example.com"))
+        assertEquals(1, batch.queue.size)
+        assertEquals("mailto:test@example.com", batch.queue[0].values[Relation.NAME])
+        assertEquals(Relation.TYPE_CUSTOM, batch.queue[0].values[Relation.TYPE])
+        assertEquals("Other", batch.queue[0].values[Relation.LABEL])
     }
 
 }

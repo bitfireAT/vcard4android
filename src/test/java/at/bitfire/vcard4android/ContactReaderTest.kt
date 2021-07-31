@@ -422,7 +422,7 @@ class ContactReaderTest {
         val date = Date(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
             addProperty(XAbDate(date).apply { group = "test1" })
-            addProperty(XAbLabel(Contact.DATE_LABEL_ANNIVERSARY).apply { group = "test1" })
+            addProperty(XAbLabel(XAbLabel.APPLE_ANNIVERSARY).apply { group = "test1" })
         })
         assertEquals(0, c.customDates.size)
         assertEquals(Anniversary(date), c.anniversary)
@@ -433,7 +433,7 @@ class ContactReaderTest {
         val date = Date(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
             addProperty(XAbDate(date).apply { group = "test1" })
-            addProperty(XAbLabel(Contact.DATE_LABEL_OTHER).apply { group = "test1" })
+            addProperty(XAbLabel(XAbLabel.APPLE_OTHER).apply { group = "test1" })
         })
         assertEquals(date, c.customDates.first.property.date)
         assertNull(c.customDates.first.label)
@@ -448,6 +448,52 @@ class ContactReaderTest {
         })
         assertEquals(date, c.customDates.first.property.date)
         assertEquals("Test 1", c.customDates.first.label)
+    }
+
+
+    @Test
+    fun testXAbRelatedNames_Sister() {
+        val c = ContactReader.fromVCard(VCard().apply {
+            addProperty(XAbRelatedNames("My Sis").apply { group = "item1" })
+            addProperty(XAbLabel(XAbRelatedNames.APPLE_SISTER).apply { group = "item1" })
+        })
+        assertEquals("My Sis", c.relations.first.text)
+        assertTrue(c.relations.first.types.contains(RelatedType.SIBLING))
+        assertTrue(c.relations.first.types.contains(CustomRelatedType.SISTER))
+    }
+
+    @Test
+    fun testXAbRelatedNames_Custom() {
+        val c = ContactReader.fromVCard(VCard().apply {
+            addProperty(XAbRelatedNames("Someone Other").apply { group = "item1" })
+            addProperty(XAbLabel("Someone").apply { group = "item1" })
+        })
+        assertEquals("Someone Other", c.relations.first.text)
+        assertEquals(1, c.relations.first.types.size)
+        assertTrue(c.relations.first.types.contains(RelatedType.get("someone")))
+    }
+
+    @Test
+    fun testXAbRelatedNames_Custom_Acquitance() {
+        val c = ContactReader.fromVCard(VCard().apply {
+            addProperty(XAbRelatedNames("Someone Other").apply { group = "item1" })
+            addProperty(XAbLabel(RelatedType.ACQUAINTANCE.value).apply { group = "item1" })
+        })
+        assertEquals("Someone Other", c.relations.first.text)
+        assertEquals(1, c.relations.size)
+        assertTrue(c.relations.first.types.contains(RelatedType.ACQUAINTANCE))
+    }
+
+    @Test
+    fun testXAbRelatedNames_Custom_TwoValues() {
+        val c = ContactReader.fromVCard(VCard().apply {
+            addProperty(XAbRelatedNames("Someone Other").apply { group = "item1" })
+            addProperty(XAbLabel("dog, cat").apply { group = "item1" })
+        })
+        assertEquals("Someone Other", c.relations.first.text)
+        assertEquals(2, c.relations.first.types.size)
+        assertTrue(c.relations.first.types.contains(RelatedType.get("cat")))
+        assertTrue(c.relations.first.types.contains(RelatedType.get("dog")))
     }
 
 

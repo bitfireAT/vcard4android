@@ -30,7 +30,7 @@ class BatchOperation(
 
     }
 
-    private val queue = LinkedList<CpoBuilder>()
+    internal val queue = LinkedList<CpoBuilder>()
     private var results = arrayOfNulls<ContentProviderResult?>(0)
 
 

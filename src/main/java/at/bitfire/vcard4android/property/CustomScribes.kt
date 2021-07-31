@@ -3,6 +3,7 @@ package at.bitfire.vcard4android.property
 import ezvcard.io.chain.ChainingTextWriter
 import ezvcard.io.scribe.ScribeIndex
 import ezvcard.io.text.VCardReader
+import ezvcard.io.text.VCardWriter
 
 object CustomScribes {
 
@@ -10,6 +11,7 @@ object CustomScribes {
     val customScribes = arrayOf(
         XAbDate.Scribe,
         XAbLabel.Scribe,
+        XAbRelatedNames.Scribe,
         XAddressBookServerKind.Scribe,
         XAddressBookServerMember.Scribe,
         XPhoneticFirstName.Scribe,
@@ -18,20 +20,22 @@ object CustomScribes {
         XSip.Scribe
     )
 
-    fun registerAt(writer: ChainingTextWriter) {
+
+    fun ChainingTextWriter.registerCustomScribes(): ChainingTextWriter {
         for (scribe in customScribes)
-            writer.register(scribe)
+            register(scribe)
+        return this
     }
 
-    fun registerAt(index: ScribeIndex) {
+    fun VCardReader.registerCustomScribes(): VCardReader {
         for (scribe in customScribes)
-            index.register(scribe)
+            scribeIndex.register(scribe)
+        return this
     }
 
-    fun registerAt(reader: VCardReader): VCardReader {
+    fun VCardWriter.registerCustomScribes() {
         for (scribe in customScribes)
-            reader.scribeIndex.register(scribe)
-        return reader
+            scribeIndex.register(scribe)
     }
 
 }
