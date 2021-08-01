@@ -1,0 +1,45 @@
+package at.bitfire.vcard4android.datarow
+
+import android.net.Uri
+import android.provider.ContactsContract.CommonDataKinds.Organization
+import at.bitfire.vcard4android.BatchOperation
+import at.bitfire.vcard4android.Contact
+import org.apache.commons.lang3.StringUtils
+import java.util.*
+
+class OrganizationBuilder(mimeType: String, dataRowUri: Uri, rawContactId: Long?, contact: Contact)
+    : DataRowBuilder(mimeType, dataRowUri, rawContactId, contact) {
+
+    override fun build(): List<BatchOperation.CpoBuilder> {
+        var company: String? = null
+        var department: String? = null
+        contact.organization?.let {
+            val org = it.values.iterator()
+            if (org.hasNext())
+                company = org.next()
+
+            val depts = LinkedList<String>()
+            while (org.hasNext())
+                depts += org.next()
+            department = StringUtils.trimToNull(depts.joinToString(" / "))
+        }
+
+        if (company == null && department == null && contact.jobTitle == null && contact.jobDescription == null)
+            return emptyList()
+
+        return listOf(newDataRow().apply {
+            withValue(Organization.COMPANY, company)
+            withValue(Organization.DEPARTMENT, department)
+            withValue(Organization.TITLE, contact.jobTitle)
+            withValue(Organization.JOB_DESCRIPTION, contact.jobDescription)
+        })
+    }
+
+
+    object Factory: DataRowBuilder.Factory<OrganizationBuilder> {
+        override fun mimeType() = Organization.CONTENT_ITEM_TYPE
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
+            OrganizationBuilder(mimeType(), dataRowUri, rawContactId, contact)
+    }
+
+}

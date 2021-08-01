@@ -12,22 +12,17 @@ import android.Manifest
 import android.accounts.Account
 import android.content.ContentProviderClient
 import android.provider.ContactsContract
-import android.provider.ContactsContract.CommonDataKinds.Relation
 import android.util.Base64
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
-import at.bitfire.vcard4android.property.CustomRelatedType
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
-import ezvcard.parameter.EmailType
-import ezvcard.parameter.RelatedType
 import ezvcard.property.Address
 import ezvcard.property.Birthday
 import ezvcard.property.Email
-import ezvcard.property.Related
 import ezvcard.util.PartialDate
 import org.junit.After
 import org.junit.Assert.*
@@ -88,7 +83,7 @@ class AndroidContactTest {
 
         val contact2 = addressBook.findContactByID(contact.id!!)
         try {
-            val vcard2 = contact2.contact!!
+            val vcard2 = contact2.getContact()
             assertEquals(vcard.displayName, vcard2.displayName)
             assertEquals(vcard.prefix, vcard2.prefix)
             assertEquals(vcard.givenName, vcard2.givenName)
@@ -121,7 +116,7 @@ class AndroidContactTest {
 
         val dbContact2 = addressBook.findContactByID(dbContact.id!!)
         try {
-            val contact2 = dbContact2.contact!!
+            val contact2 = dbContact2.getContact()
             assertEquals("Test", contact2.displayName)
             assertEquals("+12345", contact2.phoneNumbers.first.property.text)
             assertEquals("test@example.com", contact2.emails.first.property.value)
@@ -143,7 +138,7 @@ class AndroidContactTest {
 
         val contact2 = addressBook.findContactByID(contact.id!!)
         try {
-            val vcard2 = contact2.contact!!
+            val vcard2 = contact2.getContact()
             assertEquals(4000, vcard2.emails.size)
         } finally {
             contact2.delete()
@@ -201,7 +196,7 @@ class AndroidContactTest {
 
         val contact2 = addressBook.findContactByID(contact.id!!)
         try {
-            val vcard2 = contact2.contact!!
+            val vcard2 = contact2.getContact()
             assertEquals(vcard.displayName, vcard2.displayName)
             assertEquals(vcard.birthDay, vcard2.birthDay)
         } finally {
@@ -209,174 +204,12 @@ class AndroidContactTest {
         }
     }
 
-    @Test
-    fun testEmailTypes() {
-        val vCard = "BEGIN:VCARD\r\n" +
-                "VERSION:4.0\r\n" +
-                "FN:Test\r\n" +
-                "EMAIL;TYPE=internet;TYPE=work:work@example.com\r\n" +
-                "EMAIL;TYPE=HOME:home@example.com\r\n" +
-                "EMAIL;TYPE=internet,pref:other1@example.com\r\n" +
-                "EMAIL;TYPE=x400,oTHer:other2@example.com\r\n" +
-                "EMAIL;TYPE=x-mobile:mobile@example.com\r\n" +
-                "group1.EMAIL;TYPE=x-with-label:withlabel@example.com\r\n" +
-                "group1.X-ABLABEL:With label and x-type\r\n" +
-                "END:VCARD\r\n"
-        val contacts = Contact.fromReader(StringReader(vCard), null)
-
-        val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
-        dbContact.add()
-
-        val dbContact2 = addressBook.findContactByID(dbContact.id!!)
-        try {
-            val contact2 = dbContact2.contact!!
-            assertEquals(6, contact2.emails.size)
-
-            contact2.emails[0].property.let { email ->
-                assertEquals("work@example.com", email.value)
-                assertArrayEquals(arrayOf(EmailType.WORK), email.types.toTypedArray())
-                assertNull(email.pref)
-            }
-
-            contact2.emails[1].property.let { email ->
-                assertEquals("home@example.com", email.value)
-                assertArrayEquals(arrayOf(EmailType.HOME), email.types.toTypedArray())
-                assertNull(email.pref)
-            }
-
-            contact2.emails[2].property.let { email ->
-                assertEquals("other1@example.com", email.value)
-                assertTrue(email.types.isEmpty())
-                assertNotEquals(0, email.pref)
-            }
-
-            contact2.emails[3].property.let { email ->
-                assertEquals("other2@example.com", email.value)
-                assertTrue(email.types.isEmpty())
-                assertNull(email.pref)
-            }
-
-            contact2.emails[4].property.let { email ->
-                assertEquals("mobile@example.com", email.value)
-                assertArrayEquals(arrayOf(Contact.EMAIL_TYPE_MOBILE), email.types.toTypedArray())
-                assertNull(email.pref)
-            }
-
-            contact2.emails[5].let { email ->
-                assertEquals("withlabel@example.com", email.property.value)
-                assertTrue(email.property.types.isEmpty())
-                assertEquals("With label and x-type", email.label)
-            }
-        } finally {
-            dbContact2.delete()
-        }
-    }
-
-    @Test
-    fun testWebsiteTypes() {
-        val vCard = "BEGIN:VCARD\r\n" +
-                "VERSION:4.0\r\n" +
-                "FN:Test\r\n" +
-                "URL;TYPE=home:http://home.example\r\n" +
-                "URL;TYPE=WORK:http://WORK.example\r\n" +
-                "URL;TYPE=Custom:http://Custom.example\r\n" +
-                "group1.URL;TYPE=x-custom-with-label:http://Custom.example\r\n" +
-                "group1.X-ABLABEL:Custom (with label)\r\n" +
-                "END:VCARD\r\n"
-        val contacts = Contact.fromReader(StringReader(vCard), null)
-
-        val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
-        dbContact.add()
-
-        val dbContact2 = addressBook.findContactByID(dbContact.id!!)
-        try {
-            val contact2 = dbContact2.contact!!
-            assertEquals(4, contact2.urls.size)
-
-            contact2.urls[0].property.let { url ->
-                assertEquals("http://home.example", url.value)
-                assertEquals("home", url.type)
-            }
-
-            contact2.urls[1].property.let { url ->
-                assertEquals("http://WORK.example", url.value)
-                assertEquals("work", url.type)
-            }
-
-            contact2.urls[2].let { url ->
-                assertEquals("http://Custom.example", url.property.value)
-                assertNull(url.property.type)
-                assertNull(url.label)
-            }
-
-            contact2.urls[3].let { url ->
-                assertEquals("http://Custom.example", url.property.value)
-                assertEquals(null, url.property.type)
-                assertEquals("Custom (with label)", url.label)
-            }
-        } finally {
-            dbContact2.delete()
-        }
-    }
-
-    @Test
+    /*@Test
     fun testToURIScheme() {
         assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"))
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod Forum"))
         assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"))
-    }
+    }*/
 
-
-    // specific data rows
-
-    @Test
-    fun testInsertRelation_Assistant() {
-        val batch = BatchOperation(provider)
-        AndroidContact(addressBook).insertRelation(batch, Related().apply {
-            text = "My Assistant"
-            types.add(RelatedType.CO_WORKER)
-            types.add(CustomRelatedType.ASSISTANT)
-        })
-        assertEquals(1, batch.queue.size)
-        assertEquals("My Assistant", batch.queue[0].values[Relation.NAME])
-        assertEquals(Relation.TYPE_ASSISTANT, batch.queue[0].values[Relation.TYPE])
-    }
-
-    @Test
-    fun testInsertRelation_Custom() {
-        val batch = BatchOperation(provider)
-        AndroidContact(addressBook).insertRelation(batch, Related().apply {
-            text = "Someone"
-            types.add(RelatedType.get("Some Relationship"))
-        })
-        assertEquals(1, batch.queue.size)
-        assertEquals("Someone", batch.queue[0].values[Relation.NAME])
-        assertEquals(Relation.TYPE_CUSTOM, batch.queue[0].values[Relation.TYPE])
-        assertEquals("Some Relationship", batch.queue[0].values[Relation.LABEL])
-    }
-
-    @Test
-    fun testInsertRelation_Custom_TwoValues() {
-        val batch = BatchOperation(provider)
-        AndroidContact(addressBook).insertRelation(batch, Related().apply {
-            text = "Someone"
-            types.add(RelatedType.get("type1"))
-            types.add(RelatedType.get("type2"))
-        })
-        assertEquals(1, batch.queue.size)
-        assertEquals("Someone", batch.queue[0].values[Relation.NAME])
-        assertEquals(Relation.TYPE_CUSTOM, batch.queue[0].values[Relation.TYPE])
-        assertEquals("Type1, Type2", batch.queue[0].values[Relation.LABEL])
-    }
-
-    @Test
-    fun testInsertRelation_NoType_Email() {
-        val batch = BatchOperation(provider)
-        AndroidContact(addressBook).insertRelation(batch, Related.email("test@example.com"))
-        assertEquals(1, batch.queue.size)
-        assertEquals("mailto:test@example.com", batch.queue[0].values[Relation.NAME])
-        assertEquals(Relation.TYPE_CUSTOM, batch.queue[0].values[Relation.TYPE])
-        assertEquals("Other", batch.queue[0].values[Relation.LABEL])
-    }
 
 }

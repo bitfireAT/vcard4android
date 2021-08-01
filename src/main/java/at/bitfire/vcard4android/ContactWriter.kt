@@ -169,28 +169,28 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
             var label: String? = null
 
             val types = LinkedList(relation.types)
-            types.remove(CustomRelatedType.OTHER)       // ignore this type (has to be inserted by ContactReader when no type is set)
+            types.remove(CustomType.Related.OTHER)       // ignore this type (has to be inserted by ContactReader when no type is set)
 
             when {
-                types.contains(CustomRelatedType.ASSISTANT) ->
+                types.contains(CustomType.Related.ASSISTANT) ->
                     label = XAbRelatedNames.APPLE_ASSISTANT
-                types.contains(CustomRelatedType.BROTHER) ->
+                types.contains(CustomType.Related.BROTHER) ->
                     label = XAbRelatedNames.APPLE_BROTHER
                 types.contains(RelatedType.CHILD) ->
                     label = XAbRelatedNames.APPLE_CHILD
-                types.contains(CustomRelatedType.FATHER) ->
+                types.contains(CustomType.Related.FATHER) ->
                     label = XAbRelatedNames.APPLE_FATHER
                 types.contains(RelatedType.FRIEND) ->
                     label = XAbRelatedNames.APPLE_FRIEND
-                types.contains(CustomRelatedType.MANAGER) ->
+                types.contains(CustomType.Related.MANAGER) ->
                     label = XAbRelatedNames.APPLE_MANAGER
-                types.contains(CustomRelatedType.MOTHER) ->
+                types.contains(CustomType.Related.MOTHER) ->
                     label = XAbRelatedNames.APPLE_MOTHER
                 types.contains(RelatedType.PARENT) ->
                     label = XAbRelatedNames.APPLE_PARENT
-                types.contains(CustomRelatedType.PARTNER) ->
+                types.contains(CustomType.Related.PARTNER) ->
                     label = XAbRelatedNames.APPLE_PARTNER
-                types.contains(CustomRelatedType.SISTER) ->
+                types.contains(CustomType.Related.SISTER) ->
                     label = XAbRelatedNames.APPLE_SISTER
                 types.contains(RelatedType.SPOUSE) ->
                     label = XAbRelatedNames.APPLE_SPOUSE

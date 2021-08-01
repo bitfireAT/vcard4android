@@ -11,11 +11,11 @@ package at.bitfire.vcard4android
 import android.accounts.Account
 import android.content.ContentProviderClient
 import android.content.ContentValues
-import android.database.DatabaseUtils
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.ContactsContract.Groups
 import android.provider.ContactsContract.RawContacts
+import at.bitfire.vcard4android.Utils.toContentValues
 import java.io.FileNotFoundException
 import java.util.*
 
@@ -36,11 +36,8 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
          */
         get() {
             provider!!.query(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), null, null, null, null)?.use { cursor ->
-                if (cursor.moveToNext()) {
-                    val values = ContentValues(cursor.columnCount)
-                    DatabaseUtils.cursorRowToContentValues(cursor, values)
-                    return values
-                }
+                if (cursor.moveToNext())
+                    return cursor.toContentValues()
             }
             throw FileNotFoundException()
         }
@@ -66,11 +63,8 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         val contacts = LinkedList<T1>()
         provider!!.query(rawContactsSyncUri(),
                 null, where, whereArgs, null)?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val values = ContentValues(cursor.columnCount)
-                DatabaseUtils.cursorRowToContentValues(cursor, values)
-                contacts += contactFactory.fromProvider(this, values)
-            }
+            while (cursor.moveToNext())
+                contacts += contactFactory.fromProvider(this, cursor.toContentValues())
         }
         return contacts
     }
@@ -80,11 +74,8 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         provider!!.query(groupsSyncUri(),
                 arrayOf(Groups._ID, AndroidGroup.COLUMN_FILENAME, AndroidGroup.COLUMN_ETAG),
                 where, whereArgs, null)?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val values = ContentValues(cursor.columnCount)
-                DatabaseUtils.cursorRowToContentValues(cursor, values)
-                groups += groupFactory.fromProvider(this, values)
-            }
+            while (cursor.moveToNext())
+                groups += groupFactory.fromProvider(this, cursor.toContentValues())
         }
         return groups
     }

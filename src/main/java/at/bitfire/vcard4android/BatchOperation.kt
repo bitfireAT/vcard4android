@@ -36,10 +36,13 @@ class BatchOperation(
 
     fun nextBackrefIdx() = queue.size
 
-    fun enqueue(operation: CpoBuilder): BatchOperation {
-        queue.add(operation)
-        return this
+    fun enqueue(operation: CpoBuilder) = queue.add(operation)
+
+    fun enqueueAll(operations: Iterable<CpoBuilder>) {
+        for (operation in operations)
+            enqueue(operation)
     }
+
 
     /**
      * Commits all operations from [queue] and then empties the queue.
@@ -146,7 +149,7 @@ class BatchOperation(
     }
 
 
-    class BackReference(
+    data class BackReference(
             /** index of the referenced row in the original, nonsplitted transaction */
             val originalIndex: Int
     ) {

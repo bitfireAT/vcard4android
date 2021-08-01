@@ -459,7 +459,7 @@ class ContactReaderTest {
         })
         assertEquals("My Sis", c.relations.first.text)
         assertTrue(c.relations.first.types.contains(RelatedType.SIBLING))
-        assertTrue(c.relations.first.types.contains(CustomRelatedType.SISTER))
+        assertTrue(c.relations.first.types.contains(CustomType.Related.SISTER))
     }
 
     @Test

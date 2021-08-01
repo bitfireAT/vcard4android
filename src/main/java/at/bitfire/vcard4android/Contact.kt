@@ -27,7 +27,8 @@ import java.util.*
  *
  * Data shall be stored without workarounds in the most appropriate form. For instance,
  * an anniversary should be stored as [anniversary] and not in [customDates] with a
- * proprietary label ([Contact.DATE_LABEL_ANNIVERSARY]).
+ * proprietary label ([Contact.DATE_LABEL_ANNIVERSARY]). Strings should not be empty values
+ * (rather *null* in this case).
  *
  * vCards are parsed to [Contact]s by [ContactReader].
  * [Contact]s are written to vCards by [ContactWriter].
@@ -96,16 +97,6 @@ class Contact {
 
         // EMAIL x-types to store Android types
         val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
-
-        const val NICKNAME_TYPE_MAIDEN_NAME = "x-maiden-name"
-        const val NICKNAME_TYPE_SHORT_NAME = "x-short-name"
-        const val NICKNAME_TYPE_INITIALS = "x-initials"
-        const val NICKNAME_TYPE_OTHER_NAME = "x-other-name"
-
-        const val URL_TYPE_HOMEPAGE = "x-homepage"
-        const val URL_TYPE_BLOG = "x-blog"
-        const val URL_TYPE_PROFILE = "x-profile"
-        const val URL_TYPE_FTP = "x-ftp"
 
         const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
         const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604

@@ -282,7 +282,7 @@ class ContactWriterTest {
         val vCard = generate(version = VCardVersion.V3_0) {
             relations += Related().apply {
                 text = "My Assistant"
-                types.add(CustomRelatedType.ASSISTANT)
+                types.add(CustomType.Related.ASSISTANT)
                 types.add(RelatedType.CO_WORKER)
             }
         }
@@ -352,7 +352,7 @@ class ContactWriterTest {
         val vCard = generate(version = VCardVersion.V3_0) {
             relations += Related().apply {
                 text = "My Partner"
-                types.add(CustomRelatedType.PARTNER)
+                types.add(CustomType.Related.PARTNER)
             }
         }
         vCard.getProperty(XAbRelatedNames::class.java).apply {

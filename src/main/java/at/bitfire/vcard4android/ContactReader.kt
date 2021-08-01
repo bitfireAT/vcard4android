@@ -181,37 +181,37 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                     val labelStr = findAndRemoveLabel(prop.group)
                     when (labelStr) {
                         XAbRelatedNames.APPLE_ASSISTANT -> {
-                            relation.types.add(CustomRelatedType.ASSISTANT)
+                            relation.types.add(CustomType.Related.ASSISTANT)
                             relation.types.add(RelatedType.CO_WORKER)
                         }
                         XAbRelatedNames.APPLE_BROTHER -> {
-                            relation.types.add(CustomRelatedType.BROTHER)
+                            relation.types.add(CustomType.Related.BROTHER)
                             relation.types.add(RelatedType.SIBLING)
                         }
                         XAbRelatedNames.APPLE_CHILD ->
                             relation.types.add(RelatedType.CHILD)
                         XAbRelatedNames.APPLE_FATHER -> {
-                            relation.types.add(CustomRelatedType.FATHER)
+                            relation.types.add(CustomType.Related.FATHER)
                             relation.types.add(RelatedType.PARENT)
                         }
                         XAbRelatedNames.APPLE_FRIEND ->
                             relation.types.add(RelatedType.FRIEND)
                         XAbRelatedNames.APPLE_MANAGER -> {
-                            relation.types.add(CustomRelatedType.MANAGER)
+                            relation.types.add(CustomType.Related.MANAGER)
                             relation.types.add(RelatedType.CO_WORKER)
                         }
                         XAbRelatedNames.APPLE_MOTHER -> {
-                            relation.types.add(CustomRelatedType.MOTHER)
+                            relation.types.add(CustomType.Related.MOTHER)
                             relation.types.add(RelatedType.PARENT)
                         }
                         XAbRelatedNames.APPLE_SISTER -> {
-                            relation.types.add(CustomRelatedType.SISTER)
+                            relation.types.add(CustomType.Related.SISTER)
                             relation.types.add(RelatedType.SIBLING)
                         }
                         XAbRelatedNames.APPLE_PARENT ->
                             relation.types.add(RelatedType.PARENT)
                         XAbRelatedNames.APPLE_PARTNER ->
-                            relation.types.add(CustomRelatedType.PARTNER)
+                            relation.types.add(CustomType.Related.PARTNER)
                         XAbRelatedNames.APPLE_SPOUSE ->
                             relation.types.add(RelatedType.SPOUSE)
 
