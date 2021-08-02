@@ -81,7 +81,7 @@ class AndroidContactTest {
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.add()
 
-        val contact2 = addressBook.findContactByID(contact.id!!)
+        val contact2 = addressBook.findContactById(contact.id!!)
         try {
             val vcard2 = contact2.getContact()
             assertEquals(vcard.displayName, vcard2.displayName)
@@ -114,7 +114,7 @@ class AndroidContactTest {
         val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
         dbContact.add()
 
-        val dbContact2 = addressBook.findContactByID(dbContact.id!!)
+        val dbContact2 = addressBook.findContactById(dbContact.id!!)
         try {
             val contact2 = dbContact2.getContact()
             assertEquals("Test", contact2.displayName)
@@ -136,7 +136,7 @@ class AndroidContactTest {
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.add()
 
-        val contact2 = addressBook.findContactByID(contact.id!!)
+        val contact2 = addressBook.findContactById(contact.id!!)
         try {
             val vcard2 = contact2.getContact()
             assertEquals(4000, vcard2.emails.size)
@@ -181,7 +181,7 @@ class AndroidContactTest {
          * So, ADR value components may contain DQUOTE (0x22) and don't have to be encoded as defined in RFC 6868 */
 
         val os = ByteArrayOutputStream()
-        contact.writeVCard(VCardVersion.V4_0, GroupMethod.GROUP_VCARDS, os)
+        contact.writeVCard(VCardVersion.V4_0, os)
         assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'\\nLine 2:;;Street \"Address\";;;;"))
     }
 
@@ -194,7 +194,7 @@ class AndroidContactTest {
         val contact = AndroidContact(addressBook, vcard, null, null)
         contact.add()
 
-        val contact2 = addressBook.findContactByID(contact.id!!)
+        val contact2 = addressBook.findContactById(contact.id!!)
         try {
             val vcard2 = contact2.getContact()
             assertEquals(vcard.displayName, vcard2.displayName)

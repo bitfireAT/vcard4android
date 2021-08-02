@@ -21,7 +21,7 @@ import java.util.logging.Level
  *
  * Properties which are not supported by the target vCard version have to be converted appropriately.
  */
-class ContactWriter private constructor(val contact: Contact, val version: VCardVersion, val groupMethod: GroupMethod) {
+class ContactWriter private constructor(val contact: Contact, val version: VCardVersion) {
 
     private val unknownProperties = LinkedList<VCardProperty>()
     val vCard = VCard()
@@ -31,8 +31,8 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
 
     companion object {
 
-        fun fromContact(contact: Contact, version: VCardVersion, groupMethod: GroupMethod) =
-            ContactWriter(contact, version, groupMethod)
+        fun fromContact(contact: Contact, version: VCardVersion) =
+            ContactWriter(contact, version)
 
     }
 
@@ -140,7 +140,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
     }
 
     private fun addKindAndMembers() {
-        if (contact.group && groupMethod == GroupMethod.GROUP_VCARDS) {
+        if (contact.group) {
             // TODO Use urn:uuid only when applicable
             if (version == VCardVersion.V4_0) {         // vCard4
                 vCard.kind = Kind.group()

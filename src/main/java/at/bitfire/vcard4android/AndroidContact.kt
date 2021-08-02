@@ -55,7 +55,6 @@ open class AndroidContact(
         setContact(_contact)
     }
 
-
     /**
      * Creates a new instance, initialized with metadata from the content provider. Usually used when reading a contact from an address book.
      */
@@ -137,8 +136,8 @@ open class AndroidContact(
         return resultUri
     }
 
-    fun update(contact: Contact): Uri {
-        setContact(contact)
+    fun update(data: Contact): Uri {
+        setContact(data)
 
         val batch = BatchOperation(addressBook.provider!!)
         val uri = rawContactSyncURI()

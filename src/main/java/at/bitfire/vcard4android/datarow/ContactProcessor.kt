@@ -3,6 +3,7 @@ package at.bitfire.vcard4android.datarow
 import android.content.ContentProviderClient
 import android.content.ContentValues
 import android.net.Uri
+import android.provider.ContactsContract.CommonDataKinds.GroupMembership
 import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.BatchOperation

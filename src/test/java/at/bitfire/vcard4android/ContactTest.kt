@@ -33,13 +33,13 @@ class ContactTest {
 
     private fun regenerate(c: Contact, vCardVersion: VCardVersion): Contact {
         val os = ByteArrayOutputStream()
-        c.writeVCard(vCardVersion, GroupMethod.CATEGORIES, os)
+        c.writeVCard(vCardVersion, os)
         return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), null).first()
     }
 
     private fun toString(c: Contact, groupMethod: GroupMethod, vCardVersion: VCardVersion): String {
         val os = ByteArrayOutputStream()
-        c.writeVCard(vCardVersion, groupMethod, os)
+        c.writeVCard(vCardVersion, os)
         return os.toString()
     }
 

@@ -192,7 +192,7 @@ class ContactWriterTest {
 
     @Test
     fun testKindAndMember_vCard3() {
-        val vCard = generate(GroupMethod.GROUP_VCARDS, VCardVersion.V3_0) {
+        val vCard = generate(VCardVersion.V3_0) {
             group = true
             members += "member1"
         }
@@ -202,7 +202,7 @@ class ContactWriterTest {
 
     @Test
     fun testKindAndMember_vCard4() {
-        val vCard = generate(GroupMethod.GROUP_VCARDS, VCardVersion.V4_0) {
+        val vCard = generate(VCardVersion.V4_0) {
             group = true
             members += "member1"
         }
@@ -478,7 +478,7 @@ class ContactWriterTest {
 
     @Test
     fun testRewritePartialDate_vCard3_Date() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(Date(121, 6, 30))
         generator.rewritePartialDate(date)
         assertEquals(Date(121, 6, 30), date.date)
@@ -487,7 +487,7 @@ class ContactWriterTest {
 
     @Test
     fun testRewritePartialDate_vCard4_Date() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         val date = Birthday(Date(121, 6, 30))
         generator.rewritePartialDate(date)
         assertEquals(Date(121, 6, 30), date.date)
@@ -497,7 +497,7 @@ class ContactWriterTest {
 
     @Test
     fun testRewritePartialDate_vCard3_PartialDateWithYear() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(PartialDate.parse("20210730"))
         generator.rewritePartialDate(date)
         assertEquals(Date(121, 6, 30), date.date)
@@ -507,7 +507,7 @@ class ContactWriterTest {
 
     @Test
     fun testRewritePartialDate_vCard4_PartialDateWithYear() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         val date = Birthday(PartialDate.parse("20210730"))
         generator.rewritePartialDate(date)
         assertNull(date.date)
@@ -517,7 +517,7 @@ class ContactWriterTest {
 
     @Test
     fun testRewritePartialDate_vCard3_PartialDateWithoutYear() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(PartialDate.parse("--0730"))
         generator.rewritePartialDate(date)
         assertEquals(Date(-300+4, 6, 30), date.date)
@@ -528,7 +528,7 @@ class ContactWriterTest {
 
     @Test
     fun testRewritePartialDate_vCard4_PartialDateWithoutYear() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         val date = Birthday(PartialDate.parse("--0730"))
         generator.rewritePartialDate(date)
         assertNull(date.date)
@@ -539,7 +539,7 @@ class ContactWriterTest {
 
     @Test
     fun testWriteVCard() {
-        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0, GroupMethod.GROUP_VCARDS)
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         generator.vCard.revision = Revision(Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC.id)).apply {
             set(2021, 6, 30, 1, 2, 3)
         })
@@ -564,7 +564,7 @@ class ContactWriterTest {
             })
         }
         ContactWriter
-                .fromContact(contact, VCardVersion.V4_0, GroupMethod.GROUP_VCARDS)
+                .fromContact(contact, VCardVersion.V4_0)
                 .writeVCard(stream)
         assertTrue(stream.toString().contains("ADR;LABEL=\"Li^^ne 1,1 - ^' -\":;;Line1;;;;Line2"))
     }
@@ -572,10 +572,10 @@ class ContactWriterTest {
 
     // helpers
 
-    private fun generate(groupMethod: GroupMethod = GroupMethod.GROUP_VCARDS, version: VCardVersion = VCardVersion.V4_0, prepare: Contact.() -> Unit): VCard {
+    private fun generate(version: VCardVersion = VCardVersion.V4_0, prepare: Contact.() -> Unit): VCard {
         val contact = Contact()
         contact.run(prepare)
-        return ContactWriter.fromContact(contact, version, groupMethod).vCard
+        return ContactWriter.fromContact(contact, version).vCard
     }
 
 }

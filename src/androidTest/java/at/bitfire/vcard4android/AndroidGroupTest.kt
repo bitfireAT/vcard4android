@@ -63,9 +63,9 @@ class AndroidGroupTest {
         group.add()
         val groups = addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!))
         assertEquals(1, groups.size)
-        val contact2 = groups.first().contact
-        assertEquals(contact.displayName, contact2?.displayName)
-        assertEquals(contact.note, contact2?.note)
+        val contact2 = groups.first().getContact()
+        assertEquals(contact.displayName, contact2.displayName)
+        assertEquals(contact.note, contact2.note)
 
         // delete group
         group.delete()

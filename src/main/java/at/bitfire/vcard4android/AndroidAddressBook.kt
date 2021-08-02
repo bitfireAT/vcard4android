@@ -80,12 +80,14 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         return groups
     }
 
-    fun findContactByID(id: Long) =
-            queryContacts("${RawContacts._ID}=?", arrayOf(id.toString())).firstOrNull()
-                    ?: throw FileNotFoundException()
+    fun findContactById(id: Long) =
+            queryContacts("${RawContacts._ID}=?", arrayOf(id.toString())).firstOrNull() ?: throw FileNotFoundException()
 
-    fun findContactByUID(uid: String) =
+    fun findContactByUid(uid: String) =
             queryContacts("${AndroidContact.COLUMN_UID}=?", arrayOf(uid)).firstOrNull()
+
+    fun findGroupById(id: Long) =
+        queryGroups("${Groups._ID}=?", arrayOf(id.toString())).firstOrNull() ?: throw FileNotFoundException()
 
 
     // helpers

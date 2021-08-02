@@ -127,8 +127,8 @@ class Contact {
 
 
     @Throws(IOException::class)
-    fun writeVCard(vCardVersion: VCardVersion, groupMethod: GroupMethod, os: OutputStream) {
-        val generator = ContactWriter.fromContact(this, vCardVersion, groupMethod)
+    fun writeVCard(vCardVersion: VCardVersion, os: OutputStream) {
+        val generator = ContactWriter.fromContact(this, vCardVersion)
         generator.writeVCard(os)
     }
 
