@@ -1,16 +1,33 @@
 package at.bitfire.vcard4android.property
 
+import ezvcard.parameter.EmailType
 import ezvcard.parameter.RelatedType
+import ezvcard.parameter.TelephoneType
 
+/**
+ * Custom TYPE parameter definitions
+ */
 object CustomType {
 
     val HOME = "home"
     val WORK = "work"
 
+    object Email {
+        val MOBILE = EmailType.get("x-mobile")
+    }
+
     object Nickname {
         val INITIALS = "x-initials"
         val MAIDEN_NAME = "x-maiden-name"
         val SHORT_NAME = "x-short-name"
+    }
+
+    object Phone {
+        val ASSISTANT = TelephoneType.get("x-assistant")!!
+        val CALLBACK = TelephoneType.get("x-callback")!!
+        val COMPANY_MAIN = TelephoneType.get("x-company_main")!!
+        val MMS = TelephoneType.get("x-mms")!!
+        val RADIO = TelephoneType.get("x-radio")!!
     }
 
     object Related {

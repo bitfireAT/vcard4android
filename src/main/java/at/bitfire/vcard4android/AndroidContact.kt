@@ -18,12 +18,12 @@ import android.provider.ContactsContract
 import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
-import at.bitfire.vcard4android.datarow.ContactProcessor
+import at.bitfire.vcard4android.contactrow.ContactProcessor
 import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
 
 open class AndroidContact(
-        val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
+        open val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {

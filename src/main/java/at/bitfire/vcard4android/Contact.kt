@@ -88,19 +88,8 @@ class Contact {
 
         const val LABEL_GROUP_PREFIX = "item"
 
-        // TEL x-types to store Android types
-        val PHONE_TYPE_CALLBACK = TelephoneType.get("x-callback")!!
-        val PHONE_TYPE_COMPANY_MAIN = TelephoneType.get("x-company_main")!!
-        val PHONE_TYPE_RADIO = TelephoneType.get("x-radio")!!
-        val PHONE_TYPE_ASSISTANT = TelephoneType.get("X-assistant")!!
-        val PHONE_TYPE_MMS = TelephoneType.get("x-mms")!!
-
-        // EMAIL x-types to store Android types
-        val EMAIL_TYPE_MOBILE = EmailType.get("x-mobile")!!
-
         const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
         const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
-
 
         /**
          * Parses an InputStream that contains a vCard.

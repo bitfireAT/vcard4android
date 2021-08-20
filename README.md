@@ -16,7 +16,7 @@ It has been primarily developed for [DAVx⁵](https://www.davx5.com).
 _This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
 by Google LLC. Android is a trademark of Google LLC._
 
-Generated KDoc: https://bitfireAT.gitlab.io/vcard4android/dokka/vcard4android/
+Generated KDoc: https://bitfireAT.gitlab.io/vcard4android/dokka/html/
 
 
 ## Contact
