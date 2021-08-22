@@ -35,8 +35,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
         if (dateOrTime == null)
             return null
 
-        val dateStr: String
-        dateStr = when {
+        val dateStr: String = when {
             dateOrTime.date != null -> {
                 val format = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
                 format.format(dateOrTime.date)

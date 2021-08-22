@@ -27,8 +27,7 @@ import java.util.*
  *
  * Data shall be stored without workarounds in the most appropriate form. For instance,
  * an anniversary should be stored as [anniversary] and not in [customDates] with a
- * proprietary label ([Contact.DATE_LABEL_ANNIVERSARY]). Strings should not be empty values
- * (rather *null* in this case).
+ * proprietary label. Strings should not be empty values (rather *null* in this case).
  *
  * vCards are parsed to [Contact]s by [ContactReader].
  * [Contact]s are written to vCards by [ContactWriter].

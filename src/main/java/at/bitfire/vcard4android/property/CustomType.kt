@@ -9,17 +9,17 @@ import ezvcard.parameter.TelephoneType
  */
 object CustomType {
 
-    val HOME = "home"
-    val WORK = "work"
+    const val HOME = "home"
+    const val WORK = "work"
 
     object Email {
         val MOBILE = EmailType.get("x-mobile")
     }
 
     object Nickname {
-        val INITIALS = "x-initials"
-        val MAIDEN_NAME = "x-maiden-name"
-        val SHORT_NAME = "x-short-name"
+        const val INITIALS = "x-initials"
+        const val MAIDEN_NAME = "x-maiden-name"
+        const val SHORT_NAME = "x-short-name"
     }
 
     object Phone {

@@ -41,7 +41,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
         addProperties()
     }
 
-    fun addProperties() {
+    private fun addProperties() {
         contact.uid?.let { vCard.uid = Uid(it) }
         Contact.productID?.let { vCard.setProductId(it) }
 
@@ -120,19 +120,17 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
 
         } else /* version == VCardVersion.V3_0 */ {
             // vCard 3 REQUIRES FN [RFC 2426 p. 29]
-            var fn =
+            val fn =
                     // use display name, if available
                     StringUtils.trimToNull(contact.displayName) ?:
                     // no display name, try organization
-                    contact.organization?.let { org ->
-                        org.values.joinToString(" / ")
-                    } ?:
+                    contact.organization?.values?.joinToString(" / ") ?:
                     // otherwise, try nickname
-                    contact.nickName?.let { nick -> nick.property.values.firstOrNull() } ?:
+                    contact.nickName?.property?.values?.firstOrNull() ?:
                     // otherwise, try email address
-                    contact.emails.firstOrNull()?.let { email -> email.property.value } ?:
+                    contact.emails.firstOrNull()?.property?.value ?:
                     // otherwise, try phone number
-                    contact.phoneNumbers.firstOrNull()?.let { phone -> phone.property.text } ?:
+                    contact.phoneNumbers.firstOrNull()?.property?.text ?:
                     // otherwise, try UID or use empty string
                     contact.uid ?: ""
             vCard.setFormattedName(fn)
@@ -199,7 +197,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                     if (relation.types.isEmpty())
                         name.addParameter("TYPE", "other")
                     else
-                        label = relation.types.map { type -> WordUtils.capitalize(type.value) }.joinToString(", ")
+                        label = relation.types.joinToString(", ") { type -> WordUtils.capitalize(type.value) }
                 }
             }
 

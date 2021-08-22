@@ -9,7 +9,6 @@
 package at.bitfire.vcard4android
 
 import ezvcard.property.VCardProperty
-import org.apache.commons.lang3.StringUtils
 
 data class LabeledProperty<out T: VCardProperty> @JvmOverloads constructor(
         val property: T,

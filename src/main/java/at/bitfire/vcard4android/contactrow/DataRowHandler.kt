@@ -6,10 +6,6 @@ import at.bitfire.vcard4android.Contact
 
 /**
  * Handler for a raw contact's data row.
- *
- * @param provider      content provider client that has been used to fetch the data row;
- *                      may be used by the handler to fetch further data (like a photo)
- *
  */
 abstract class DataRowHandler {
 

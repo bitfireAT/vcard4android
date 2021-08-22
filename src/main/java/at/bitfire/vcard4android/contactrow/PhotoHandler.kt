@@ -1,4 +1,4 @@
-package at.bitfire.vcard4android.datavalues
+package at.bitfire.vcard4android.contactrow
 
 import android.content.ContentProviderClient
 import android.content.ContentUris
@@ -7,7 +7,6 @@ import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Photo
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
-import at.bitfire.vcard4android.contactrow.DataRowHandler
 import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.util.logging.Level

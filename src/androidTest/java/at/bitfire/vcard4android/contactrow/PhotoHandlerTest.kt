@@ -3,7 +3,6 @@ package at.bitfire.vcard4android.contactrow
 import android.content.ContentValues
 import android.provider.ContactsContract.CommonDataKinds.Photo
 import at.bitfire.vcard4android.Contact
-import at.bitfire.vcard4android.datavalues.PhotoHandler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

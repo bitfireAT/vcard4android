@@ -150,9 +150,9 @@ open class AndroidContact(
         // - We'll only delete rows we have inserted so that unknown rows like
         //   vnd.android.cursor.item/important_people (= contact is in Samsung "edge panel") remain untouched.
         val typesToRemove = processor.builderMimeTypes()
-        val sqlTypesToRemove = typesToRemove.map { mimeType ->
+        val sqlTypesToRemove = typesToRemove.joinToString(",") { mimeType ->
             DatabaseUtils.sqlEscapeString(mimeType)
-        }.joinToString(",")
+        }
         batch.enqueue(BatchOperation.CpoBuilder
                 .newDelete(dataSyncURI())
                 .withSelection(Data.RAW_CONTACT_ID + "=? AND ${Data.MIMETYPE} IN ($sqlTypesToRemove)", arrayOf(id!!.toString())))
@@ -204,19 +204,6 @@ open class AndroidContact(
 
 
     // helpers
-
-    protected fun insertDataBuilder(rawContactKeyName: String): BatchOperation.CpoBuilder {
-        val builder = BatchOperation.CpoBuilder.newInsert(dataSyncURI())
-        if (id == null)
-            builder.withValueBackReference(rawContactKeyName, 0)
-        else
-            builder.withValue(rawContactKeyName, id)
-
-        if (addressBook.readOnly)
-            builder.withValue(Data.IS_READ_ONLY, 1)
-
-        return builder
-    }
 
     protected fun rawContactSyncURI(): Uri {
         val id = requireNotNull(id)

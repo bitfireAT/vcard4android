@@ -10,13 +10,14 @@ import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import java.io.ByteArrayOutputStream
 import java.util.*
+import kotlin.math.min
 
 class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
 
     companion object {
-        val MAX_PHOTO_BLOB_SIZE = 950*1024    // IPC limit 1 MB, minus 50 kB for the protocol itself = 950 kB
-        val MAX_RESIZE_PASSES = 10
+        const val MAX_PHOTO_BLOB_SIZE = 950*1024    // IPC limit 1 MB, minus 50 kB for the protocol itself = 950 kB
+        const val MAX_RESIZE_PASSES = 10
     }
 
     override fun build(): List<BatchOperation.CpoBuilder> {
@@ -59,7 +60,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                 return null
             }
 
-            var size = Math.min(bitmap.width, bitmap.height).toFloat()
+            var size = min(bitmap.width, bitmap.height).toFloat()
             var resized: ByteArray = blob
             var count = 0
             var quality = 98

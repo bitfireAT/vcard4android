@@ -87,7 +87,7 @@ class BatchOperation(
      * @param end   index of last operation which will be run (exclusive!)
      * @throws RemoteException on calendar provider errors
      * @throws OperationApplicationException when the batch can't be processed
-     * @throws CalendarStorageException if the transaction is too large
+     * @throws ContactsStorageException if the transaction is too large
      */
     private fun runBatch(start: Int, end: Int) {
         if (end == start)

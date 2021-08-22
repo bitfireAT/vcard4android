@@ -8,7 +8,7 @@ import ezvcard.io.text.VCardWriter
 object CustomScribes {
 
     /** list of all custom scribes (will be registered to readers/writers) **/
-    val customScribes = arrayOf(
+    private val customScribes = arrayOf(
         XAbDate.Scribe,
         XAbLabel.Scribe,
         XAbRelatedNames.Scribe,

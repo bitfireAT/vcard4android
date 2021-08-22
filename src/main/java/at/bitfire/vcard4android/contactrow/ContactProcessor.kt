@@ -8,8 +8,6 @@ import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
-import at.bitfire.vcard4android.datavalues.EmailHandler
-import at.bitfire.vcard4android.datavalues.PhotoHandler
 import java.util.logging.Level
 
 class ContactProcessor(

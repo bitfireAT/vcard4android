@@ -20,7 +20,7 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
             if (name.isNullOrBlank())
                 continue
 
-            var typeCode = when {
+            val typeCode = when {
                 // specific Android types (not defined in RFC 6350)
                 related.types.contains(CustomType.Related.ASSISTANT) -> Relation.TYPE_ASSISTANT
                 related.types.contains(CustomType.Related.BROTHER) -> Relation.TYPE_BROTHER

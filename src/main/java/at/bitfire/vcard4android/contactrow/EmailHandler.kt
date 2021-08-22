@@ -1,10 +1,9 @@
-package at.bitfire.vcard4android.datavalues
+package at.bitfire.vcard4android.contactrow
 
 import android.content.ContentValues
 import android.provider.ContactsContract.CommonDataKinds.Email
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
-import at.bitfire.vcard4android.contactrow.DataRowHandler
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.EmailType
 
