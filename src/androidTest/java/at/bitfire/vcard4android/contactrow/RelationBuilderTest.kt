@@ -103,6 +103,17 @@ class RelationBuilderTest {
     }
 
     @Test
+    fun testType_Child() {
+        RelationBuilder(Uri.EMPTY, null, Contact().apply {
+            relations += Related("somebody").apply {
+                types += RelatedType.CHILD
+            }
+        }).build().also { result ->
+            assertEquals(Relation.TYPE_CHILD, result[0].values[Relation.TYPE])
+        }
+    }
+
+    @Test
     fun testType_DomesticPartner() {
         RelationBuilder(Uri.EMPTY, null, Contact().apply {
             relations += Related("somebody").apply {

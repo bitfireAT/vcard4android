@@ -33,6 +33,7 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                 related.types.contains(CustomType.Related.SISTER) -> Relation.TYPE_SISTER
 
                 // standard types (defined in RFC 6350) supported by Android
+                related.types.contains(RelatedType.CHILD) -> Relation.TYPE_CHILD
                 related.types.contains(RelatedType.FRIEND) -> Relation.TYPE_FRIEND
                 related.types.contains(RelatedType.KIN) -> Relation.TYPE_RELATIVE
                 related.types.contains(RelatedType.PARENT) -> Relation.TYPE_PARENT
