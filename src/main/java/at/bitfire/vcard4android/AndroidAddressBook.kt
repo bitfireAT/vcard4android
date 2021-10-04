@@ -18,6 +18,7 @@ import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.Utils.toContentValues
 import java.io.FileNotFoundException
 import java.util.*
+import kotlin.jvm.Throws
 
 open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         var account: Account,
@@ -80,12 +81,14 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         return groups
     }
 
+    @Throws(FileNotFoundException::class)
     fun findContactById(id: Long) =
             queryContacts("${RawContacts._ID}=?", arrayOf(id.toString())).firstOrNull() ?: throw FileNotFoundException()
 
     fun findContactByUid(uid: String) =
             queryContacts("${AndroidContact.COLUMN_UID}=?", arrayOf(uid)).firstOrNull()
 
+    @Throws(FileNotFoundException::class)
     fun findGroupById(id: Long) =
         queryGroups("${Groups._ID}=?", arrayOf(id.toString())).firstOrNull() ?: throw FileNotFoundException()
 
