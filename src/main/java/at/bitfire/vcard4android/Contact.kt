@@ -12,8 +12,6 @@ import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
 import ezvcard.io.text.VCardReader
-import ezvcard.parameter.EmailType
-import ezvcard.parameter.TelephoneType
 import ezvcard.property.*
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder
@@ -21,6 +19,7 @@ import java.io.IOException
 import java.io.OutputStream
 import java.io.Reader
 import java.util.*
+import kotlin.collections.HashSet
 
 /**
  * Data class for a contact; between vCards and the Android contacts provider.
@@ -40,7 +39,7 @@ class Contact {
     var group = false
 
     /** list of UIDs of group members without urn:uuid prefix (only meaningful if [group] is true) */
-    val members = LinkedList<String>()
+    val members = mutableSetOf<String>()
 
     var displayName: String? = null
     var prefix: String? = null

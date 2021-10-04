@@ -167,7 +167,7 @@ class ContactReaderTest {
             kind = Kind.group()
             members += Member("member1")
         })
-        assertEquals("member1", c.members.first)
+        assertEquals("member1", c.members.first())
     }
 
     @Test
@@ -185,7 +185,7 @@ class ContactReaderTest {
             kind = Kind.group()
             members += Member("urn:uuid:be829cf2-4244-42f8-bd4c-ab39b4b5fcd3")
         })
-        assertEquals("be829cf2-4244-42f8-bd4c-ab39b4b5fcd3", c.members.first)
+        assertEquals("be829cf2-4244-42f8-bd4c-ab39b4b5fcd3", c.members.first())
     }
 
     @Test
