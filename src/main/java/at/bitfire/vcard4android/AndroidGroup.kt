@@ -37,7 +37,9 @@ open class AndroidGroup(
     var eTag: String? = null
 
 	constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, values: ContentValues): this(addressBook) {
-	    initializeFromContentValues(values)
+        id = values.getAsLong(Groups._ID)
+        fileName = values.getAsString(COLUMN_FILENAME)
+        eTag = values.getAsString(COLUMN_ETAG)
 	}
 
     constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, contact: Contact, fileName: String?  = null, eTag: String? = null): this(addressBook) {
@@ -45,12 +47,6 @@ open class AndroidGroup(
         this.fileName = fileName
         this.eTag = eTag
 	}
-
-    protected open fun initializeFromContentValues(values: ContentValues) {
-        id = values.getAsLong(Groups._ID)
-        fileName = values.getAsString(COLUMN_FILENAME)
-        eTag = values.getAsString(COLUMN_ETAG)
-    }
 
 
     /**

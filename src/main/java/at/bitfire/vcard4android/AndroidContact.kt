@@ -48,8 +48,7 @@ open class AndroidContact(
     /**
      * Creates a new instance, initialized with some metadata. Usually used to insert a contact to an address book.
      */
-    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, _contact: Contact, _fileName: String?, _eTag: String?)
-            : this(addressBook) {
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, _contact: Contact, _fileName: String?, _eTag: String?): this(addressBook) {
         fileName = _fileName
         eTag = _eTag
         setContact(_contact)
@@ -58,11 +57,7 @@ open class AndroidContact(
     /**
      * Creates a new instance, initialized with metadata from the content provider. Usually used when reading a contact from an address book.
      */
-    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, values: ContentValues) : this(addressBook) {
-        initializeFromContentValues(values)
-    }
-
-    protected open fun initializeFromContentValues(values: ContentValues) {
+    constructor(addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>, values: ContentValues): this(addressBook) {
         id = values.getAsLong(RawContacts._ID)
         fileName = values.getAsString(COLUMN_FILENAME)
         eTag = values.getAsString(COLUMN_ETAG)

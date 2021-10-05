@@ -16,32 +16,33 @@ import android.provider.ContactsContract
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
-import org.junit.After
+import org.junit.*
 import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 
 class AndroidAddressBookTest {
 
-    @JvmField
-    @Rule
-    val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
+    companion object {
+        @JvmField
+        @ClassRule
+        val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-    private val testAccount = Account("AndroidAddressBookTest", "at.bitfire.vcard4android")
-    private lateinit var provider: ContentProviderClient
+        private val testAccount = Account("AndroidAddressBookTest", "at.bitfire.vcard4android")
+        private lateinit var provider: ContentProviderClient
 
-	@Before
-	fun connect() {
-        val context = InstrumentationRegistry.getInstrumentation().context
-		provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
-        assertNotNull(provider)
-    }
+        @BeforeClass
+        @JvmStatic
+        fun connect() {
+            val context = InstrumentationRegistry.getInstrumentation().context
+            provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
+            assertNotNull(provider)
+        }
 
-	@After
-	fun disconnect() {
-        @Suppress("DEPRECATION")
-        provider.release()
+        @BeforeClass
+        @JvmStatic
+        fun disconnect() {
+            @Suppress("DEPRECATION")
+            provider.release()
+        }
     }
 
 

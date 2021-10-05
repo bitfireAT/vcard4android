@@ -24,39 +24,40 @@ import ezvcard.property.Address
 import ezvcard.property.Birthday
 import ezvcard.property.Email
 import ezvcard.util.PartialDate
-import org.junit.After
+import org.junit.*
 import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.text.SimpleDateFormat
 
 class AndroidContactTest {
 
-    @JvmField
-    @Rule
-    val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
+    companion object {
+        @JvmField
+        @ClassRule
+        val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-    private val testAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
-    
-    private lateinit var provider: ContentProviderClient
-    private lateinit var addressBook: TestAddressBook
+        private val testAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
 
-    @Before
-    fun connect() {
-        val context = InstrumentationRegistry.getInstrumentation().context
-        provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
-        assertNotNull(provider)
+        private lateinit var provider: ContentProviderClient
+        private lateinit var addressBook: TestAddressBook
 
-        addressBook = TestAddressBook(testAccount, provider)
-    }
+        @BeforeClass
+        @JvmStatic
+        fun connect() {
+            val context = InstrumentationRegistry.getInstrumentation().context
+            provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
+            assertNotNull(provider)
 
-    @After
-    fun disconnect() {
-        @Suppress("DEPRECATION")
-        provider.release()
+            addressBook = TestAddressBook(testAccount, provider)
+        }
+
+        @BeforeClass
+        @JvmStatic
+        fun disconnect() {
+            @Suppress("DEPRECATION")
+            provider.release()
+        }
     }
 
 

@@ -15,37 +15,40 @@ import android.provider.ContactsContract
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.impl.TestAddressBook
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Before
-import org.junit.Rule
+import org.junit.BeforeClass
+import org.junit.ClassRule
 import org.junit.Test
 
 class AndroidGroupTest {
 
-    @JvmField
-    @Rule
-    val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
+    companion object {
+        @JvmField
+        @ClassRule
+        val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-    private val testAccount = Account("AndroidContactGroupTest", "at.bitfire.vcard4android")
+        private val testAccount = Account("AndroidContactGroupTest", "at.bitfire.vcard4android")
 
-    private lateinit var provider: ContentProviderClient
-    private lateinit var addressBook: TestAddressBook
+        private lateinit var provider: ContentProviderClient
+        private lateinit var addressBook: TestAddressBook
 
-    @Before
-    fun connect() {
-        val context = InstrumentationRegistry.getInstrumentation().context
-        provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
-        assertNotNull(provider)
+        @BeforeClass
+        @JvmStatic
+        fun connect() {
+            val context = InstrumentationRegistry.getInstrumentation().context
+            provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
+            assertNotNull(provider)
 
-        addressBook = TestAddressBook(testAccount, provider)
-    }
+            addressBook = TestAddressBook(testAccount, provider)
+        }
 
-    @After
-    fun disconnect() {
-        @Suppress("DEPRECATION")
-        provider.release()
+        @BeforeClass
+        @JvmStatic
+        fun disconnect() {
+            @Suppress("DEPRECATION")
+            provider.release()
+        }
     }
 
 

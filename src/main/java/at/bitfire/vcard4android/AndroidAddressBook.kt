@@ -18,7 +18,6 @@ import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.Utils.toContentValues
 import java.io.FileNotFoundException
 import java.util.*
-import kotlin.jvm.Throws
 
 open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
         var account: Account,
@@ -62,23 +61,37 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 
     fun queryContacts(where: String?, whereArgs: Array<String>?): List<T1> {
         val contacts = LinkedList<T1>()
-        provider!!.query(rawContactsSyncUri(),
-                null, where, whereArgs, null)?.use { cursor ->
+        provider!!.query(rawContactsSyncUri(), null,
+                where, whereArgs, null)?.use { cursor ->
             while (cursor.moveToNext())
                 contacts += contactFactory.fromProvider(this, cursor.toContentValues())
         }
         return contacts
     }
 
+    fun queryGroups(where: String?, whereArgs: Array<String>?, callback: (T2) -> Unit) {
+        provider!!.query(groupsSyncUri(), null,
+            where, whereArgs, null)?.use { cursor ->
+            while (cursor.moveToNext()) {
+                val group = groupFactory.fromProvider(this, cursor.toContentValues())
+                callback(group)
+            }
+        }
+    }
+
     fun queryGroups(where: String?, whereArgs: Array<String>?): List<T2> {
         val groups = LinkedList<T2>()
-        provider!!.query(groupsSyncUri(),
-                arrayOf(Groups._ID, AndroidGroup.COLUMN_FILENAME, AndroidGroup.COLUMN_ETAG),
-                where, whereArgs, null)?.use { cursor ->
-            while (cursor.moveToNext())
-                groups += groupFactory.fromProvider(this, cursor.toContentValues())
+        queryGroups(where, whereArgs) { group ->
+            groups += group
         }
         return groups
+    }
+
+
+    fun allGroups(callback: (T2) -> Unit) {
+        queryGroups("${Groups.ACCOUNT_TYPE}=? AND ${Groups.ACCOUNT_NAME}=?", arrayOf(account.type, account.name)) { group ->
+            callback(group)
+        }
     }
 
     @Throws(FileNotFoundException::class)
