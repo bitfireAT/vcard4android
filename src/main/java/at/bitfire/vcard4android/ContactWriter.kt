@@ -139,7 +139,6 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
 
     private fun addKindAndMembers() {
         if (contact.group) {
-            // TODO Use urn:uuid only when applicable
             if (version == VCardVersion.V4_0) {         // vCard4
                 vCard.kind = Kind.group()
                 for (member in contact.members)
