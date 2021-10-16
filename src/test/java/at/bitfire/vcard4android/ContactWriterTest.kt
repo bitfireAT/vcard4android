@@ -548,7 +548,7 @@ class ContactWriterTest {
         generator.writeVCard(stream)
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
-                "PRODID:ez-vcard 0.11.2\r\n" +
+                "PRODID:ez-vcard 0.11.3\r\n" +
                 "REV:20210730T010203Z\r\n" +
                 "END:VCARD\r\n", stream.toString())
     }

@@ -14,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
+        classpath 'com.android.tools.build:gradle:7.0.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
@@ -83,7 +83,7 @@ dependencies {
     implementation "org.apache.commons:commons-text:${versions.commonsText}"
 
     // ez-vcard to parse/generate vCards
-    api('com.googlecode.ez-vcard:ez-vcard:0.11.2') {
+    api('com.googlecode.ez-vcard:ez-vcard:0.11.3') {
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'
