@@ -5,6 +5,7 @@ import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
+import ezvcard.io.json.JCardWriter
 import ezvcard.io.text.VCardWriter
 import ezvcard.parameter.ImageType
 import ezvcard.parameter.RelatedType
@@ -313,7 +314,44 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
     }
 
 
-    fun writeVCard(stream: OutputStream) {
+    /**
+     * Validates and writes the vCard to an output stream.
+     *
+     * @param stream    target output stream
+     * @param jCard     *true*: write as jCard; *false*: write as vCard
+     */
+    fun writeCard(stream: OutputStream, jCard: Boolean) {
+        validate()
+
+        val writer =
+            if (jCard)
+                JCardWriter(stream).apply {
+                    isAddProdId = Contact.productID == null
+                    registerCustomScribes()
+
+                    // allow properties that are not defined in this vCard version
+                    isVersionStrict = false
+                }
+            else
+                VCardWriter(stream, version).apply {
+                    isAddProdId = Contact.productID == null
+                    registerCustomScribes()
+
+                    // include trailing semicolons for maximum compatibility
+                    isIncludeTrailingSemicolons = true
+
+                    // use caret encoding for parameter values (RFC 6868)
+                    isCaretEncodingEnabled = true
+
+                    // allow properties that are not defined in this vCard version
+                    isVersionStrict = false
+                }
+
+        writer.write(vCard)
+        writer.flush()
+    }
+
+    private fun validate() {
         // validate vCard and log results
         val validation = vCard.validate(version)
         if (!validation.isEmpty) {
@@ -322,21 +360,6 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                 msgs += "  * " + key?.javaClass?.simpleName + " - " + warnings?.joinToString(" | ")
             Constants.log.log(Level.WARNING, "vCard validation warnings", msgs.joinToString(","))
         }
-
-        val writer = VCardWriter(stream, version).apply {
-            isAddProdId = Contact.productID == null
-            registerCustomScribes()
-
-            // include trailing semicolons for maximum compatibility
-            isIncludeTrailingSemicolons = true
-
-            // use caret encoding for parameter values (RFC 6868)
-            isCaretEncodingEnabled = true
-
-            isVersionStrict = false
-        }
-        writer.write(vCard)
-        writer.flush()
     }
 
 }

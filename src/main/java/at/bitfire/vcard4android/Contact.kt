@@ -11,6 +11,7 @@ package at.bitfire.vcard4android
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.VCardVersion
+import ezvcard.io.json.JCardReader
 import ezvcard.io.text.VCardReader
 import ezvcard.property.*
 import org.apache.commons.lang3.builder.HashCodeBuilder
@@ -19,7 +20,6 @@ import java.io.IOException
 import java.io.OutputStream
 import java.io.Reader
 import java.util.*
-import kotlin.collections.HashSet
 
 /**
  * Data class for a contact; between vCards and the Android contacts provider.
@@ -84,8 +84,6 @@ class Contact {
         // You may set this statically from the calling application.
         var productID: String? = null
 
-        const val LABEL_GROUP_PREFIX = "item"
-
         const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
         const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
 
@@ -94,15 +92,24 @@ class Contact {
          *
          * @param reader     reader for the input stream containing the vCard (pay attention to the charset)
          * @param downloader will be used to download external resources like contact photos (may be null)
+         * @param jCard      *true*: content is jCard; *false*: content is vCard
+         *
          * @return list of filled Event data objects (may have size 0) – doesn't return null
+         *
          * @throws IOException on I/O errors when reading the stream
          * @throws ezvcard.io.CannotParseException when the vCard can't be parsed
          */
-        fun fromReader(reader: Reader, downloader: Downloader?): List<Contact>  {
-            // create new vCard reader and add custom scribes
-            val vCards = VCardReader(reader, VCardVersion.V3_0)        // CardDAV requires vCard 3 or newer
-                    .registerCustomScribes()
-                    .readAll()
+        fun fromReader(reader: Reader, jCard: Boolean, downloader: Downloader?): List<Contact>  {
+            // create new reader and add custom scribes
+            val vCards =
+                if (jCard)
+                    JCardReader(reader)
+                        .registerCustomScribes()
+                        .readAll()
+                else
+                    VCardReader(reader, VCardVersion.V3_0)        // CardDAV requires vCard 3 or newer
+                        .registerCustomScribes()
+                        .readAll()
 
             return vCards.map { vCard ->
                 // convert every vCard to a Contact data object
@@ -114,9 +121,15 @@ class Contact {
 
 
     @Throws(IOException::class)
+    fun writeJCard(os: OutputStream) {
+        val generator = ContactWriter.fromContact(this, VCardVersion.V4_0)
+        generator.writeCard(os, true)
+    }
+
+    @Throws(IOException::class)
     fun writeVCard(vCardVersion: VCardVersion, os: OutputStream) {
         val generator = ContactWriter.fromContact(this, vCardVersion)
-        generator.writeVCard(os)
+        generator.writeCard(os, false)
     }
 
 

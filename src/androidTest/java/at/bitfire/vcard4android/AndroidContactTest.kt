@@ -110,7 +110,7 @@ class AndroidContactTest {
                 "TEL;CELL=;PREF=:+12345\r\n" +
                 "EMAIL;PREF=invalid:test@example.com\r\n" +
                 "END:VCARD\r\n"
-        val contacts = Contact.fromReader(StringReader(vCard), null)
+        val contacts = Contact.fromReader(StringReader(vCard), false, null)
 
         val dbContact = AndroidContact(addressBook, contacts.first(), null, null)
         dbContact.add()

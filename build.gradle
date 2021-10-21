@@ -87,8 +87,6 @@ dependencies {
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'
-        // jCard functionality not needed
-        exclude group: 'com.fasterxml.jackson.core'
     }
 
     androidTestImplementation 'androidx.test:runner:1.4.0'

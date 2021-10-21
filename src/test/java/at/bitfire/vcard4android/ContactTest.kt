@@ -28,13 +28,13 @@ class ContactTest {
 
     private fun parseContact(fname: String, charset: Charset = Charsets.UTF_8) =
             javaClass.classLoader!!.getResourceAsStream(fname).use { stream ->
-                Contact.fromReader(InputStreamReader(stream, charset), null).first()
+                Contact.fromReader(InputStreamReader(stream, charset), false, null).first()
             }
 
     private fun regenerate(c: Contact, vCardVersion: VCardVersion): Contact {
         val os = ByteArrayOutputStream()
         c.writeVCard(vCardVersion, os)
-        return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), null).first()
+        return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), false,null).first()
     }
 
     private fun toString(c: Contact, groupMethod: GroupMethod, vCardVersion: VCardVersion): String {

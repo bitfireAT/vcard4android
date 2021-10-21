@@ -538,6 +538,19 @@ class ContactWriterTest {
 
 
     @Test
+    fun testWriteJCard() {
+        val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
+        generator.vCard.revision = Revision(Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC.id)).apply {
+            set(2021, 6, 30, 1, 2, 3)
+        })
+
+        val stream = ByteArrayOutputStream()
+        generator.writeCard(stream, true)
+        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.11.3\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03Z\"]]]", stream.toString())
+    }
+
+
+    @Test
     fun testWriteVCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         generator.vCard.revision = Revision(Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC.id)).apply {
@@ -545,7 +558,7 @@ class ContactWriterTest {
         })
 
         val stream = ByteArrayOutputStream()
-        generator.writeVCard(stream)
+        generator.writeCard(stream, false)
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
                 "PRODID:ez-vcard 0.11.3\r\n" +
@@ -565,7 +578,7 @@ class ContactWriterTest {
         }
         ContactWriter
                 .fromContact(contact, VCardVersion.V4_0)
-                .writeVCard(stream)
+                .writeCard(stream, false)
         assertTrue(stream.toString().contains("ADR;LABEL=\"Li^^ne 1,1 - ^' -\":;;Line1;;;;Line2"))
     }
 
