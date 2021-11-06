@@ -12,6 +12,7 @@ object ImHandler: DataRowHandler() {
 
     override fun forMimeType() = Im.CONTENT_ITEM_TYPE
 
+    @Suppress("DEPRECATION")
     override fun handle(values: ContentValues, contact: Contact) {
         super.handle(values, contact)
 
