@@ -169,7 +169,7 @@ class ContactWriterTest {
     @Test
     fun testFn_vCard4_NoFn() {
         val vCard = generate(version = VCardVersion.V4_0) { }
-        assertNull(vCard.formattedName)
+        assertEquals("", vCard.formattedName.value)
     }
 
     @Test
@@ -432,7 +432,7 @@ class ContactWriterTest {
                 values.add("nick1")
             })
         }
-        assertEquals(2 /* NICK + REV */, vCard.properties.size)
+        assertEquals(3 /* NICK + REV + FN */, vCard.properties.size)
         assertEquals("nick1", vCard.nickname.values.first())
     }
 
@@ -443,7 +443,7 @@ class ContactWriterTest {
                 values.add("nick1")
             }, "label1")
         }
-        assertEquals(3 /* NICK + X-ABLABEL + REV */, vCard.properties.size)
+        assertEquals(4 /* NICK + X-ABLABEL + FN + REV */, vCard.properties.size)
         vCard.nickname.apply {
             assertEquals("nick1", values.first())
             assertEquals("item1", group)
@@ -464,7 +464,7 @@ class ContactWriterTest {
                 values.add("nick1")
             }, "label1")
         }
-        assertEquals(4 /* X-TEST + NICK + X-ABLABEL + REV */, vCard.properties.size)
+        assertEquals(5 /* X-TEST + NICK + X-ABLABEL + FN + REV */, vCard.properties.size)
         vCard.nickname.apply {
             assertEquals("nick1", values.first())
             assertEquals("item2", group)
@@ -546,7 +546,7 @@ class ContactWriterTest {
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, true)
-        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.11.3\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03Z\"]]]", stream.toString())
+        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.11.3\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03Z\"]]]", stream.toString())
     }
 
 
@@ -562,6 +562,7 @@ class ContactWriterTest {
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
                 "PRODID:ez-vcard 0.11.3\r\n" +
+                "FN:\r\n" +
                 "REV:20210730T010203Z\r\n" +
                 "END:VCARD\r\n", stream.toString())
     }

@@ -116,26 +116,22 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
     }
 
     private fun addFormattedName() {
-        if (version == VCardVersion.V4_0) {
-            contact.displayName?.let { fn -> vCard.setFormattedName(fn) }
-
-        } else /* version == VCardVersion.V3_0 */ {
-            // vCard 3 REQUIRES FN [RFC 2426 p. 29]
-            val fn =
-                    // use display name, if available
-                    StringUtils.trimToNull(contact.displayName) ?:
-                    // no display name, try organization
-                    contact.organization?.values?.joinToString(" / ") ?:
-                    // otherwise, try nickname
-                    contact.nickName?.property?.values?.firstOrNull() ?:
-                    // otherwise, try email address
-                    contact.emails.firstOrNull()?.property?.value ?:
-                    // otherwise, try phone number
-                    contact.phoneNumbers.firstOrNull()?.property?.text ?:
-                    // otherwise, try UID or use empty string
-                    contact.uid ?: ""
-            vCard.setFormattedName(fn)
-        }
+        // vCard 3 REQUIRES FN [RFC 2426 p. 29]
+        // vCard 4 REQUIRES FN [RFC 6350 6.2.1 FN]
+        val fn =
+            // use display name, if available
+            StringUtils.trimToNull(contact.displayName) ?:
+            // no display name, try organization
+            contact.organization?.values?.joinToString(" / ") ?:
+            // otherwise, try nickname
+            contact.nickName?.property?.values?.firstOrNull() ?:
+            // otherwise, try email address
+            contact.emails.firstOrNull()?.property?.value ?:
+            // otherwise, try phone number
+            contact.phoneNumbers.firstOrNull()?.property?.text ?:
+            // otherwise, try UID or use empty string
+            contact.uid ?: ""
+        vCard.setFormattedName(fn)
     }
 
     private fun addKindAndMembers() {
