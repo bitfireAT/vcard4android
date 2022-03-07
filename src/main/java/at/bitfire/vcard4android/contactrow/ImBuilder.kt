@@ -27,20 +27,14 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                 continue
             }
 
-            var typeCode: Int = Im.TYPE_OTHER
-            var typeLabel: String? = null
-            if (labeledIm.label != null) {
-                typeCode = Im.TYPE_CUSTOM
-                typeLabel = labeledIm.label
-            } else {
-                for (type in impp.types)
-                    when (type) {
-                        ImppType.HOME,
-                        ImppType.PERSONAL -> typeCode = Im.TYPE_HOME
-                        ImppType.WORK,
-                        ImppType.BUSINESS -> typeCode = Im.TYPE_WORK
-                    }
-            }
+            var typeCode = Im.TYPE_OTHER
+            for (type in impp.types)
+                when (type) {
+                    ImppType.HOME,
+                    ImppType.PERSONAL -> typeCode = Im.TYPE_HOME
+                    ImppType.WORK,
+                    ImppType.BUSINESS -> typeCode = Im.TYPE_WORK
+                }
 
             var protocolCode: Int
             var protocolLabel: String? = null
@@ -58,7 +52,7 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                 protocol.equals("sip", true) -> continue // IMPP:sip:…  is handled by SipAddressBuilder
                 else -> {
                     protocolCode = Im.PROTOCOL_CUSTOM
-                    protocolLabel = protocol
+                    protocolLabel = labeledIm.label ?: protocol
                 }
             }
 
@@ -66,7 +60,6 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
             result += newDataRow()
                 .withValue(Im.DATA, impp.handle)
                 .withValue(Im.TYPE, typeCode)
-                .withValue(Im.LABEL, typeLabel)
                 .withValue(Im.PROTOCOL, protocolCode)
                 .withValue(Im.CUSTOM_PROTOCOL, protocolLabel)
         }

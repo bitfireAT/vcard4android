@@ -11,6 +11,7 @@ import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
 import ezvcard.parameter.ImppType
 import ezvcard.property.Impp
+import java.util.logging.Level
 
 object ImHandler: DataRowHandler() {
 
@@ -26,47 +27,47 @@ object ImHandler: DataRowHandler() {
             return
         }
 
-        var impp: Impp? = null
-        when (values.getAsInteger(Im.PROTOCOL)) {
+        val labeledImpp = when (values.getAsInteger(Im.PROTOCOL)) {
             Im.PROTOCOL_AIM ->
-                impp = Impp.aim(handle)
+                LabeledProperty(Impp.aim(handle))
             Im.PROTOCOL_MSN ->
-                impp = Impp.msn(handle)
+                LabeledProperty(Impp.msn(handle))
             Im.PROTOCOL_YAHOO ->
-                impp = Impp.yahoo(handle)
+                LabeledProperty(Impp.yahoo(handle))
             Im.PROTOCOL_SKYPE ->
-                impp = Impp.skype(handle)
+                LabeledProperty(Impp.skype(handle))
             Im.PROTOCOL_QQ ->
-                impp = Impp("qq", handle)
+                LabeledProperty(Impp("qq", handle))
             Im.PROTOCOL_GOOGLE_TALK ->
-                impp = Impp("google-talk", handle)
+                LabeledProperty(Impp("google-talk", handle))
             Im.PROTOCOL_ICQ ->
-                impp = Impp.icq(handle)
+                LabeledProperty(Impp.icq(handle))
             Im.PROTOCOL_JABBER ->
-                impp = Impp.xmpp(handle)
+                LabeledProperty(Impp.xmpp(handle))
             Im.PROTOCOL_NETMEETING ->
-                impp = Impp("netmeeting", handle)
+                LabeledProperty(Impp("netmeeting", handle))
             Im.PROTOCOL_CUSTOM ->
                 try {
-                    impp = Impp(protocolToUriScheme(values.getAsString(Im.CUSTOM_PROTOCOL)), handle)
+                    LabeledProperty(
+                        Impp(protocolToUriScheme(values.getAsString(Im.CUSTOM_PROTOCOL)), handle),
+                        values.getAsString(Im.CUSTOM_PROTOCOL)
+                    )
                 } catch(e: IllegalArgumentException) {
                     Constants.log.warning("Messenger type/value can't be expressed as URI; ignoring")
+                    return
                 }
+            else -> {
+                Constants.log.log(Level.WARNING, "Unknown IM type", values)
+                return
+            }
         }
-
-        if (impp == null)
-            return
-        val labeledImpp = LabeledProperty(impp)
+        val impp = labeledImpp.property
 
         when (values.getAsInteger(Im.TYPE)) {
             Im.TYPE_HOME ->
                 impp.types += ImppType.HOME
             Im.TYPE_WORK ->
                 impp.types += ImppType.WORK
-            Im.TYPE_CUSTOM ->
-                values.getAsString(Im.LABEL)?.let {
-                    labeledImpp.label = it
-                }
         }
 
         contact.impps += labeledImpp
