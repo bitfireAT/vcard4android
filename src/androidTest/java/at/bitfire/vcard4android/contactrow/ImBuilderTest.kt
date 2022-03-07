@@ -41,15 +41,35 @@ class ImBuilderTest {
         }
     }
 
+    // Android 12+
+//    @Test
+//    fun testHandle_WithCustomProtocol() {
+//        ImBuilder(Uri.EMPTY, null, Contact().apply {
+//            impps += LabeledProperty(Impp.xmpp("jabber@example.com"))
+//        }).build().also { result ->
+//            assertEquals(1, result.size)
+//            assertEquals(CommonDataKinds.Im.PROTOCOL_CUSTOM, result[0].values[CommonDataKinds.Im.PROTOCOL])
+//            assertEquals("xmpp", result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+//            assertEquals("jabber@example.com", result[0].values[CommonDataKinds.Im.DATA])
+//        }
+//    }
+
+    // Android 11 and below
     @Test
+    @Suppress("DEPRECATION")
     fun testHandle_WithProtocol() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com"))
+            impps += LabeledProperty(Impp.skype("skype-id"))
+            impps += LabeledProperty(Impp("qq", "qq-id"))
         }).build().also { result ->
-            assertEquals(1, result.size)
-            assertEquals(CommonDataKinds.Im.PROTOCOL_CUSTOM, result[0].values[CommonDataKinds.Im.PROTOCOL])
-            assertEquals("xmpp", result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            assertEquals(3, result.size)
+            assertEquals(CommonDataKinds.Im.PROTOCOL_JABBER, result[0].values[CommonDataKinds.Im.PROTOCOL])
             assertEquals("jabber@example.com", result[0].values[CommonDataKinds.Im.DATA])
+            assertEquals(CommonDataKinds.Im.PROTOCOL_SKYPE, result[1].values[CommonDataKinds.Im.PROTOCOL])
+            assertEquals("skype-id", result[1].values[CommonDataKinds.Im.DATA])
+            assertEquals(CommonDataKinds.Im.PROTOCOL_QQ, result[2].values[CommonDataKinds.Im.PROTOCOL])
+            assertEquals("qq-id", result[2].values[CommonDataKinds.Im.DATA])
         }
     }
 

@@ -15,6 +15,7 @@ import java.util.*
 class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
 
+    @Suppress("DEPRECATION")
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
         for (labeledIm in contact.impps) {
@@ -24,10 +25,7 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
             if (protocol == null) {
                 Constants.log.warning("Ignoring IM address without protocol")
                 continue
-
-            } else if (protocol == "sip")
-                // IMPP:sip:…  is handled by SipAddressBuilder
-                continue
+            }
 
             var typeCode: Int = Im.TYPE_OTHER
             var typeLabel: String? = null
@@ -44,13 +42,33 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                     }
             }
 
+            var protocolCode: Int
+            var protocolLabel: String? = null
+
+            when {
+                impp.isAim -> protocolCode = Im.PROTOCOL_AIM
+                impp.isMsn -> protocolCode = Im.PROTOCOL_MSN
+                impp.isYahoo -> protocolCode = Im.PROTOCOL_YAHOO
+                impp.isSkype -> protocolCode = Im.PROTOCOL_SKYPE
+                impp.isIcq -> protocolCode = Im.PROTOCOL_ICQ
+                impp.isXmpp || protocol.equals("jabber", true) -> protocolCode = Im.PROTOCOL_JABBER
+                protocol.equals("qq", true) -> protocolCode = Im.PROTOCOL_QQ
+                protocol.equals("google-talk", true) -> protocolCode = Im.PROTOCOL_GOOGLE_TALK
+                protocol.equals("netmeeting", true) -> protocolCode = Im.PROTOCOL_NETMEETING
+                protocol.equals("sip", true) -> continue // IMPP:sip:…  is handled by SipAddressBuilder
+                else -> {
+                    protocolCode = Im.PROTOCOL_CUSTOM
+                    protocolLabel = protocol
+                }
+            }
+
             // save as IM address
             result += newDataRow()
                 .withValue(Im.DATA, impp.handle)
                 .withValue(Im.TYPE, typeCode)
                 .withValue(Im.LABEL, typeLabel)
-                .withValue(Im.PROTOCOL, Im.PROTOCOL_CUSTOM)
-                .withValue(Im.CUSTOM_PROTOCOL, protocol)
+                .withValue(Im.PROTOCOL, protocolCode)
+                .withValue(Im.CUSTOM_PROTOCOL, protocolLabel)
         }
         return result
     }
