@@ -11,6 +11,7 @@ import at.bitfire.vcard4android.LabeledProperty
 import ezvcard.parameter.ImppType
 import ezvcard.property.Impp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class ImBuilderTest {
@@ -64,12 +65,21 @@ class ImBuilderTest {
             impps += LabeledProperty(Impp("qq", "qq-id"))
         }).build().also { result ->
             assertEquals(3, result.size)
+
             assertEquals(CommonDataKinds.Im.PROTOCOL_JABBER, result[0].values[CommonDataKinds.Im.PROTOCOL])
             assertEquals("jabber@example.com", result[0].values[CommonDataKinds.Im.DATA])
+            assertNull(result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            assertNull(result[0].values[CommonDataKinds.Im.LABEL])
+
             assertEquals(CommonDataKinds.Im.PROTOCOL_SKYPE, result[1].values[CommonDataKinds.Im.PROTOCOL])
             assertEquals("skype-id", result[1].values[CommonDataKinds.Im.DATA])
+            assertNull(result[1].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            assertNull(result[1].values[CommonDataKinds.Im.LABEL])
+
             assertEquals(CommonDataKinds.Im.PROTOCOL_QQ, result[2].values[CommonDataKinds.Im.PROTOCOL])
             assertEquals("qq-id", result[2].values[CommonDataKinds.Im.DATA])
+            assertNull(result[2].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            assertNull(result[2].values[CommonDataKinds.Im.LABEL])
         }
     }
 
