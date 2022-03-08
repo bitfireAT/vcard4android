@@ -5,12 +5,16 @@
 package at.bitfire.vcard4android.contactrow
 
 import android.content.ContentValues
+import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Im
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
+import at.bitfire.vcard4android.Utils.normalizeNFD
+import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.ImppType
 import ezvcard.property.Impp
+import org.apache.commons.lang3.StringUtils
 import java.util.logging.Level
 
 object ImHandler: DataRowHandler() {
@@ -23,61 +27,69 @@ object ImHandler: DataRowHandler() {
 
         val handle = values.getAsString(Im.DATA)
         if (handle == null) {
-            Constants.log.warning("Ignoring instant messenger record without handle")
+            Constants.log.warning("Ignoring IM without handle")
             return
         }
 
-        val labeledImpp = when (values.getAsInteger(Im.PROTOCOL)) {
+        val impp = when (values.getAsInteger(Im.PROTOCOL)) {
             Im.PROTOCOL_AIM ->
-                LabeledProperty(Impp.aim(handle))
+                Impp.aim(handle)
             Im.PROTOCOL_MSN ->
-                LabeledProperty(Impp.msn(handle))
-            Im.PROTOCOL_YAHOO ->
-                LabeledProperty(Impp.yahoo(handle))
+                Impp.msn(handle)
             Im.PROTOCOL_SKYPE ->
-                LabeledProperty(Impp.skype(handle))
-            Im.PROTOCOL_QQ ->
-                LabeledProperty(Impp("qq", handle))
+                Impp.skype(handle)
             Im.PROTOCOL_GOOGLE_TALK ->
-                LabeledProperty(Impp("google-talk", handle))
+                Impp(CustomType.Im.PROTOCOL_GOOGLE_TALK, handle)
             Im.PROTOCOL_ICQ ->
-                LabeledProperty(Impp.icq(handle))
+                Impp.icq(handle)
             Im.PROTOCOL_JABBER ->
-                LabeledProperty(Impp.xmpp(handle))
+                Impp.xmpp(handle)
             Im.PROTOCOL_NETMEETING ->
-                LabeledProperty(Impp("netmeeting", handle))
-            Im.PROTOCOL_CUSTOM ->
+                Impp.skype(handle)      // NetMeeting is dead and has most likely been replaced by Skype
+            Im.PROTOCOL_QQ ->
+                Impp(CustomType.Im.PROTOCOL_QQ, handle)
+            Im.PROTOCOL_YAHOO ->
+                Impp.yahoo(handle)
+            Im.PROTOCOL_CUSTOM -> {
+                val protocol = StringUtils.trimToNull(values.getAsString(Im.CUSTOM_PROTOCOL))
                 try {
-                    LabeledProperty(
-                        Impp(protocolToUriScheme(values.getAsString(Im.CUSTOM_PROTOCOL)), handle),
-                        values.getAsString(Im.CUSTOM_PROTOCOL)
-                    )
-                } catch(e: IllegalArgumentException) {
-                    Constants.log.warning("Messenger type/value can't be expressed as URI; ignoring")
+                    Impp(protocolToUriScheme(protocol), handle)
+                } catch (e: IllegalArgumentException) {
+                    Constants.log.warning("IM type/value can't be expressed as URI; ignoring")
                     return
                 }
+            }
             else -> {
                 Constants.log.log(Level.WARNING, "Unknown IM type", values)
                 return
             }
         }
-        val impp = labeledImpp.property
 
+        val labeledImpp = LabeledProperty(impp)
         when (values.getAsInteger(Im.TYPE)) {
             Im.TYPE_HOME ->
                 impp.types += ImppType.HOME
             Im.TYPE_WORK ->
                 impp.types += ImppType.WORK
+            Im.TYPE_CUSTOM ->
+                values.getAsString(ContactsContract.CommonDataKinds.Email.LABEL)?.let {
+                    labeledImpp.label = it
+                }
         }
 
         contact.impps += labeledImpp
     }
 
-    fun protocolToUriScheme(s: String?) =
-            // RFC 3986 3.1
-            // scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-            // ALPHA       =  %x41-5A / %x61-7A   ; A-Z / a-z
-                // DIGIT       =  %x30-39             ; 0-9
-            s?.replace(Regex("^[^a-zA-Z]+"), "")?.replace(Regex("[^\\da-zA-Z+-.]"), "")?.lowercase()
+    fun protocolToUriScheme(s: String?) = s
+            ?.normalizeNFD()     // normalize with decomposition first (e.g. Á → A+ ́)
+
+            /* then filter according to RFC 3986 3.1:
+               scheme      = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+               ALPHA       =  %x41-5A / %x61-7A   ; A-Z / a-z
+               DIGIT       =  %x30-39             ; 0-9
+            */
+            ?.replace(Regex("^[^a-zA-Z]+"), "")
+            ?.replace(Regex("[^\\da-zA-Z+-.]"), "")
+            ?.lowercase()
 
 }
