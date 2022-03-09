@@ -23,11 +23,8 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
         for (labeledIm in contact.impps) {
             val impp = labeledIm.property
 
-            val protocol = impp.protocol ?: ""
-            /*if (protocol == null) {
-                Constants.log.warning("Ignoring IM address without protocol")
-                continue
-            }*/
+            var protocol = impp.protocol ?: ""
+            var user = impp.handle
 
             var typeCode = Im.TYPE_OTHER
             var typeLabel: String? = null
@@ -46,8 +43,35 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
             var protocolCode = Im.PROTOCOL_CUSTOM
             var customProtocol: String? = null
 
-            if (Build.VERSION.SDK_INT >= 31) {
+            // look for known messengers
+            ImMapping.uriToMessenger(impp.uri)?.let { (messenger, handle) ->
+                customProtocol = messenger
+                user = handle
+            }
+
+            if (customProtocol == null) {
+                // TODO move this code to ImMapping.uriToMessenger
+
+                // We parse SERVICE-TYPE (for instance used by iCloud), but don't use it actively.
+                val serviceType =
+                    impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE)
+                    ?: impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE_ALT)
+
+                customProtocol = // protocol name shown in Android
+                    serviceType?.let { StringUtils.capitalize(it) }     // use service type, if available
+                    ?: StringUtils.capitalize(protocol)                 // fall back to raw URI scheme
+            }
+
+            if (Build.VERSION.SDK_INT < 31) {
                 // Since API level 31, PROTOCOL_XXX values are deprecated and only PROTOCOL_CUSTOM should be used.
+                @Suppress("DEPRECATION")
+                when (customProtocol) {
+                    ImMapping.MESSENGER_AIM -> protocolCode = Im.PROTOCOL_AIM
+                    // TODO
+                }
+            }
+
+            /*if (Build.VERSION.SDK_INT >= 31) {
 
             } else {
                 /* On Android <12, we assign specific protocols like AIM etc. although most of them are not used anymore.
@@ -80,22 +104,11 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                         // IMPP:sip:…  is handled by SipAddressBuilder
                         continue
                 }
-            }
-
-            if (protocolCode == Im.PROTOCOL_CUSTOM) {
-                // We parse SERVICE-TYPE (for instance used by iCloud), but don't use it actively.
-                val serviceType =
-                    impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE) ?:
-                    impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE_ALT)
-
-                customProtocol =                                        // protocol name shown in Android
-                    serviceType?.let { StringUtils.capitalize(it) } ?:  // use service type, if available
-                    StringUtils.capitalize(protocol)                    // fall back to raw URI scheme
-            }
+            }*/
 
             // save as IM address
             result += newDataRow()
-                .withValue(Im.DATA, impp.handle)
+                .withValue(Im.DATA, user)
                 .withValue(Im.TYPE, typeCode)
                 .withValue(Im.LABEL, typeLabel)
                 .withValue(Im.PROTOCOL, protocolCode)
