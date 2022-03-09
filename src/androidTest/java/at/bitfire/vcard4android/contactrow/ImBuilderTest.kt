@@ -5,6 +5,7 @@
 package at.bitfire.vcard4android.contactrow
 
 import android.net.Uri
+import android.os.Build
 import android.provider.ContactsContract.CommonDataKinds
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
@@ -38,7 +39,12 @@ class ImBuilderTest {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp("test@example.com"))
         }).build().also { result ->
-            assertEquals(0, result.size)
+            assertEquals(1, result.size)
+
+            assertEquals(CommonDataKinds.Im.PROTOCOL_CUSTOM, result[0].values[CommonDataKinds.Im.PROTOCOL])
+            assertEquals("test@example.com", result[0].values[CommonDataKinds.Im.DATA])
+            assertNull(result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            assertNull(result[0].values[CommonDataKinds.Im.LABEL])
         }
     }
 
@@ -62,24 +68,26 @@ class ImBuilderTest {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com"))
             impps += LabeledProperty(Impp.skype("skype-id"))
-            impps += LabeledProperty(Impp("qq", "qq-id"))
         }).build().also { result ->
-            assertEquals(3, result.size)
+            assertEquals(2, result.size)
 
-            assertEquals(CommonDataKinds.Im.PROTOCOL_JABBER, result[0].values[CommonDataKinds.Im.PROTOCOL])
+            if (Build.VERSION.SDK_INT < 31)
+                assertEquals(CommonDataKinds.Im.PROTOCOL_JABBER, result[0].values[CommonDataKinds.Im.PROTOCOL])
+            else {
+                assertEquals(CommonDataKinds.Im.PROTOCOL_CUSTOM, result[0].values[CommonDataKinds.Im.PROTOCOL])
+                assertEquals(ImMapping.MESSENGER_XMPP, result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            }
             assertEquals("jabber@example.com", result[0].values[CommonDataKinds.Im.DATA])
-            assertNull(result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
             assertNull(result[0].values[CommonDataKinds.Im.LABEL])
 
-            assertEquals(CommonDataKinds.Im.PROTOCOL_SKYPE, result[1].values[CommonDataKinds.Im.PROTOCOL])
+            if (Build.VERSION.SDK_INT < 31)
+                assertEquals(CommonDataKinds.Im.PROTOCOL_SKYPE, result[1].values[CommonDataKinds.Im.PROTOCOL])
+            else {
+                assertEquals(CommonDataKinds.Im.PROTOCOL_CUSTOM, result[1].values[CommonDataKinds.Im.PROTOCOL])
+                assertEquals(ImMapping.MESSENGER_SKYPE, result[1].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
+            }
             assertEquals("skype-id", result[1].values[CommonDataKinds.Im.DATA])
-            assertNull(result[1].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
             assertNull(result[1].values[CommonDataKinds.Im.LABEL])
-
-            assertEquals(CommonDataKinds.Im.PROTOCOL_QQ, result[2].values[CommonDataKinds.Im.PROTOCOL])
-            assertEquals("qq-id", result[2].values[CommonDataKinds.Im.DATA])
-            assertNull(result[2].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
-            assertNull(result[2].values[CommonDataKinds.Im.LABEL])
         }
     }
 

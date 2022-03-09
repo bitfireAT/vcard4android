@@ -21,7 +21,7 @@ object SipAddressHandler: DataRowHandler() {
         val sip = values.getAsString(SipAddress.SIP_ADDRESS) ?: return
 
         try {
-            val impp = Impp("sip:$sip")
+            val impp = Impp("${ImMapping.SCHEME_SIP}:$sip")
             val labeledImpp = LabeledProperty(impp)
 
             when (values.getAsInteger(SipAddress.TYPE)) {

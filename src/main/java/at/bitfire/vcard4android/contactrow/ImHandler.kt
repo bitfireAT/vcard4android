@@ -10,12 +10,9 @@ import android.provider.ContactsContract.CommonDataKinds.Im
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
-import at.bitfire.vcard4android.Utils.normalizeNFD
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.ImppType
 import ezvcard.property.Impp
-import org.apache.commons.lang3.StringUtils
-import java.net.URI
 import java.util.logging.Level
 
 object ImHandler: DataRowHandler() {
@@ -33,34 +30,24 @@ object ImHandler: DataRowHandler() {
         }
 
         val protocolCode = values.getAsInteger(Im.PROTOCOL)
-        val impp = when (protocolCode) {
-            Im.PROTOCOL_AIM ->
-                Impp.aim(handle)
-            Im.PROTOCOL_MSN ->
-                Impp.msn(handle)
-            Im.PROTOCOL_SKYPE ->
-                Impp.skype(handle)
-            Im.PROTOCOL_GOOGLE_TALK ->
-                Impp(CustomType.Im.PROTOCOL_GOOGLE_TALK, handle)
-            Im.PROTOCOL_ICQ ->
-                Impp.icq(handle)
-            Im.PROTOCOL_JABBER ->
-                Impp.xmpp(handle)
-            Im.PROTOCOL_NETMEETING ->
-                Impp.skype(handle)      // NetMeeting is dead and has most likely been replaced by Skype
-            Im.PROTOCOL_QQ ->
-                Impp(CustomType.Im.PROTOCOL_QQ, handle)
-            Im.PROTOCOL_YAHOO ->
-                Impp.yahoo(handle)
-            Im.PROTOCOL_CUSTOM -> {
-                val customProtocol = values.getAsString(Im.CUSTOM_PROTOCOL)
-                Impp(ImMapping.messengerToUri(customProtocol, handle))
-            }
+        val messenger = when (protocolCode) {
+            Im.PROTOCOL_AIM -> ImMapping.MESSENGER_AIM
+            Im.PROTOCOL_MSN,
+            Im.PROTOCOL_SKYPE -> ImMapping.MESSENGER_SKYPE
+            Im.PROTOCOL_GOOGLE_TALK -> "GoogleTalk"     // dead
+            Im.PROTOCOL_ICQ -> ImMapping.MESSENGER_ICQ
+            Im.PROTOCOL_JABBER -> ImMapping.MESSENGER_XMPP
+            Im.PROTOCOL_NETMEETING -> "NetMeeting"      // dead
+            Im.PROTOCOL_QQ -> ImMapping.MESSENGER_QQ
+            Im.PROTOCOL_YAHOO -> "Yahoo"                // dead
+            Im.PROTOCOL_CUSTOM ->
+                values.getAsString(Im.CUSTOM_PROTOCOL)
             else -> {
                 Constants.log.log(Level.WARNING, "Unknown IM protocol: $protocolCode")
                 return
             }
         }
+        val impp = Impp(ImMapping.messengerToUri(messenger, handle))
 
         val labeledImpp = LabeledProperty(impp)
         when (values.getAsInteger(Im.TYPE)) {

@@ -21,25 +21,7 @@ object CustomType {
     }
 
     object Im {
-        // [RFC 4770 and other sources]
-        const val PROTOCOL_AIM = "aim"
-        const val PROTOCOL_ICQ = "icq"
-        const val PROTOCOL_MSN = "msn"
-        const val PROTOCOL_MSN_ALT = "msnim"
-        const val PROTOCOL_SIP = "sip"
-        const val PROTOCOL_SKYPE = "skype"
-        const val PROTOCOL_XMPP = "xmpp"
-        const val PROTOCOL_YAHOO = "ymsgr"
-
-        // own values
-        const val PROTOCOL_CALLTO = "callto"                // [https://en.wikipedia.org/wiki/List_of_URI_schemes]
-        const val PROTOCOL_GOOGLE_TALK = "gtalk"            // [https://en.wikipedia.org/wiki/List_of_URI_schemes]
-        const val PROTOCOL_GOOGLE_TALK_ALT = "google-talk"  // DAVx⁵ <4.2
-        const val PROTOCOL_NETMEETING = "netmeeting"        // DAVx⁵ <4.2
-        const val PROTOCOL_QQ = "mqq"                       // [https://developpaper.com/common-url-scheme/]
-        const val PROTOCOL_QQ_ALT = "qq"                    // DAVx⁵ <4.2
-
-        // [https://datatracker.ietf.org/doc/html/draft-daboo-vcard-service-type]
+        // https://datatracker.ietf.org/doc/html/draft-daboo-vcard-service-type
         const val PARAMETER_SERVICE_TYPE = "X-SERVICE-TYPE"
         const val PARAMETER_SERVICE_TYPE_ALT = "SERVICE-TYPE"
     }

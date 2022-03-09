@@ -20,7 +20,7 @@ class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
             val impp = labeledIm.property
 
             val protocol = impp.protocol
-            if (protocol != "sip")
+            if (!ImMapping.SCHEME_SIP.equals(protocol, true))
                 // other protocols are handled by ImBuilder
                 continue
 

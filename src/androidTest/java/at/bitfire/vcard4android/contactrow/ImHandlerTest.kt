@@ -129,14 +129,4 @@ class ImHandlerTest {
         assertEquals(ImppType.WORK, contact.impps[0].property.types[0])
     }
 
-
-    // tests for helpers
-
-    @Test
-    fun testProtocolToUriScheme() {
-        assertNull(ImHandler.protocolToUriScheme(null))
-        assertEquals("", ImHandler.protocolToUriScheme(""))
-        assertEquals("protocol", ImHandler.protocolToUriScheme("PrO/ätO\\cOl"))
-    }
-
 }

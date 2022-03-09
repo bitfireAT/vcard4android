@@ -12,7 +12,6 @@ import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.ImppType
-import org.apache.commons.lang3.StringUtils
 import java.util.*
 
 class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
@@ -23,8 +22,9 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
         for (labeledIm in contact.impps) {
             val impp = labeledIm.property
 
-            var protocol = impp.protocol ?: ""
-            var user = impp.handle
+            if ((impp.uri.scheme == null && impp.uri.schemeSpecificPart == "") ||   // empty URI
+                ImMapping.SCHEME_SIP.equals(impp.uri.scheme, true))       // handled by SipAddressBuilder
+                continue
 
             var typeCode = Im.TYPE_OTHER
             var typeLabel: String? = null
@@ -41,70 +41,33 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                     }
 
             var protocolCode = Im.PROTOCOL_CUSTOM
-            var customProtocol: String? = null
+
+            // We parse SERVICE-TYPE (for instance used by iCloud), but don't use it actively.
+            val serviceType = impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE)
+                ?: impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE_ALT)
+                ?: impp.getParameter("TYPE")
 
             // look for known messengers
-            ImMapping.uriToMessenger(impp.uri)?.let { (messenger, handle) ->
+            val customProtocol: String?
+            val user: String
+            ImMapping.uriToMessenger(impp.uri, serviceType).let { (messenger, handle) ->
                 customProtocol = messenger
                 user = handle
             }
 
-            if (customProtocol == null) {
-                // TODO move this code to ImMapping.uriToMessenger
-
-                // We parse SERVICE-TYPE (for instance used by iCloud), but don't use it actively.
-                val serviceType =
-                    impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE)
-                    ?: impp.getParameter(CustomType.Im.PARAMETER_SERVICE_TYPE_ALT)
-
-                customProtocol = // protocol name shown in Android
-                    serviceType?.let { StringUtils.capitalize(it) }     // use service type, if available
-                    ?: StringUtils.capitalize(protocol)                 // fall back to raw URI scheme
-            }
-
             if (Build.VERSION.SDK_INT < 31) {
-                // Since API level 31, PROTOCOL_XXX values are deprecated and only PROTOCOL_CUSTOM should be used.
+                /* On Android <12, we assign specific protocols like AIM etc. although most of them are not used anymore.
+                   It's impossible to keep an up-to-date table of messengers, which is probably the reason why these
+                   constants were deprecated in Android 12 (SDK level 31). */
                 @Suppress("DEPRECATION")
                 when (customProtocol) {
                     ImMapping.MESSENGER_AIM -> protocolCode = Im.PROTOCOL_AIM
-                    // TODO
+                    ImMapping.MESSENGER_ICQ -> protocolCode = Im.PROTOCOL_ICQ
+                    ImMapping.MESSENGER_SKYPE -> protocolCode = Im.PROTOCOL_SKYPE
+                    ImMapping.MESSENGER_QQ -> protocolCode = Im.PROTOCOL_QQ
+                    ImMapping.MESSENGER_XMPP -> protocolCode = Im.PROTOCOL_JABBER
                 }
             }
-
-            /*if (Build.VERSION.SDK_INT >= 31) {
-
-            } else {
-                /* On Android <12, we assign specific protocols like AIM etc. although most of them are not used anymore.
-                   It's impossible to keep an up-to-date table of messengers, which is probably the reason why these
-                   constants were deprecated. */
-                @Suppress("DEPRECATION")
-                when {
-                    protocol.equals(CustomType.Im.PROTOCOL_AIM, true) ->
-                        protocolCode = Im.PROTOCOL_AIM
-                    protocol.equals(CustomType.Im.PROTOCOL_GOOGLE_TALK, true) ||
-                            protocol.equals(CustomType.Im.PROTOCOL_GOOGLE_TALK_ALT, true) ->
-                        protocolCode = Im.PROTOCOL_GOOGLE_TALK
-                    protocol.equals(CustomType.Im.PROTOCOL_ICQ, true) ->
-                        protocolCode = Im.PROTOCOL_ICQ
-                    protocol.equals(CustomType.Im.PROTOCOL_XMPP, true) ->
-                        protocolCode = Im.PROTOCOL_JABBER
-                    protocol.equals(CustomType.Im.PROTOCOL_MSN, true) ||
-                    protocol.equals(CustomType.Im.PROTOCOL_MSN_ALT, true) ->
-                        protocolCode = Im.PROTOCOL_MSN
-                    protocol.equals(CustomType.Im.PROTOCOL_QQ, true) ||
-                            protocol.equals(CustomType.Im.PROTOCOL_QQ_ALT, true) ->
-                        protocolCode = Im.PROTOCOL_QQ
-                    protocol.equals(CustomType.Im.PROTOCOL_CALLTO, true) ||     // includes NetMeeting, which is dead
-                    protocol.equals(CustomType.Im.PROTOCOL_SKYPE, true) ->
-                        protocolCode = Im.PROTOCOL_SKYPE
-                    protocol.equals(CustomType.Im.PROTOCOL_YAHOO, true) ->
-                        protocolCode = Im.PROTOCOL_YAHOO
-
-                    protocol.equals(CustomType.Im.PROTOCOL_SIP, true) ->
-                        // IMPP:sip:…  is handled by SipAddressBuilder
-                        continue
-                }
-            }*/
 
             // save as IM address
             result += newDataRow()
