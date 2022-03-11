@@ -33,6 +33,9 @@ class PhotoHandlerTest {
         assertEquals(blob, contact.photo)
     }
 
-    // TODO testPhoto_FileId
+    @Test
+    fun testPhoto_FileId() {
+        // TODO testPhoto_FileId
+    }
 
 }

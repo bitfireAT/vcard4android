@@ -22,8 +22,7 @@ class PhotoHandler(val provider: ContentProviderClient?): DataRowHandler() {
     override fun handle(values: ContentValues, contact: Contact) {
         super.handle(values, contact)
 
-        val photoId = values.getAsLong(Photo.PHOTO_FILE_ID)
-        if (photoId != null) {
+        values.getAsLong(Photo.PHOTO_FILE_ID)?.let { photoId ->
             val photoUri = ContentUris.withAppendedId(ContactsContract.DisplayPhoto.CONTENT_URI, photoId)
             try {
                 provider?.openAssetFile(photoUri, "r")?.let { file ->
@@ -34,7 +33,9 @@ class PhotoHandler(val provider: ContentProviderClient?): DataRowHandler() {
             } catch(e: IOException) {
                 Constants.log.log(Level.WARNING, "Couldn't read local contact photo file", e)
             }
-        } else
+        }
+
+        if (contact.photo == null)
             contact.photo = values.getAsByteArray(Photo.PHOTO)
     }
 

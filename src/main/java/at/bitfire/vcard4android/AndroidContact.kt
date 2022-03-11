@@ -15,6 +15,7 @@ import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
 import at.bitfire.vcard4android.contactrow.ContactProcessor
+import at.bitfire.vcard4android.contactrow.PhotoBuilder
 import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
 
@@ -112,7 +113,8 @@ open class AndroidContact(
 
 
     fun add(): Uri {
-        val batch = BatchOperation(addressBook.provider!!)
+        val provider = addressBook.provider!!
+        val batch = BatchOperation(provider)
 
         val builder = BatchOperation.CpoBuilder.newInsert(addressBook.syncAdapterURI(RawContacts.CONTENT_URI))
         buildContact(builder, false)
@@ -124,13 +126,18 @@ open class AndroidContact(
         val resultUri = batch.getResult(0)?.uri ?: throw ContactsStorageException("Empty result from content provider when adding contact")
         id = ContentUris.parseId(resultUri)
 
+        getContact().photo?.let { photo ->
+            PhotoBuilder.insertPhoto(provider, addressBook.account, id!!, photo)
+        }
+
         return resultUri
     }
 
     fun update(data: Contact): Uri {
         setContact(data)
 
-        val batch = BatchOperation(addressBook.provider!!)
+        val provider = addressBook.provider!!
+        val batch = BatchOperation(provider)
         val uri = rawContactSyncURI()
         val builder = BatchOperation.CpoBuilder.newUpdate(uri)
         buildContact(builder, true)
@@ -150,6 +157,10 @@ open class AndroidContact(
 
         insertDataRows(batch)
         batch.commit()
+
+        getContact().photo?.let { photo ->
+            PhotoBuilder.insertPhoto(provider, addressBook.account, id!!, photo)
+        }
 
         return uri
     }
