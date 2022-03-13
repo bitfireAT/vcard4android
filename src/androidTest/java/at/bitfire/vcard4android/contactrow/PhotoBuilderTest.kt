@@ -82,9 +82,7 @@ class PhotoBuilderTest {
         val rawContactId = ContentUris.parseId(contactUri)
 
         try {
-            val photo = testContext.assets.open("large.jpg").use { stream ->
-                IOUtils.toByteArray(stream)
-            }
+            val photo = IOUtils.resourceToByteArray("/large.jpg")
             val photoUri = PhotoBuilder.insertPhoto(provider, testAccount, rawContactId, photo)
             assertNotNull(photoUri)
 

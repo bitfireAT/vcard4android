@@ -4,15 +4,57 @@
 
 package at.bitfire.vcard4android.contactrow
 
+import android.Manifest
+import android.accounts.Account
+import android.content.ContentProviderClient
+import android.content.ContentUris
 import android.content.ContentValues
+import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Photo
+import android.provider.ContactsContract.RawContacts
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
+import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.Contact
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import at.bitfire.vcard4android.impl.TestAddressBook
+import org.apache.commons.io.IOUtils
+import org.junit.Assert
+import org.junit.Assert.*
+import org.junit.BeforeClass
+import org.junit.ClassRule
 import org.junit.Test
 import kotlin.random.Random
 
 class PhotoHandlerTest {
+
+    companion object {
+        @JvmField
+        @ClassRule
+        val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
+
+        private val testAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
+
+        val testContext = InstrumentationRegistry.getInstrumentation().context
+        private lateinit var provider: ContentProviderClient
+        private lateinit var addressBook: TestAddressBook
+
+        @BeforeClass
+        @JvmStatic
+        fun connect() {
+            provider = testContext.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
+            Assert.assertNotNull(provider)
+
+            addressBook = TestAddressBook(testAccount, provider)
+        }
+
+        @BeforeClass
+        @JvmStatic
+        fun disconnect() {
+            @Suppress("DEPRECATION")
+            provider.release()
+        }
+    }
+
 
     @Test
     fun testPhoto_Empty() {
@@ -35,7 +77,36 @@ class PhotoHandlerTest {
 
     @Test
     fun testPhoto_FileId() {
-        // TODO testPhoto_FileId
+        val contact = Contact().apply {
+            displayName = "Contact with photo"
+            photo = IOUtils.resourceToByteArray("/large.jpg")
+        }
+        val androidContact = AndroidContact(addressBook, contact, null, null)
+        val rawContactId = ContentUris.parseId(androidContact.add())
+
+        val dataUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, rawContactId).buildUpon()
+            .appendPath(RawContacts.Data.CONTENT_DIRECTORY)
+            .build()
+        val thumbnail = provider.query(dataUri, arrayOf(Photo.PHOTO_FILE_ID, Photo.PHOTO),
+            "${RawContacts.Data.MIMETYPE}=?", arrayOf(Photo.CONTENT_ITEM_TYPE),
+            null
+        )!!.use { cursor ->
+            assertTrue(cursor.moveToNext())
+
+            val fileId = cursor.getLong(0)
+            assertNotNull(fileId)
+
+            val blob = cursor.getBlob(1)
+            assertNotNull(blob)
+            blob!!
+        }
+
+        val contact2 = addressBook.findContactById(rawContactId)
+        // now PhotoHandler handles the PHOTO_FILE_ID
+        val photo2 = contact2.getContact().photo
+        assertNotNull(photo2)
+        // make sure PhotoHandler didn't just return the thumbnail blob
+        assertNotEquals(thumbnail, photo2)
     }
 
 }
