@@ -8,12 +8,14 @@ import android.accounts.Account
 import android.content.ContentProviderClient
 import android.content.ContentUris
 import android.content.ContentValues
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Photo
 import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
+import at.bitfire.vcard4android.ContactsStorageException
 import at.bitfire.vcard4android.Utils.asSyncAdapter
 import java.util.logging.Level
 
@@ -22,7 +24,30 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     companion object {
 
-        fun insertPhoto(provider: ContentProviderClient, account: Account, rawContactId: Long, data: ByteArray) {
+        /**
+         * Inserts a raw contact photo and resets [RawContacts.DIRTY] to 0 then.
+         *
+         * If the contact provider needs more than 7 seconds to insert the photo, this
+         * method will time out and throw a [ContactsStorageException]. In this case, the
+         * [RawContacts.DIRTY] flag may be set asynchronously by the contacts provider
+         * as soon as it finishes the operation.
+         *
+         * @param provider      client to access contacts provider
+         * @param account       account of the contact, used to create sync adapter URIs
+         * @param rawContactId  ID of the raw contact ([RawContacts._ID]])
+         * @param data          contact photo (binary data in a supported format like JPEG or PNG)
+         *
+         * @return URI of the raw contact display photo ([Photo.PHOTO_URI])
+         *
+         * @throws ContactsStorageException when the image couldn't be written
+         */
+        fun insertPhoto(provider: ContentProviderClient, account: Account, rawContactId: Long, data: ByteArray): Uri? {
+            // verify that data can be decoded by BitmapFactory, so that the contacts provider can process it
+            val valid = BitmapFactory.decodeByteArray(data, 0, data.size) != null
+            if (!valid)
+                throw IllegalArgumentException("Image can't be decoded")
+
+            // write file to contacts provider
             val uri = RawContacts.CONTENT_URI.buildUpon()
                 .appendPath(rawContactId.toString())
                 .appendPath(RawContacts.DisplayPhoto.CONTENT_DIRECTORY)
@@ -36,7 +61,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
             // photo is now processed in the background; wait until it is available
             var photoUri: Uri? = null
-            for (i in 1..50) {      // wait max. 50x100 ms = 5 seconds
+            for (i in 1..70) {      // wait max. 70x100 ms = 7 seconds
                 val dataRowUri = RawContacts.CONTENT_URI.buildUpon()
                     .appendPath(rawContactId.toString())
                     .appendPath(RawContacts.Data.CONTENT_DIRECTORY)
@@ -52,19 +77,22 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
                 Thread.sleep(100)
             }
 
-            if (photoUri != null) {
-                Constants.log.log(Level.FINE, "Photo has been inserted: $photoUri")
+            // reset dirty flag in any case (however if we didn't wait long enough, the dirty flag will then be set again)
+            val notDirty = ContentValues(1)
+            notDirty.put(RawContacts.DIRTY, 0)
+            val rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, rawContactId).asSyncAdapter(account)
+            provider.update(rawContactUri, notDirty, null, null)
 
-                // reset dirty flag
-                val notDirty = ContentValues(1)
-                notDirty.put(RawContacts.DIRTY, 0)
-                val rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI, rawContactId).asSyncAdapter(account)
-                provider.update(rawContactUri, notDirty, null, null)
-            } else
-                Constants.log.log(Level.WARNING, "Couldn't insert photo")
+            if (photoUri != null)
+                Constants.log.log(Level.FINE, "Photo has been inserted: $photoUri")
+            else
+                throw ContactsStorageException("Couldn't store contact photo")
+
+            return photoUri
         }
 
     }
+
 
     override fun build(): List<BatchOperation.CpoBuilder> =
         emptyList()     // data row must be inserted by calling insertPhoto()
