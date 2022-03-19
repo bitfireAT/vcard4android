@@ -39,13 +39,17 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
          *
          * @return URI of the raw contact display photo ([Photo.PHOTO_URI])
          *
+         * @throws IllegalArgumentException when the image can't be read by [BitmapFactory]
          * @throws ContactsStorageException when the image couldn't be written
          */
         fun insertPhoto(provider: ContentProviderClient, account: Account, rawContactId: Long, data: ByteArray): Uri? {
             // verify that data can be decoded by BitmapFactory, so that the contacts provider can process it
-            val valid = BitmapFactory.decodeByteArray(data, 0, data.size) != null
+            val opts = BitmapFactory.Options()
+            opts.inJustDecodeBounds = true
+            BitmapFactory.decodeByteArray(data, 0, data.size, opts)
+            val valid = opts.outHeight != -1 && opts.outWidth != -1
             if (!valid)
-                throw IllegalArgumentException("Image can't be decoded")
+                throw IllegalArgumentException("BitmapFactory can't decode image")
 
             // write file to contacts provider
             val uri = RawContacts.CONTENT_URI.buildUpon()
