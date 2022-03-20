@@ -23,7 +23,7 @@ import org.junit.Assert.*
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
-import kotlin.random.Random
+import java.util.*
 
 class PhotoHandlerTest {
 
@@ -57,6 +57,25 @@ class PhotoHandlerTest {
 
 
     @Test
+    fun testConvertToJpeg_Invalid() {
+        val blob = ByteArray(1024) { it.toByte() }
+        assertNull(PhotoHandler.convertToJpeg(blob, 75))
+    }
+
+    @Test
+    fun testConvertToJpeg_Jpeg() {
+        val blob = IOUtils.resourceToByteArray("/small.jpg")
+        assertArrayEquals(blob, PhotoHandler.convertToJpeg(blob, 75))
+    }
+
+    @Test
+    fun testConvertToJpeg_Png() {
+        val blob = IOUtils.resourceToByteArray("/small.png")
+        assertFalse(Arrays.equals(blob, PhotoHandler.convertToJpeg(blob, 75)))
+    }
+
+
+    @Test
     fun testPhoto_Empty() {
         val contact = Contact()
         PhotoHandler(null).handle(ContentValues().apply {
@@ -67,7 +86,7 @@ class PhotoHandlerTest {
 
     @Test
     fun testPhoto_Blob() {
-        val blob = ByteArray(1024) { Random.nextInt().toByte() }
+        val blob = IOUtils.resourceToByteArray("/small.jpg")
         val contact = Contact()
         PhotoHandler(null).handle(ContentValues().apply {
             put(Photo.PHOTO, blob)
