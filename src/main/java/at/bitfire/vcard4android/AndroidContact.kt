@@ -18,7 +18,6 @@ import at.bitfire.vcard4android.contactrow.ContactProcessor
 import at.bitfire.vcard4android.contactrow.PhotoBuilder
 import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
-import java.util.logging.Level
 
 open class AndroidContact(
         open val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
@@ -128,11 +127,7 @@ open class AndroidContact(
         id = ContentUris.parseId(resultUri)
 
         getContact().photo?.let { photo ->
-            try {
-                PhotoBuilder.insertPhoto(provider, addressBook.account, id!!, photo)
-            } catch (e: IllegalArgumentException) {
-                Constants.log.log(Level.WARNING, "Invalid contact photo", e)
-            }
+            PhotoBuilder.insertPhoto(provider, addressBook.account, id!!, photo)
         }
 
         return resultUri

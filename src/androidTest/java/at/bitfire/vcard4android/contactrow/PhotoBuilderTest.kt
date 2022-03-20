@@ -110,12 +110,12 @@ class PhotoBuilderTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun testInsertPhoto_Invalid() {
         val contact = AndroidContact(addressBook, Contact().apply { displayName = "Contact with photo" }, null, null)
         contact.add()
         try {
-            val photoUri = PhotoBuilder.insertPhoto(provider, testAccount, contact.id!!, ByteArray(100) /* invalid photo  */)
+            assertNull(PhotoBuilder.insertPhoto(provider, testAccount, contact.id!!, ByteArray(100) /* invalid photo  */))
         } finally {
             contact.delete()
         }

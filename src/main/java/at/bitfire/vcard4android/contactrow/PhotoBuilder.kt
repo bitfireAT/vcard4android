@@ -17,6 +17,7 @@ import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.ContactsStorageException
 import at.bitfire.vcard4android.Utils.asSyncAdapter
+import org.apache.commons.io.FileUtils
 import java.util.logging.Level
 
 class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
@@ -37,9 +38,8 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
          * @param rawContactId  ID of the raw contact ([RawContacts._ID]])
          * @param data          contact photo (binary data in a supported format like JPEG or PNG)
          *
-         * @return URI of the raw contact display photo ([Photo.PHOTO_URI])
+         * @return URI of the raw contact display photo ([Photo.PHOTO_URI]); null if image can't be decoded
          *
-         * @throws IllegalArgumentException when the image can't be read by [BitmapFactory]
          * @throws ContactsStorageException when the image couldn't be written
          */
         fun insertPhoto(provider: ContentProviderClient, account: Account, rawContactId: Long, data: ByteArray): Uri? {
@@ -48,15 +48,17 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
             opts.inJustDecodeBounds = true
             BitmapFactory.decodeByteArray(data, 0, data.size, opts)
             val valid = opts.outHeight != -1 && opts.outWidth != -1
-            if (!valid)
-                throw IllegalArgumentException("BitmapFactory can't decode image")
+            if (!valid) {
+                Constants.log.log(Level.WARNING, "Ignoring invalid contact photo")
+                return null
+            }
 
             // write file to contacts provider
             val uri = RawContacts.CONTENT_URI.buildUpon()
                 .appendPath(rawContactId.toString())
                 .appendPath(RawContacts.DisplayPhoto.CONTENT_DIRECTORY)
                 .build()
-            Constants.log.log(Level.FINE, "Writing photo to $uri (${data.size} bytes)")
+            Constants.log.log(Level.FINE, "Writing photo to $uri (${FileUtils.byteCountToDisplaySize(data.size.toLong())})")
             provider.openAssetFile(uri, "w")?.use { fd ->
                 fd.createOutputStream()?.use { os ->
                     os.write(data)
