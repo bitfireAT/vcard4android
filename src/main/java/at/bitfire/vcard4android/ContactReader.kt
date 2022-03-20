@@ -11,7 +11,6 @@ import ezvcard.VCard
 import ezvcard.parameter.RelatedType
 import ezvcard.property.*
 import ezvcard.util.PartialDate
-import org.apache.commons.lang3.ObjectUtils
 import org.apache.commons.lang3.StringUtils
 import java.net.URI
 import java.net.URISyntaxException
@@ -238,7 +237,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 }
 
                 is Photo ->
-                    c.photo = getPhotoBytes(prop)
+                    c.photo = c.photo ?: getPhotoBytes(prop)
 
                 // drop large binary properties because of potential OutOfMemory / TransactionTooLarge exceptions
                 is Logo -> {
