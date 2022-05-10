@@ -1,6 +1,6 @@
 buildscript {
     ext.versions = [
-        kotlin: '1.6.10',
+        kotlin: '1.6.21',
         dokka: '1.5.31',
         // latest Apache Commons versions that don't require Java 8 (Android 7)
         commonsIO: '2.6',
@@ -13,7 +13,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.0'
+        classpath 'com.android.tools.build:gradle:7.2.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
@@ -29,12 +29,12 @@ apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka'
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion '30.0.3'
+    compileSdkVersion 32
+    buildToolsVersion '32.0.0'
 
     defaultConfig {
         minSdkVersion 16        // Android 4.1
-        targetSdkVersion 31     // Android 12
+        targetSdkVersion 32     // Android 12v2
     }
 
     compileOptions {
