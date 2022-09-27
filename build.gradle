@@ -42,6 +42,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    namespace 'at.bitfire.vcard4android'
+
     buildTypes {
         release {
             minifyEnabled false

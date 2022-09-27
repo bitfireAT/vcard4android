@@ -6,8 +6,7 @@
   ~ http://www.gnu.org/licenses/gpl.html
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="at.bitfire.vcard4android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
