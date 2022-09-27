@@ -21,7 +21,16 @@ object StructuredPostalHandler: DataRowHandler() {
         val address = Address()
         val labeledAddress = LabeledProperty(address)
 
-        address.label = values.getAsString(StructuredPostal.FORMATTED_ADDRESS)
+        /* Sep 2022: We don't set the vCard LABEL anymore. Reasons:
+         *
+         * 1. It can't be entered by the user anyway because no contacts app has a separate field for "formatted address"
+         *    [https://www.davx5.com/faq/entering-structured-addresses], which is only used as read-only field to display an address.
+         * 2. It confuses other CalDAV user agents which don't support LABEL (the majority). When such a client receives
+         *    and retains the LABEL although the structured address is changed, there are two inconsistent addresses.
+         *    [https://github.com/nextcloud/contacts/issues/1900]
+         */
+        //address.label = values.getAsString(StructuredPostal.FORMATTED_ADDRESS)
+
         when (values.getAsInteger(StructuredPostal.TYPE)) {
             StructuredPostal.TYPE_HOME ->
                 address.types += AddressType.HOME

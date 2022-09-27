@@ -45,7 +45,7 @@ class StructuredPostalHandlerTest {
         assertArrayEquals(arrayOf("Sampleregion"), contact.addresses[0].property.regions.toTypedArray())
         assertArrayEquals(arrayOf("ZIP"), contact.addresses[0].property.postalCodes.toTypedArray())
         assertArrayEquals(arrayOf("Samplecountry"), contact.addresses[0].property.countries.toTypedArray())
-        assertEquals("Full Formatted Address", contact.addresses[0].property.label)
+        assertNull(contact.addresses[0].property.label)
     }
 
 

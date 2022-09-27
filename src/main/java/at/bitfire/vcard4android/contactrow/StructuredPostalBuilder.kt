@@ -14,20 +14,6 @@ import java.util.*
 
 /**
  * Data row builder for structured addresses.
- *
- * Android requires a formatted address. If the contact data doesn't contain a
- * formatted address, it's built like this:
- *
- *     | field             | example                      |
- *     |-------------------|------------------------------|
- *     | street            | Sample Street 123            |
- *     | poBox             | P/O Box 45                   |
- *     | extended          | Near the park                |
- *     | postalCode city   | 12345 Sampletown             |
- *     | country (region)  | Samplecountry (Sampleregion) |
- *
- * TODO: should be localized (there are many different international formats)
- *
  */
 class StructuredPostalBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
@@ -37,6 +23,12 @@ class StructuredPostalBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Con
         for (labeledAddress in contact.addresses) {
             val address = labeledAddress.property
 
+            /* Generate the formatted address (the one contacts app show in the preview) in European format.
+             *
+             * If we wouldn't do that, the content provider would format it US-EN or JP style:
+             * https://android.googlesource.com/platform/packages/providers/ContactsProvider.git/+/refs/heads/android13-release/src/com/android/providers/contacts/PostalSplitter.java#84
+             *
+             * Could be localized here (but it's still only for viewing the contact on Android and won't be put into a vCard). */
             var formattedAddress = address.label
             if (formattedAddress.isNullOrBlank()) {
                 val lines = LinkedList<String>()

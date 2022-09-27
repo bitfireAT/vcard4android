@@ -62,7 +62,7 @@ class StructuredPostalBuilderTest {
             assertEquals("ZIP", result[0].values[StructuredPostal.POSTCODE])
             assertEquals("Country", result[0].values[StructuredPostal.COUNTRY])
 
-            assertEquals("Street 1\n" +
+            assertEquals("Street 1\n" +     // European format
                     "(Corner Street 2)\n" +
                     "PO Box 123\n" +
                     "Hood\n" +
