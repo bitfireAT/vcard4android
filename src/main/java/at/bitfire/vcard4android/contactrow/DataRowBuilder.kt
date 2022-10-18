@@ -6,7 +6,6 @@ package at.bitfire.vcard4android.contactrow
 
 import android.net.Uri
 import android.provider.ContactsContract
-import at.bitfire.vcard4android.AndroidAddressBook
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 
@@ -18,7 +17,13 @@ import at.bitfire.vcard4android.Contact
  *                      *null*: data row will be assigned to back reference with index 0
  *                      (= result ID of the first operation in batch, which must be the insert operation to insert the raw contact)
  */
-abstract class DataRowBuilder(val mimeType: String, val dataRowUri: Uri, val rawContactId: Long?, val contact: Contact) {
+abstract class DataRowBuilder(
+    val mimeType: String,
+    val dataRowUri: Uri,
+    val rawContactId: Long?,
+    val contact: Contact,
+    val readOnly: Boolean
+) {
 
     abstract fun build(): List<BatchOperation.CpoBuilder>
 
@@ -27,6 +32,9 @@ abstract class DataRowBuilder(val mimeType: String, val dataRowUri: Uri, val raw
         val insert = BatchOperation.CpoBuilder
             .newInsert(dataRowUri)
             .withValue(ContactsContract.RawContacts.Data.MIMETYPE, mimeType)
+
+        if (readOnly)
+            insert.withValue(ContactsContract.Data.IS_READ_ONLY, 1)
 
         if (rawContactId != null)
             insert.withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
@@ -38,10 +46,8 @@ abstract class DataRowBuilder(val mimeType: String, val dataRowUri: Uri, val raw
 
 
     interface Factory<T: DataRowBuilder> {
-
         fun mimeType(): String
-        fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact): T
-
+        fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean): T
     }
 
 }

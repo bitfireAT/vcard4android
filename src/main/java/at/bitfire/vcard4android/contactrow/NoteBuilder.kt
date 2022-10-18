@@ -9,8 +9,8 @@ import android.provider.ContactsContract.CommonDataKinds.Note
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 
-class NoteBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class NoteBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val note = contact.note
@@ -25,8 +25,8 @@ class NoteBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<NoteBuilder> {
         override fun mimeType() = Note.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            NoteBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            NoteBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

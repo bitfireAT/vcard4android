@@ -14,8 +14,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Level
 
-class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
@@ -65,8 +65,8 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<EventBuilder> {
         override fun mimeType() = Event.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            EventBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            EventBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

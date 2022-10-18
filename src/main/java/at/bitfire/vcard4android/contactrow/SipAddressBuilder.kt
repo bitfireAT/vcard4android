@@ -11,8 +11,8 @@ import at.bitfire.vcard4android.Contact
 import ezvcard.parameter.ImppType
 import java.util.*
 
-class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
@@ -51,8 +51,8 @@ class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<SipAddressBuilder> {
         override fun mimeType() = SipAddress.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            SipAddressBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            SipAddressBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

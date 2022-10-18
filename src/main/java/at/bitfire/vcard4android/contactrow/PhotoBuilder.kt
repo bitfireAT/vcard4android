@@ -20,8 +20,8 @@ import at.bitfire.vcard4android.Utils.asSyncAdapter
 import org.apache.commons.io.FileUtils
 import java.util.logging.Level
 
-class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     companion object {
 
@@ -106,8 +106,8 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<PhotoBuilder> {
         override fun mimeType() = Photo.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            PhotoBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            PhotoBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

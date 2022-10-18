@@ -12,8 +12,8 @@ import at.bitfire.vcard4android.Contact
 import ezvcard.parameter.ImppType
 import java.util.*
 
-class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
@@ -58,8 +58,8 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<ImBuilder> {
         override fun mimeType() = Im.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            ImBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            ImBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

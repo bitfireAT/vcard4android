@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.WordUtils
 import java.util.*
 
-class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
@@ -68,8 +68,8 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<RelationBuilder> {
         override fun mimeType() = Relation.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            RelationBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            RelationBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

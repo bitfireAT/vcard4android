@@ -9,8 +9,8 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 
-class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         if (contact.displayName == null &&
@@ -36,8 +36,8 @@ class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Conta
 
     object Factory: DataRowBuilder.Factory<StructuredNameBuilder> {
         override fun mimeType() = StructuredName.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            StructuredNameBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            StructuredNameBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

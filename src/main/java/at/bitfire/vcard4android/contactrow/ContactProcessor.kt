@@ -90,9 +90,9 @@ class ContactProcessor(
     }
 
 
-    fun insertDataRows(dataRowUri: Uri, rawContactId: Long?, contact: Contact, batch: BatchOperation) {
+    fun insertDataRows(dataRowUri: Uri, rawContactId: Long?, contact: Contact, batch: BatchOperation, readOnly: Boolean) {
         for (factory in dataRowBuilderFactories) {
-            val builder = factory.newInstance(dataRowUri, rawContactId, contact)
+            val builder = factory.newInstance(dataRowUri, rawContactId, contact, readOnly)
             batch.enqueueAll(builder.build())
         }
     }

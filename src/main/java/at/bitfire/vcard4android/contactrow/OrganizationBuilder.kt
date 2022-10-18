@@ -11,8 +11,8 @@ import at.bitfire.vcard4android.Contact
 import org.apache.commons.lang3.StringUtils
 import java.util.*
 
-class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         var company: String? = null
@@ -42,8 +42,8 @@ class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact
 
     object Factory: DataRowBuilder.Factory<OrganizationBuilder> {
         override fun mimeType() = Organization.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            OrganizationBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            OrganizationBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

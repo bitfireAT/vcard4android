@@ -15,8 +15,8 @@ import ezvcard.parameter.EmailType
 import java.util.*
 import java.util.logging.Level
 
-class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
@@ -68,8 +68,8 @@ class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<EmailBuilder> {
         override fun mimeType() = Email.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            EmailBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            EmailBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }
