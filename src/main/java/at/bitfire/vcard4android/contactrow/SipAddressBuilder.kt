@@ -11,7 +11,7 @@ import at.bitfire.vcard4android.Contact
 import ezvcard.parameter.ImppType
 import java.util.*
 
-class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

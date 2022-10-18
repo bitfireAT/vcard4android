@@ -15,7 +15,7 @@ import ezvcard.parameter.EmailType
 import java.util.*
 import java.util.logging.Level
 
-class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

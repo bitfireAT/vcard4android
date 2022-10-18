@@ -20,7 +20,7 @@ import at.bitfire.vcard4android.Utils.asSyncAdapter
 import org.apache.commons.io.FileUtils
 import java.util.logging.Level
 
-class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     companion object {

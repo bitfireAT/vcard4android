@@ -14,7 +14,7 @@ import ezvcard.parameter.TelephoneType
 import java.util.*
 import java.util.logging.Level
 
-class PhoneBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+class PhoneBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

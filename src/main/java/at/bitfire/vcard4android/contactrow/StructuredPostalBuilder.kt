@@ -15,7 +15,7 @@ import java.util.*
 /**
  * Data row builder for structured addresses.
  */
-class StructuredPostalBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+class StructuredPostalBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
