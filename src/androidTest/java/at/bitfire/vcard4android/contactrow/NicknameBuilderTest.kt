@@ -17,7 +17,7 @@ class NicknameBuilderTest {
 
     @Test
     fun testEmpty() {
-        NicknameBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -31,7 +31,7 @@ class NicknameBuilderTest {
                 type = CustomType.Nickname.SHORT_NAME       // will be ignored because there's a label
             }, "Label 1")
         }
-        NicknameBuilder(Uri.EMPTY, null, c).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("Nick 1", result[0].values[CommonDataKinds.Nickname.NAME])
             assertEquals(CommonDataKinds.Nickname.TYPE_CUSTOM, result[0].values[CommonDataKinds.Nickname.TYPE])
@@ -47,7 +47,7 @@ class NicknameBuilderTest {
                 values.add("Name 1")
             })
         }
-        NicknameBuilder(Uri.EMPTY, null, c).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(CommonDataKinds.Nickname.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Nickname.MIMETYPE])
         }
     }
@@ -61,7 +61,7 @@ class NicknameBuilderTest {
                 type = CustomType.Nickname.INITIALS
             })
         }
-        NicknameBuilder(Uri.EMPTY, null, c).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("N1", result[0].values[CommonDataKinds.Nickname.NAME])
             assertEquals(CommonDataKinds.Nickname.TYPE_INITIALS, result[0].values[CommonDataKinds.Nickname.TYPE])
@@ -76,7 +76,7 @@ class NicknameBuilderTest {
                 type = CustomType.Nickname.MAIDEN_NAME
             })
         }
-        NicknameBuilder(Uri.EMPTY, null, c).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("Mai Den", result[0].values[CommonDataKinds.Nickname.NAME])
             assertEquals(CommonDataKinds.Nickname.TYPE_MAIDEN_NAME, result[0].values[CommonDataKinds.Nickname.TYPE])
@@ -91,7 +91,7 @@ class NicknameBuilderTest {
                 type = CustomType.Nickname.SHORT_NAME
             })
         }
-        NicknameBuilder(Uri.EMPTY, null, c).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("Short Name", result[0].values[CommonDataKinds.Nickname.NAME])
             assertEquals(CommonDataKinds.Nickname.TYPE_SHORT_NAME, result[0].values[CommonDataKinds.Nickname.TYPE])
@@ -107,7 +107,7 @@ class NicknameBuilderTest {
                 values.add("Nick 2")
             })
         }
-        NicknameBuilder(Uri.EMPTY, null, c).build().also { result ->
+        NicknameBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(2, result.size)
             assertEquals("Nick 1", result[0].values[CommonDataKinds.Nickname.NAME])
             assertEquals("Nick 2", result[1].values[CommonDataKinds.Nickname.NAME])

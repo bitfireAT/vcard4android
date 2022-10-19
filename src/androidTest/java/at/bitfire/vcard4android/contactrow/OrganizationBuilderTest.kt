@@ -16,7 +16,7 @@ class OrganizationBuilderTest {
 
     @Test
     fun testEmpty() {
-        OrganizationBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        OrganizationBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -25,7 +25,7 @@ class OrganizationBuilderTest {
     fun testEmpty_OrganizationEmpty() {
         OrganizationBuilder(Uri.EMPTY, null, Contact().apply {
             organization = Organization()
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -35,7 +35,7 @@ class OrganizationBuilderTest {
     fun testJobDescription() {
         OrganizationBuilder(Uri.EMPTY, null, Contact().apply {
             jobDescription = "Job Description"
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Job Description", result[0].values[CommonDataKinds.Organization.JOB_DESCRIPTION])
         }
     }
@@ -45,7 +45,7 @@ class OrganizationBuilderTest {
     fun testMimeType() {
         OrganizationBuilder(Uri.EMPTY, null, Contact().apply {
             jobDescription = "Job Description"
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Organization.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Organization.MIMETYPE])
         }
     }
@@ -57,7 +57,7 @@ class OrganizationBuilderTest {
             organization = Organization().apply {
                 values.add("Organization")
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Organization", result[0].values[CommonDataKinds.Organization.COMPANY])
             assertNull(result[0].values[CommonDataKinds.Organization.DEPARTMENT])
         }
@@ -70,7 +70,7 @@ class OrganizationBuilderTest {
                 values.add("Organization")
                 values.add("Department")
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Organization", result[0].values[CommonDataKinds.Organization.COMPANY])
             assertEquals("Department", result[0].values[CommonDataKinds.Organization.DEPARTMENT])
         }
@@ -84,7 +84,7 @@ class OrganizationBuilderTest {
                 values.add("Department")
                 values.add("Division")
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Organization", result[0].values[CommonDataKinds.Organization.COMPANY])
             assertEquals("Department / Division", result[0].values[CommonDataKinds.Organization.DEPARTMENT])
         }
@@ -95,7 +95,7 @@ class OrganizationBuilderTest {
     fun testTitle() {
         OrganizationBuilder(Uri.EMPTY, null, Contact().apply {
             jobTitle = "Job Title"
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Job Title", result[0].values[CommonDataKinds.Organization.TITLE])
         }
     }

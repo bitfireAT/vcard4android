@@ -128,7 +128,8 @@ open class AndroidGroup(
 		values.put(Groups.ACCOUNT_TYPE, addressBook.account.type)
 		values.put(Groups.ACCOUNT_NAME, addressBook.account.name)
         values.put(Groups.SHOULD_SYNC, 1)
-        // read-only: values.put(Groups.GROUP_VISIBLE, 1);
+        if (addressBook.readOnly)
+            values.put(Groups.GROUP_IS_READ_ONLY, 1)
         val uri = addressBook.provider!!.insert(addressBook.syncAdapterURI(Groups.CONTENT_URI), values)
                 ?: throw ContactsStorageException("Empty result from content provider when adding group")
         id = ContentUris.parseId(uri)

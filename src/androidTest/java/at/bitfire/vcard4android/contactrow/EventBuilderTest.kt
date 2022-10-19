@@ -20,7 +20,7 @@ class EventBuilderTest {
 
     @Test
     fun testEmpty() {
-        EventBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        EventBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -32,7 +32,7 @@ class EventBuilderTest {
             anniversary = Anniversary(Calendar.getInstance().apply {
                 set(1984, /* zero-based */ 7, 20)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("1984-08-20", result[0].values[CommonDataKinds.Event.START_DATE])
             assertEquals(CommonDataKinds.Event.TYPE_ANNIVERSARY, result[0].values[CommonDataKinds.Event.TYPE])
@@ -60,7 +60,7 @@ class EventBuilderTest {
             anniversary = Anniversary(Calendar.getInstance().apply {
                 set(1984, /* zero-based */ 7, 20)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("1984-08-20", result[0].values[CommonDataKinds.Event.START_DATE])
         }
@@ -74,7 +74,7 @@ class EventBuilderTest {
                 .date(20)
                 .month(8)
                 .build()), "Custom Event")
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.TYPE_CUSTOM, result[0].values[CommonDataKinds.Event.TYPE])
             assertEquals("Custom Event", result[0].values[CommonDataKinds.Event.LABEL])
         }
@@ -88,7 +88,7 @@ class EventBuilderTest {
                 set(1984, /* zero-based */ 7, 20)
             })
         }
-        EventBuilder(Uri.EMPTY, null, c).build().also { result ->
+        EventBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Event.MIMETYPE])
         }
     }
@@ -100,7 +100,7 @@ class EventBuilderTest {
             anniversary = Anniversary(Calendar.getInstance().apply {
                 set(1984, /* zero-based */ 7, 20)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.TYPE_ANNIVERSARY, result[0].values[CommonDataKinds.Event.TYPE])
         }
     }
@@ -111,7 +111,7 @@ class EventBuilderTest {
             birthDay = Birthday(Calendar.getInstance().apply {
                 set(1984, /* zero-based */ 7, 20)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.TYPE_BIRTHDAY, result[0].values[CommonDataKinds.Event.TYPE])
         }
     }
@@ -123,7 +123,7 @@ class EventBuilderTest {
                 .date(20)
                 .month(8)
                 .build()))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.TYPE_OTHER, result[0].values[CommonDataKinds.Event.TYPE])
         }
     }

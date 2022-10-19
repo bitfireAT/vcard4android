@@ -11,8 +11,8 @@ import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.property.CustomType
 import java.util.*
 
-class NicknameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
-    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact) {
+class NicknameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
+    : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val labeledNick = contact.nickName ?: return emptyList()
@@ -52,8 +52,8 @@ class NicknameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact)
 
     object Factory: DataRowBuilder.Factory<NicknameBuilder> {
         override fun mimeType() = CommonDataKinds.Nickname.CONTENT_ITEM_TYPE
-        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact) =
-            NicknameBuilder(dataRowUri, rawContactId, contact)
+        override fun newInstance(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean) =
+            NicknameBuilder(dataRowUri, rawContactId, contact, readOnly)
     }
 
 }

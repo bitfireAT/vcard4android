@@ -17,7 +17,7 @@ class RelationBuilderTest {
 
     @Test
     fun testEmpty() {
-        RelationBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        RelationBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -30,7 +30,7 @@ class RelationBuilderTest {
                 types += RelatedType.FRIEND
             }
         }
-        RelationBuilder(Uri.EMPTY, null, c).build().also { result ->
+        RelationBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(Relation.CONTENT_ITEM_TYPE, result[0].values[Relation.MIMETYPE])
         }
     }
@@ -43,7 +43,7 @@ class RelationBuilderTest {
                 text = "Somebody"
                 types += RelatedType.FRIEND
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Somebody", result[0].values[Relation.NAME])
         }
     }
@@ -55,7 +55,7 @@ class RelationBuilderTest {
                 text = "Text"
                 types += RelatedType.FRIEND
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Text", result[0].values[Relation.NAME])
         }
     }
@@ -66,7 +66,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.FRIEND
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("somebody", result[0].values[Relation.NAME])
         }
     }
@@ -78,7 +78,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.ASSISTANT
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_ASSISTANT, result[0].values[Relation.TYPE])
         }
     }
@@ -89,7 +89,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.BROTHER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_BROTHER, result[0].values[Relation.TYPE])
         }
     }
@@ -101,7 +101,7 @@ class RelationBuilderTest {
                 types += RelatedType.SIBLING
                 types += CustomType.Related.BROTHER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_BROTHER, result[0].values[Relation.TYPE])
         }
     }
@@ -112,7 +112,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.CHILD
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_CHILD, result[0].values[Relation.TYPE])
         }
     }
@@ -123,7 +123,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.DOMESTIC_PARTNER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_DOMESTIC_PARTNER, result[0].values[Relation.TYPE])
         }
     }
@@ -134,7 +134,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.FATHER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_FATHER, result[0].values[Relation.TYPE])
         }
     }
@@ -146,7 +146,7 @@ class RelationBuilderTest {
                 types += RelatedType.PARENT
                 types += CustomType.Related.FATHER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_FATHER, result[0].values[Relation.TYPE])
         }
     }
@@ -157,7 +157,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.FRIEND
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_FRIEND, result[0].values[Relation.TYPE])
         }
     }
@@ -168,7 +168,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.KIN
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_RELATIVE, result[0].values[Relation.TYPE])
         }
     }
@@ -179,7 +179,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.MANAGER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_MANAGER, result[0].values[Relation.TYPE])
         }
     }
@@ -190,7 +190,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.MOTHER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_MOTHER, result[0].values[Relation.TYPE])
         }
     }
@@ -202,7 +202,7 @@ class RelationBuilderTest {
                 types += RelatedType.PARENT
                 types += CustomType.Related.MOTHER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_MOTHER, result[0].values[Relation.TYPE])
         }
     }
@@ -214,7 +214,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.SWEETHEART
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_CUSTOM, result[0].values[Relation.TYPE])
             assertEquals("Sweetheart", result[0].values[Relation.LABEL])
         }
@@ -226,7 +226,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.PARENT
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_PARENT, result[0].values[Relation.TYPE])
         }
     }
@@ -237,7 +237,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.PARTNER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_PARTNER, result[0].values[Relation.TYPE])
         }
     }
@@ -248,7 +248,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.REFERRED_BY
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_REFERRED_BY, result[0].values[Relation.TYPE])
         }
     }
@@ -259,7 +259,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += CustomType.Related.SISTER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_SISTER, result[0].values[Relation.TYPE])
         }
     }
@@ -271,7 +271,7 @@ class RelationBuilderTest {
                 types += RelatedType.SIBLING
                 types += CustomType.Related.SISTER
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_SISTER, result[0].values[Relation.TYPE])
         }
     }
@@ -282,7 +282,7 @@ class RelationBuilderTest {
             relations += Related("somebody").apply {
                 types += RelatedType.SPOUSE
             }
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(Relation.TYPE_SPOUSE, result[0].values[Relation.TYPE])
         }
     }

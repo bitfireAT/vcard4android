@@ -14,7 +14,7 @@ class StructuredNameBuilderTest {
 
     @Test
     fun testEmpty() {
-        StructuredNameBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        StructuredNameBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -31,7 +31,7 @@ class StructuredNameBuilderTest {
             phoneticGivenName = "Phonetic Given"
             phoneticMiddleName = "Phonetic Middle"
             phoneticFamilyName = "Phonetic Family"
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals(StructuredName.CONTENT_ITEM_TYPE, result[0].values[StructuredName.MIMETYPE])
 

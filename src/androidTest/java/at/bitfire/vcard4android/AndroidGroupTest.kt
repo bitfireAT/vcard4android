@@ -71,4 +71,48 @@ class AndroidGroupTest {
         assertEquals(0, addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!)).size)
     }
 
+    @Test
+    fun testAdd_readOnly() {
+        addressBook.readOnly = true
+
+        val contact = Contact()
+        contact.displayName = "at.bitfire.vcard4android-AndroidGroupTest"
+        contact.note = "(test group)"
+
+        // ensure we start without this group
+        assertEquals(0, addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!)).size)
+
+        // create group
+        val group = AndroidGroup(addressBook, contact, null, null)
+        group.add()
+        val groups = addressBook.queryGroups("${ContactsContract.Groups.GROUP_IS_READ_ONLY}=?", arrayOf("1"))
+        assertEquals(1, groups.size)
+
+        // delete group
+        group.delete()
+        assertEquals(0, addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!)).size)
+    }
+
+    @Test
+    fun testAdd_notReadOnly() {
+        addressBook.readOnly = false
+
+        val contact = Contact()
+        contact.displayName = "at.bitfire.vcard4android-AndroidGroupTest"
+        contact.note = "(test group)"
+
+        // ensure we start without this group
+        assertEquals(0, addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!)).size)
+
+        // create group
+        val group = AndroidGroup(addressBook, contact, null, null)
+        group.add()
+        val groups = addressBook.queryGroups("${ContactsContract.Groups.GROUP_IS_READ_ONLY}=?", arrayOf("0"))
+        assertEquals(1, groups.size)
+
+        // delete group
+        group.delete()
+        assertEquals(0, addressBook.queryGroups("${ContactsContract.Groups.TITLE}=?", arrayOf(contact.displayName!!)).size)
+    }
+
 }

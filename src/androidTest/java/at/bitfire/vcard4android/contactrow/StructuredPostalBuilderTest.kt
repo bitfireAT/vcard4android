@@ -17,7 +17,7 @@ class StructuredPostalBuilderTest {
 
     @Test
     fun testEmpty() {
-        StructuredPostalBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        StructuredPostalBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -30,7 +30,7 @@ class StructuredPostalBuilderTest {
                 streetAddress = "Street"
             }, "Label")
         }
-        StructuredPostalBuilder(Uri.EMPTY, null, c).build().also { result ->
+        StructuredPostalBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(StructuredPostal.TYPE_CUSTOM, result[0].values[StructuredPostal.TYPE])
             assertEquals("Label", result[0].values[StructuredPostal.LABEL])
         }
@@ -50,7 +50,7 @@ class StructuredPostalBuilderTest {
                 postalCode = "ZIP"
                 country = "Country"
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals(StructuredPostal.CONTENT_ITEM_TYPE, result[0].values[StructuredPostal.MIMETYPE])
 
@@ -80,7 +80,7 @@ class StructuredPostalBuilderTest {
                 types += AddressType.HOME
             })
         }
-        StructuredPostalBuilder(Uri.EMPTY, null, c).build().also { result ->
+        StructuredPostalBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(StructuredPostal.TYPE_HOME, result[0].values[StructuredPostal.TYPE])
         }
     }
@@ -92,7 +92,7 @@ class StructuredPostalBuilderTest {
                 streetAddress = "Street"
             })
         }
-        StructuredPostalBuilder(Uri.EMPTY, null, c).build().also { result ->
+        StructuredPostalBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(StructuredPostal.TYPE_OTHER, result[0].values[StructuredPostal.TYPE])
         }
     }
@@ -105,7 +105,7 @@ class StructuredPostalBuilderTest {
                 types += AddressType.WORK
             })
         }
-        StructuredPostalBuilder(Uri.EMPTY, null, c).build().also { result ->
+        StructuredPostalBuilder(Uri.EMPTY, null, c, false).build().also { result ->
             assertEquals(StructuredPostal.TYPE_WORK, result[0].values[StructuredPostal.TYPE])
         }
     }

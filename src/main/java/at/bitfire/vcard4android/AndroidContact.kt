@@ -201,7 +201,7 @@ open class AndroidContact(
      */
     protected fun insertDataRows(batch: BatchOperation) {
         val contact = getContact()
-        processor.insertDataRows(dataSyncURI(), id, contact, batch)
+        processor.insertDataRows(dataSyncURI(), id, contact, batch, addressBook.readOnly)
     }
 
 

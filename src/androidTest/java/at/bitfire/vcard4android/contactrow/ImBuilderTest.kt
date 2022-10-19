@@ -17,7 +17,7 @@ class ImBuilderTest {
 
     @Test
     fun testEmpty() {
-        ImBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        ImBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -27,7 +27,7 @@ class ImBuilderTest {
     fun testHandle_Empty() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp(""))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -36,7 +36,7 @@ class ImBuilderTest {
     fun testHandle_WithoutProtocol() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp("test@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -45,7 +45,7 @@ class ImBuilderTest {
     fun testHandle_WithProtocol() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals(CommonDataKinds.Im.PROTOCOL_CUSTOM, result[0].values[CommonDataKinds.Im.PROTOCOL])
             assertEquals("xmpp", result[0].values[CommonDataKinds.Im.CUSTOM_PROTOCOL])
@@ -58,7 +58,7 @@ class ImBuilderTest {
     fun testIgnoreSip() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp("sip:voip@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -68,7 +68,7 @@ class ImBuilderTest {
     fun testLabel() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com"), "Label")
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Im.TYPE_CUSTOM, result[0].values[CommonDataKinds.Im.TYPE])
             assertEquals("Label", result[0].values[CommonDataKinds.Im.LABEL])
         }
@@ -79,7 +79,7 @@ class ImBuilderTest {
     fun testMimeType() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Im.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Im.MIMETYPE])
         }
     }
@@ -89,7 +89,7 @@ class ImBuilderTest {
     fun testProtocol_Sip() {
         ImBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.sip("voip@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             // handled by SipAddressHandler
             assertEquals(0, result.size)
         }
@@ -102,7 +102,7 @@ class ImBuilderTest {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com").apply {
                 types.add(ImppType.HOME)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Im.TYPE_HOME, result[0].values[CommonDataKinds.Im.TYPE])
         }
     }
@@ -114,7 +114,7 @@ class ImBuilderTest {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com").apply {
                 types.add(ImppType.MOBILE)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Im.TYPE_OTHER, result[0].values[CommonDataKinds.Im.TYPE])
         }
     }
@@ -125,7 +125,7 @@ class ImBuilderTest {
             impps += LabeledProperty(Impp.xmpp("jabber@example.com").apply {
                 types.add(ImppType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Im.TYPE_WORK, result[0].values[CommonDataKinds.Im.TYPE])
         }
     }
