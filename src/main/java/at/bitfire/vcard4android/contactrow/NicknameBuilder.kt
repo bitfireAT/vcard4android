@@ -11,7 +11,7 @@ import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.property.CustomType
 import java.util.*
 
-class NicknameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
+class NicknameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

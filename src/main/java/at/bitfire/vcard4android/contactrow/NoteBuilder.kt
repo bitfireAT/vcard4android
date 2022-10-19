@@ -9,7 +9,7 @@ import android.provider.ContactsContract.CommonDataKinds.Note
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 
-class NoteBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
+class NoteBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

@@ -18,7 +18,7 @@ class PhoneBuilderTest {
 
     @Test
     fun testEmpty() {
-        PhoneBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        PhoneBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -28,7 +28,7 @@ class PhoneBuilderTest {
     fun testNumber_Blank() {
         PhoneBuilder(Uri.EMPTY, null, Contact().apply {
             phoneNumbers += LabeledProperty(Telephone(""))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -37,7 +37,7 @@ class PhoneBuilderTest {
     fun testNumber_Value() {
         PhoneBuilder(Uri.EMPTY, null, Contact().apply {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("+1 555 12345", result[0].values[CommonDataKinds.Phone.NUMBER])
         }
@@ -48,7 +48,7 @@ class PhoneBuilderTest {
     fun testLabel() {
         PhoneBuilder(Uri.EMPTY, null, Contact().apply {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345"), "Label")
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Label", result[0].values[CommonDataKinds.Phone.LABEL])
         }
     }
@@ -58,7 +58,7 @@ class PhoneBuilderTest {
     fun testMimeType() {
         PhoneBuilder(Uri.EMPTY, null, Contact().apply {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Phone.MIMETYPE])
         }
     }
@@ -68,7 +68,7 @@ class PhoneBuilderTest {
     fun testPref_None() {
         PhoneBuilder(Uri.EMPTY, null, Contact().apply {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result[0].values[CommonDataKinds.Phone.IS_PRIMARY])
         }
     }
@@ -79,7 +79,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 pref = 1
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result[0].values[CommonDataKinds.Phone.IS_PRIMARY])
         }
     }
@@ -91,7 +91,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(CustomType.Phone.ASSISTANT)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_ASSISTANT, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -102,7 +102,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(CustomType.Phone.CALLBACK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_CALLBACK, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -113,7 +113,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.CELL)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_MOBILE, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -125,7 +125,7 @@ class PhoneBuilderTest {
                 types.add(TelephoneType.CELL)
                 types.add(TelephoneType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_WORK_MOBILE, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -136,7 +136,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(CustomType.Phone.COMPANY_MAIN)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_COMPANY_MAIN, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -147,7 +147,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.FAX)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_OTHER_FAX, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -159,7 +159,7 @@ class PhoneBuilderTest {
                 types.add(TelephoneType.FAX)
                 types.add(TelephoneType.HOME)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_FAX_HOME, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -171,7 +171,7 @@ class PhoneBuilderTest {
                 types.add(TelephoneType.FAX)
                 types.add(TelephoneType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_FAX_WORK, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -182,7 +182,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.HOME)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_HOME, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -193,7 +193,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.ISDN)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_ISDN, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -204,7 +204,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(CustomType.Phone.MMS)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_MMS, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -216,7 +216,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.VIDEO)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_OTHER, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -227,7 +227,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.PAGER)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_PAGER, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -239,7 +239,7 @@ class PhoneBuilderTest {
                 types.add(TelephoneType.PAGER)
                 types.add(TelephoneType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_WORK_PAGER, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -250,7 +250,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(CustomType.Phone.RADIO)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_RADIO, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }
@@ -261,7 +261,7 @@ class PhoneBuilderTest {
             phoneNumbers += LabeledProperty(Telephone("+1 555 12345").apply {
                 types.add(TelephoneType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Phone.TYPE_WORK, result[0].values[CommonDataKinds.Phone.TYPE])
         }
     }

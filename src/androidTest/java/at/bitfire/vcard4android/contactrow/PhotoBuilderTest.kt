@@ -18,7 +18,6 @@ import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.impl.TestAddressBook
 import org.apache.commons.io.IOUtils
-import org.junit.Assert
 import org.junit.Assert.*
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -42,7 +41,7 @@ class PhotoBuilderTest {
         @JvmStatic
         fun connect() {
             provider = testContext.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
-            Assert.assertNotNull(provider)
+            assertNotNull(provider)
 
             addressBook = TestAddressBook(testAccount, provider)
         }
@@ -58,7 +57,7 @@ class PhotoBuilderTest {
 
     @Test
     fun testBuild_NoPhoto() {
-        PhotoBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        PhotoBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -68,7 +67,7 @@ class PhotoBuilderTest {
         val blob = ByteArray(1024) { Random.nextInt().toByte() }
         PhotoBuilder(Uri.EMPTY, null, Contact().apply {
             photo = blob
-        }).build().also { result ->
+        }, false).build().also { result ->
             // no row because photos have to be inserted with a separate call to insertPhoto()
             assertEquals(0, result.size)
         }

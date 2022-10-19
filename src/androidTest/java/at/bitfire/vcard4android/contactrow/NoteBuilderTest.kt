@@ -14,7 +14,7 @@ class NoteBuilderTest {
 
     @Test
     fun testNote_Empty() {
-        NoteBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        NoteBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -23,7 +23,7 @@ class NoteBuilderTest {
     fun testNote_Blank() {
         NoteBuilder(Uri.EMPTY, null, Contact().apply {
             note = ""
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -32,7 +32,7 @@ class NoteBuilderTest {
     fun testNote_Value() {
         NoteBuilder(Uri.EMPTY, null, Contact().apply {
             note = "Some Note"
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals(CommonDataKinds.Note.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Note.MIMETYPE])
             assertEquals("Some Note", result[0].values[CommonDataKinds.Note.NOTE])

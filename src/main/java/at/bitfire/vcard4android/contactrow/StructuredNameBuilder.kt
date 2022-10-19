@@ -9,7 +9,7 @@ import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 
-class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
+class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

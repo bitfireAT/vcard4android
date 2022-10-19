@@ -12,7 +12,7 @@ import at.bitfire.vcard4android.Contact
 import ezvcard.parameter.ImppType
 import java.util.*
 
-class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
+class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

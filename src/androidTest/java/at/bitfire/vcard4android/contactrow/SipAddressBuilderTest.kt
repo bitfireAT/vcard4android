@@ -17,7 +17,7 @@ class SipAddressBuilderTest {
 
     @Test
     fun testEmpty() {
-        SipAddressBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        SipAddressBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -27,7 +27,7 @@ class SipAddressBuilderTest {
     fun testHandle_Empty() {
         SipAddressBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp(""))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -36,7 +36,7 @@ class SipAddressBuilderTest {
     fun testHandle_NotSip() {
         SipAddressBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.xmpp("test@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -45,7 +45,7 @@ class SipAddressBuilderTest {
     fun testHandle_Sip() {
         SipAddressBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.sip("voip@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("voip@example.com", result[0].values[SipAddress.SIP_ADDRESS])
         }
@@ -56,7 +56,7 @@ class SipAddressBuilderTest {
     fun testLabel() {
         SipAddressBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.sip("voip@example.com"), "Label")
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(SipAddress.TYPE_CUSTOM, result[0].values[SipAddress.TYPE])
             assertEquals("Label", result[0].values[SipAddress.LABEL])
         }
@@ -67,7 +67,7 @@ class SipAddressBuilderTest {
     fun testMimeType() {
         SipAddressBuilder(Uri.EMPTY, null, Contact().apply {
             impps += LabeledProperty(Impp.sip("voip@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(SipAddress.CONTENT_ITEM_TYPE, result[0].values[SipAddress.MIMETYPE])
         }
     }
@@ -79,7 +79,7 @@ class SipAddressBuilderTest {
             impps += LabeledProperty(Impp.sip("voip@example.com").apply {
                 types.add(ImppType.HOME)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(SipAddress.TYPE_HOME, result[0].values[SipAddress.TYPE])
         }
     }
@@ -91,7 +91,7 @@ class SipAddressBuilderTest {
             impps += LabeledProperty(Impp.sip("voip@example.com").apply {
                 types.add(ImppType.MOBILE)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(SipAddress.TYPE_OTHER, result[0].values[SipAddress.TYPE])
         }
     }
@@ -102,7 +102,7 @@ class SipAddressBuilderTest {
             impps += LabeledProperty(Impp.sip("voip@example.com").apply {
                 types.add(ImppType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(SipAddress.TYPE_WORK, result[0].values[SipAddress.TYPE])
         }
     }

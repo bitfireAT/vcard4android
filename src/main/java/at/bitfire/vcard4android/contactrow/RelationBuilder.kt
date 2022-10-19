@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.WordUtils
 import java.util.*
 
-class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean = false)
+class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {

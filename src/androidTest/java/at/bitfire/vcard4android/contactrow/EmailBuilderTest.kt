@@ -18,7 +18,7 @@ class EmailBuilderTest {
 
     @Test
     fun testEmpty() {
-        EmailBuilder(Uri.EMPTY, null, Contact()).build().also { result ->
+        EmailBuilder(Uri.EMPTY, null, Contact(), false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -28,7 +28,7 @@ class EmailBuilderTest {
     fun testAddress_Address() {
         EmailBuilder(Uri.EMPTY, null, Contact().apply {
             emails += LabeledProperty(Email("test@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("test@example.com", result[0].values[CommonDataKinds.Email.ADDRESS])
         }
@@ -38,7 +38,7 @@ class EmailBuilderTest {
     fun testAddress_Blank() {
         EmailBuilder(Uri.EMPTY, null, Contact().apply {
             emails += LabeledProperty(Email(""))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result.size)
         }
     }
@@ -48,7 +48,7 @@ class EmailBuilderTest {
     fun testLabel() {
         EmailBuilder(Uri.EMPTY, null, Contact().apply {
             emails += LabeledProperty(Email("test@example.com"), "Label")
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals("Label", result[0].values[CommonDataKinds.Email.LABEL])
         }
     }
@@ -58,7 +58,7 @@ class EmailBuilderTest {
     fun testMimeType() {
         EmailBuilder(Uri.EMPTY, null, Contact().apply {
             emails += LabeledProperty(Email("test@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Email.CONTENT_ITEM_TYPE, result[0].values[CommonDataKinds.Email.MIMETYPE])
         }
     }
@@ -68,7 +68,7 @@ class EmailBuilderTest {
     fun testPref_None() {
         EmailBuilder(Uri.EMPTY, null, Contact().apply {
             emails += LabeledProperty(Email("test@example.com"))
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(0, result[0].values[CommonDataKinds.Email.IS_PRIMARY])
         }
     }
@@ -79,7 +79,7 @@ class EmailBuilderTest {
             emails += LabeledProperty(Email("test@example.com").apply {
                 pref = 1
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(1, result[0].values[CommonDataKinds.Email.IS_PRIMARY])
         }
     }
@@ -91,7 +91,7 @@ class EmailBuilderTest {
             emails += LabeledProperty(Email("test@example.com").apply {
                 types.add(EmailType.HOME)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Email.TYPE_HOME, result[0].values[CommonDataKinds.Email.TYPE])
         }
     }
@@ -102,7 +102,7 @@ class EmailBuilderTest {
             emails += LabeledProperty(Email("test@example.com").apply {
                 types.add(CustomType.Email.MOBILE)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Email.TYPE_MOBILE, result[0].values[CommonDataKinds.Email.TYPE])
         }
     }
@@ -113,7 +113,7 @@ class EmailBuilderTest {
             emails += LabeledProperty(Email("test@example.com").apply {
                 types.add(EmailType.WORK)
             })
-        }).build().also { result ->
+        }, false).build().also { result ->
             assertEquals(CommonDataKinds.Email.TYPE_WORK, result[0].values[CommonDataKinds.Email.TYPE])
         }
     }
