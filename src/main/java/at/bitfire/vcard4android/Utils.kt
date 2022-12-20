@@ -10,6 +10,7 @@ import android.database.Cursor
 import android.database.DatabaseUtils
 import android.net.Uri
 import android.provider.ContactsContract
+import ezvcard.property.StructuredName
 
 object Utils {
 
@@ -18,6 +19,9 @@ object Utils {
         DatabaseUtils.cursorRowToContentValues(this, values)
         return values
     }
+
+    fun StructuredName.isEmpty() =
+        prefixes.isEmpty() && given == null && additionalNames.isEmpty() && family == null && suffixes.isEmpty()
 
     fun Uri.asSyncAdapter(account: Account): Uri = buildUpon()
         .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, account.name)

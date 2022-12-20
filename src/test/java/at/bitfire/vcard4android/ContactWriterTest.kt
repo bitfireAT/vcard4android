@@ -186,32 +186,40 @@ class ContactWriterTest {
 
 
     @Test
+    fun testGroup_vCard3() {
+        val vCard = generate(VCardVersion.V3_0) {
+            group = true
+            members += "member1"
+            displayName = "Sample vCard3 Group"
+        }
+        assertEquals(Kind.GROUP, vCard.getProperty(XAddressBookServerKind::class.java).value)
+        assertEquals("urn:uuid:member1", vCard.getProperty(XAddressBookServerMember::class.java).value)
+        assertEquals("Sample vCard3 Group", vCard.formattedName.value)
+        assertEquals(StructuredName().apply {
+            family = "Sample vCard3 Group"
+        }, vCard.structuredName)
+    }
+
+    @Test
+    fun testGroup_vCard4() {
+        val vCard = generate(VCardVersion.V4_0) {
+            group = true
+            members += "member1"
+            displayName = "Sample vCard4 Group"
+        }
+        assertEquals(Kind.GROUP, vCard.getProperty(Kind::class.java).value)
+        assertEquals("urn:uuid:member1", vCard.members.first().value)
+        assertEquals("Sample vCard4 Group", vCard.formattedName.value)
+        assertNull(vCard.structuredName)
+    }
+
+
+    @Test
     fun testImpp() {
         val vCard = generate {
             impps.add(LabeledProperty(Impp.xmpp("test@example.com")))
         }
         assertEquals(URI("xmpp:test@example.com"), vCard.impps.first().uri)
-    }
-
-
-    @Test
-    fun testKindAndMember_vCard3() {
-        val vCard = generate(VCardVersion.V3_0) {
-            group = true
-            members += "member1"
-        }
-        assertEquals(Kind.GROUP, vCard.getProperty(XAddressBookServerKind::class.java).value)
-        assertEquals("urn:uuid:member1", vCard.getProperty(XAddressBookServerMember::class.java).value)
-    }
-
-    @Test
-    fun testKindAndMember_vCard4() {
-        val vCard = generate(VCardVersion.V4_0) {
-            group = true
-            members += "member1"
-        }
-        assertEquals(Kind.GROUP, vCard.getProperty(Kind::class.java).value)
-        assertEquals("urn:uuid:member1", vCard.members.first().value)
     }
 
 

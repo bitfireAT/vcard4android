@@ -4,6 +4,7 @@
 
 package at.bitfire.vcard4android
 
+import at.bitfire.vcard4android.Utils.isEmpty
 import at.bitfire.vcard4android.property.*
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import ezvcard.Ezvcard
@@ -51,7 +52,6 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
         Contact.productID?.let { vCard.setProductId(it) }
 
         addKindAndMembers()
-
         addFormattedName()
         addStructuredName()
         addPhoneticName()
@@ -227,11 +227,16 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
 
         if (version == VCardVersion.V4_0) {
             // add N only if there's some data in it
-            if (n.prefixes.isNotEmpty() || n.given != null || n.additionalNames.isNotEmpty() || n.family != null || n.suffixes.isNotEmpty())
+            if (!n.isEmpty())
                 vCard.structuredName = n
 
-        } else /* version == VCardVersion.V3_0 */ {
+        } else if (version == VCardVersion.V3_0) {
             // vCard 3 REQUIRES N [RFC 2426 p. 29]
+
+            // don't use empty N for vCard3 groups (otherwise they appear with name ";;;;;" in Apple)
+            if (contact.group && n.isEmpty())
+                n.family = contact.displayName
+
             vCard.structuredName = n
         }
     }
@@ -337,8 +342,9 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                     isAddProdId = Contact.productID == null
                     registerCustomScribes()
 
-                    // include trailing semicolons for maximum compatibility
-                    isIncludeTrailingSemicolons = true
+                    /* include trailing semicolons for maximum compatibility
+                    Don't include trailing semicolons for groups because Apple then shows "N:Group;;;;" as "Group;;;;". */
+                    isIncludeTrailingSemicolons = !contact.group
 
                     // use caret encoding for parameter values (RFC 6868)
                     isCaretEncodingEnabled = true
