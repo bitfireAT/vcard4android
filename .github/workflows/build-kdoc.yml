@@ -14,11 +14,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 11
-          cache: 'gradle'
-      - uses: gradle/wrapper-validation-action@v1
+      - uses: gradle/gradle-build-action@v2
 
       - name: Build KDoc
-        run: ./gradlew dokkaHtml
+        run: ./gradlew --no-daemon dokkaHtml
       - name: Publish KDoc
         if: success()
         uses: crazy-max/ghaction-github-pages@v2.5.0
