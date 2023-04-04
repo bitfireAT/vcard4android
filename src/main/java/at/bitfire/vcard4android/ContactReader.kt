@@ -45,8 +45,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
             val date = prop.date
             if (prop.partialDate == null && date != null) {
                 prop.getParameter(Contact.DATE_PARAMETER_OMIT_YEAR)?.let { omitYearStr ->
-                    val cal = GregorianCalendar.getInstance()
-                    if (cal.get(GregorianCalendar.YEAR).toString() == omitYearStr) {
+                    if (date.get(ChronoField.YEAR).toString() == omitYearStr) {
                         val partial = PartialDate.builder()
                             .date(date.get(ChronoField.DAY_OF_MONTH))
                             .month(date.get(ChronoField.MONTH_OF_YEAR))

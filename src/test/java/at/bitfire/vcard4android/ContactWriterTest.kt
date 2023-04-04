@@ -15,6 +15,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.net.URI
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -513,7 +514,7 @@ class ContactWriterTest {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(PartialDate.parse("20210730"))
         generator.rewritePartialDate(date)
-        assertEquals(LocalDateTime.of(121, 6, 30, 0, 0, 0), date.date)
+        assertEquals(LocalDate.of(2021, 7, 30), date.date)
         assertNull(date.partialDate)
         assertEquals(0, date.parameters.size())
     }
@@ -533,7 +534,7 @@ class ContactWriterTest {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(PartialDate.parse("--0730"))
         generator.rewritePartialDate(date)
-        assertEquals(LocalDateTime.of(-300+4, 6, 30, 0, 0, 0), date.date)
+        assertEquals(LocalDate.of(1604, 7, 30), date.date)
         assertNull(date.partialDate)
         assertEquals(1, date.parameters.size())
         assertEquals("1604", date.getParameter(Contact.DATE_PARAMETER_OMIT_YEAR))
@@ -554,7 +555,7 @@ class ContactWriterTest {
     fun testWriteJCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         generator.vCard.revision = Revision(
-            LocalDateTime.of(2021, 6, 30, 1, 2, 3)
+            LocalDateTime.of(2021, 7, 30, 1, 2, 3)
         )
 
         val stream = ByteArrayOutputStream()
@@ -566,7 +567,7 @@ class ContactWriterTest {
     @Test
     fun testWriteVCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
-        generator.vCard.revision = Revision(LocalDateTime.of(2021, 6, 30, 1, 2, 3))
+        generator.vCard.revision = Revision(LocalDateTime.of(2021, 7, 30, 1, 2, 3))
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, false)

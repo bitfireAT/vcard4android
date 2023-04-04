@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.WordUtils
 import java.io.OutputStream
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoField
 import java.util.*
@@ -311,10 +312,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
             val year = originalYear ?: Contact.DATE_PARAMETER_OMIT_YEAR_DEFAULT
 
             // use full date format
-            val fakeCal = GregorianCalendar.getInstance()
-            fakeCal.timeInMillis = 0    // reset everything, including milliseconds
-            fakeCal.set(year, partial.month - 1, partial.date, 0, 0, 0)
-            prop.date = Instant.ofEpochMilli(fakeCal.timeInMillis)
+            prop.date = LocalDate.of(year, partial.month, partial.date)
 
             if (originalYear == null)
                 prop.addParameter(Contact.DATE_PARAMETER_OMIT_YEAR, Contact.DATE_PARAMETER_OMIT_YEAR_DEFAULT.toString())
