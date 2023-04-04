@@ -15,9 +15,12 @@ import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.net.URI
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 class ContactWriterTest {
@@ -555,27 +558,27 @@ class ContactWriterTest {
     fun testWriteJCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
         generator.vCard.revision = Revision(
-            LocalDateTime.of(2021, 7, 30, 1, 2, 3)
+            ZonedDateTime.of(2021, 7, 30, 1, 2, 3, 0, ZoneOffset.UTC)
         )
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, true)
-        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.11.3\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03Z\"]]]", stream.toString())
+        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.12.0\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03+00:00\"]]]", stream.toString())
     }
 
 
     @Test
     fun testWriteVCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
-        generator.vCard.revision = Revision(LocalDateTime.of(2021, 7, 30, 1, 2, 3))
+        generator.vCard.revision = Revision(ZonedDateTime.of(2021, 7, 30, 1, 2, 3, 0, ZoneOffset.UTC))
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, false)
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
-                "PRODID:ez-vcard 0.11.3\r\n" +
+                "PRODID:ez-vcard 0.12.0\r\n" +
                 "FN:\r\n" +
-                "REV:20210730T010203Z\r\n" +
+                "REV:20210730T010203+0000\r\n" +
                 "END:VCARD\r\n", stream.toString())
     }
 
