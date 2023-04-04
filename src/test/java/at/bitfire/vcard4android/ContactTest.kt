@@ -185,7 +185,7 @@ class ContactTest {
         assertEquals(1, c.customDates.size)
         c.customDates.first.also { date ->
             assertEquals("Custom Date", date.label)
-            assertEquals(ZonedDateTime.of(2021, 7, 29, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant(), date.property.date.toInstant())
+            assertEquals(ZonedDateTime.of(2021, 7, 29, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant(), date.property.date)
         }
 
         // RELATED

@@ -18,6 +18,9 @@ import ezvcard.property.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.text.WordUtils
 import java.io.OutputStream
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.temporal.ChronoField
 import java.util.*
 import java.util.logging.Level
 
@@ -311,7 +314,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
             val fakeCal = GregorianCalendar.getInstance()
             fakeCal.timeInMillis = 0    // reset everything, including milliseconds
             fakeCal.set(year, partial.month - 1, partial.date, 0, 0, 0)
-            prop.setDate(fakeCal, false)
+            prop.date = Instant.ofEpochMilli(fakeCal.timeInMillis)
 
             if (originalYear == null)
                 prop.addParameter(Contact.DATE_PARAMETER_OMIT_YEAR, Contact.DATE_PARAMETER_OMIT_YEAR_DEFAULT.toString())

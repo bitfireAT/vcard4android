@@ -14,6 +14,9 @@ import ezvcard.util.PartialDate
 import org.apache.commons.lang3.StringUtils
 import java.net.URI
 import java.net.URISyntaxException
+import java.time.Instant
+import java.time.temporal.ChronoField
+import java.time.temporal.Temporal
 import java.util.*
 import java.util.logging.Level
 
@@ -43,11 +46,10 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
             if (prop.partialDate == null && date != null) {
                 prop.getParameter(Contact.DATE_PARAMETER_OMIT_YEAR)?.let { omitYearStr ->
                     val cal = GregorianCalendar.getInstance()
-                    cal.time = date
                     if (cal.get(GregorianCalendar.YEAR).toString() == omitYearStr) {
                         val partial = PartialDate.builder()
-                            .date(cal.get(GregorianCalendar.DAY_OF_MONTH))
-                            .month(cal.get(GregorianCalendar.MONTH) + 1)
+                            .date(date.get(ChronoField.DAY_OF_MONTH))
+                            .month(date.get(ChronoField.MONTH_OF_YEAR))
                             .build()
                         prop.partialDate = partial
                     }

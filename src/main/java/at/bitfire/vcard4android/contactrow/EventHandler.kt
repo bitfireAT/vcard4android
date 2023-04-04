@@ -16,6 +16,7 @@ import ezvcard.util.PartialDate
 import org.apache.commons.lang3.StringUtils
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.*
 import java.util.logging.Level
 
@@ -27,11 +28,10 @@ object EventHandler: DataRowHandler() {
         super.handle(values, contact)
 
         val dateStr = values.getAsString(Event.START_DATE) ?: return
-        var full: Date? = null
+        var full: LocalDate? = null
         var partial: PartialDate? = null
-        val fullFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         try {
-            full = fullFormat.parse(dateStr)
+            full = LocalDate.parse(dateStr)
         } catch(e: ParseException) {
             try {
                 partial = PartialDate.parse(dateStr)

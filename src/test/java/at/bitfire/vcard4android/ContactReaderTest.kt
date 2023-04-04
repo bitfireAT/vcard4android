@@ -15,6 +15,7 @@ import ezvcard.util.PartialDate
 import org.junit.Assert.*
 import org.junit.Test
 import java.net.URI
+import java.time.LocalDateTime
 import java.util.*
 
 class ContactReaderTest {
@@ -46,27 +47,27 @@ class ContactReaderTest {
 
     @Test
     fun testAnniversary() {
-        val date = Date(101, 6, 30, 0, 0, 0)
+        val instant = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
-            anniversary = Anniversary(date)
+            anniversary = Anniversary(instant)
         })
-        assertEquals(Anniversary(date), c.anniversary)
+        assertEquals(Anniversary(instant), c.anniversary)
     }
 
 
     @Test
     fun testBirthday_Date() {
-        val date = Date(101, 6, 30, 0, 0, 0)
+        val instant = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
-            birthday = Birthday(date)
+            birthday = Birthday(instant)
         })
-        assertEquals(Birthday(date), c.birthDay)
+        assertEquals(Birthday(instant), c.birthDay)
     }
 
     @Test
     fun testBirthday_vCard3_PartialDate() {
         val c = ContactReader.fromVCard(VCard().apply {
-            birthday = Birthday(Date(0, 6, 30)).apply {
+            birthday = Birthday(LocalDateTime.of(0, 6, 30, 0, 0, 0)).apply {
                 addParameter(Contact.DATE_PARAMETER_OMIT_YEAR, "1900")
             }
         })
@@ -414,7 +415,7 @@ class ContactReaderTest {
 
     @Test
     fun testXAbDate_WithoutLabel() {
-        val date = Date(101, 6, 30, 0, 0, 0)
+        val date = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
             addProperty(XAbDate(date))
         })
@@ -423,7 +424,7 @@ class ContactReaderTest {
 
     @Test
     fun testXAbDate_WithLabel_AppleAnniversary() {
-        val date = Date(101, 6, 30, 0, 0, 0)
+        val date = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
             addProperty(XAbDate(date).apply { group = "test1" })
             addProperty(XAbLabel(XAbLabel.APPLE_ANNIVERSARY).apply { group = "test1" })
@@ -434,7 +435,7 @@ class ContactReaderTest {
 
     @Test
     fun testXAbDate_WithLabel_AppleOther() {
-        val date = Date(101, 6, 30, 0, 0, 0)
+        val date = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
             addProperty(XAbDate(date).apply { group = "test1" })
             addProperty(XAbLabel(XAbLabel.APPLE_OTHER).apply { group = "test1" })
@@ -445,7 +446,7 @@ class ContactReaderTest {
 
     @Test
     fun testXAbDate_WithLabel_Custom() {
-        val date = Date(101, 6, 30, 0, 0, 0)
+        val date = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val c = ContactReader.fromVCard(VCard().apply {
             addProperty(XAbDate(date).apply { group = "test1" })
             addProperty(XAbLabel("Test 1").apply { group = "test1" })
@@ -535,7 +536,7 @@ class ContactReaderTest {
 
     @Test
     fun testCheckPartialDate_Date_WithoutOmitYear() {
-        val date = Date(101, 6, 30)
+        val date = LocalDateTime.of(101, 6, 30, 0, 0, 0)
         val withDate = Anniversary(date)
         ContactReader.checkPartialDate(withDate)
         assertEquals(date, withDate.date)
@@ -544,7 +545,7 @@ class ContactReaderTest {
 
     @Test
     fun testCheckPartialDate_Date_WithOmitYear_AnotherYear() {
-        val date = Date(10, 6, 30)
+        val date = LocalDateTime.of(10, 6, 30, 0, 0, 0)
         val withDate = Anniversary(date).apply {
             addParameter(Contact.DATE_PARAMETER_OMIT_YEAR, "2010")
         }
@@ -556,7 +557,7 @@ class ContactReaderTest {
 
     @Test
     fun testCheckPartialDate_Date_WithOmitYear_SameYear() {
-        val date = Date(110, 6, 30)
+        val date = LocalDateTime.of(110, 6, 30, 0, 0, 0)
         val withDate = Anniversary(date).apply {
             addParameter(Contact.DATE_PARAMETER_OMIT_YEAR, "2010")
         }
