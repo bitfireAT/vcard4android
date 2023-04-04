@@ -40,10 +40,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             return null
 
         val dateStr: String = when {
-            dateOrTime.date != null -> {
-                val format = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-                format.format(dateOrTime.date)
-            }
+            dateOrTime.date != null -> dateOrTime.date.toString()
             dateOrTime.partialDate != null ->
                 dateOrTime.partialDate.toISO8601(true)      // AOSP Contacts app expects this format ("--06-01")
             else -> {

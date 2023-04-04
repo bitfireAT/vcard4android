@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import java.util.*
 import java.util.logging.Level
 
@@ -32,7 +33,7 @@ object EventHandler: DataRowHandler() {
         var partial: PartialDate? = null
         try {
             full = LocalDate.parse(dateStr)
-        } catch(e: ParseException) {
+        } catch(e: DateTimeParseException) {
             try {
                 partial = PartialDate.parse(dateStr)
             } catch (e: IllegalArgumentException) {
