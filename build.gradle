@@ -35,11 +35,17 @@ android {
     defaultConfig {
         minSdkVersion 19        // Android 4.4
         targetSdkVersion 32     // Android 12v2
+
+        // Required for desugaring when setting minSdkVersion to 20 or lower
+        multiDexEnabled true
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+
+        // Enable desugaring
+        coreLibraryDesugaringEnabled true
     }
 
     namespace 'at.bitfire.vcard4android'
@@ -74,11 +80,14 @@ dependencies {
     implementation "org.apache.commons:commons-text:${versions.commonsText}"
 
     // ez-vcard to parse/generate vCards
-    api('com.googlecode.ez-vcard:ez-vcard:0.11.3') {        // 0.12.0 requires Java 8, may imply minSdkVersion 26
+    api('com.googlecode.ez-vcard:ez-vcard:0.12.0') {        // 0.12.0 requires Java 8, may imply minSdkVersion 26
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'
     }
+
+    // Enable desugaring for Java 8 features
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.test:rules:1.5.0'
