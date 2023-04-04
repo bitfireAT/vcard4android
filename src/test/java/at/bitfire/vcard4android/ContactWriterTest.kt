@@ -39,7 +39,7 @@ class ContactWriterTest {
 
     @Test
     fun testAnniversary_vCard3() {
-        val date = LocalDateTime.of(121, 6, 30, 0, 0, 0)
+        val date = LocalDate.of(121, 6, 30)
         val vCard = generate(version = VCardVersion.V3_0) {
             anniversary = Anniversary(date)
         }
@@ -49,7 +49,7 @@ class ContactWriterTest {
 
     @Test
     fun testAnniversary_vCard4() {
-        val ann = Anniversary(LocalDateTime.of(121, 6, 30, 0, 0, 0))
+        val ann = Anniversary(LocalDate.of(121, 6, 30))
         val vCard = generate(version = VCardVersion.V4_0) {
             anniversary = ann
         }
@@ -59,7 +59,7 @@ class ContactWriterTest {
 
     @Test
     fun testBirthday() {
-        val bday = Birthday(LocalDateTime.of(121, 6, 30, 0, 0, 0))
+        val bday = Birthday(LocalDate.of(121, 6, 30))
         val vCard = generate {
             birthDay = bday
         }
@@ -69,7 +69,7 @@ class ContactWriterTest {
 
     @Test
     fun testCustomDate() {
-        val date = XAbDate(LocalDateTime.of(121, 6, 30, 0, 0, 0))
+        val date = XAbDate(LocalDate.of(121, 6, 30))
         val vCard = generate {
             customDates += LabeledProperty(date)
         }
@@ -493,18 +493,18 @@ class ContactWriterTest {
     @Test
     fun testRewritePartialDate_vCard3_Date() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
-        val date = Birthday(LocalDateTime.of(121, 6, 30, 0, 0, 0))
+        val date = Birthday(LocalDate.of(121, 6, 30))
         generator.rewritePartialDate(date)
-        assertEquals(LocalDateTime.of(121, 6, 30, 0, 0, 0), date.date)
+        assertEquals(LocalDate.of(121, 6, 30), date.date)
         assertNull(date.partialDate)
     }
 
     @Test
     fun testRewritePartialDate_vCard4_Date() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
-        val date = Birthday(LocalDateTime.of(121, 6, 30, 0, 0, 0))
+        val date = Birthday(LocalDate.of(121, 6, 30))
         generator.rewritePartialDate(date)
-        assertEquals(LocalDateTime.of(121, 6, 30, 0, 0, 0), date.date)
+        assertEquals(LocalDate.of(121, 6, 30), date.date)
         assertNull(date.partialDate)
         assertEquals(0, date.parameters.size())
     }
