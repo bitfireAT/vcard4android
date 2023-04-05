@@ -41,7 +41,7 @@ class EventBuilderTest {
     }
 
 
-    @Test()
+    @Test
     fun testStartDate_PartialDate() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             anniversary = Anniversary(PartialDate.builder()
