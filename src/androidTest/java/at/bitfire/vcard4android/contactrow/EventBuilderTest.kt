@@ -40,19 +40,19 @@ class EventBuilderTest {
         }
     }
 
-    // TODO enable test as soon as https://github.com/mangstadt/ez-vcard/issues/113 is fixed
-    /*@Test()
+
+    @Test()
     fun testStartDate_PartialDate() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             anniversary = Anniversary(PartialDate.builder()
                 .date(20)
                 .month(8)
                 .build())
-        }).build().also { result ->
+        }, true).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("--08-20", result[0].values[CommonDataKinds.Event.START_DATE])
         }
-    }*/
+    }
 
 
     @Test
