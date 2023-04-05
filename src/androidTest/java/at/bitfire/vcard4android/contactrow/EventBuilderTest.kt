@@ -12,10 +12,9 @@ import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.property.Anniversary
 import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
-import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.*
+import java.time.LocalDate
 
 class EventBuilderTest {
 

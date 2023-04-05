@@ -7,7 +7,7 @@ package at.bitfire.vcard4android.contactrow
 import android.net.Uri
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.*
 
