@@ -33,7 +33,7 @@ class EventHandlerTest {
             put(Event.START_DATE, "1984-08-20")
         }, contact)
         assertEquals(
-            LocalDate.of(1984, /* zero-based */8,  20),
+            LocalDate.of(1984, 8,  20),
             contact.customDates[0].property.date
         )
     }

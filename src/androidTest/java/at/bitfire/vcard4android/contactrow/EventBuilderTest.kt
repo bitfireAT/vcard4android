@@ -31,7 +31,7 @@ class EventBuilderTest {
     fun testStartDate_FullDate() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             anniversary = Anniversary(
-                LocalDate.of(1984, /* zero-based */ 8, 20)
+                LocalDate.of(1984, 8, 20)
             )
         }, false).build().also { result ->
             assertEquals(1, result.size)
@@ -59,7 +59,7 @@ class EventBuilderTest {
     fun testBirthday_FullDate() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             anniversary = Anniversary(
-                LocalDate.of(1984, /* zero-based */ 8, 20)
+                LocalDate.of(1984, 8, 20)
             )
         }, false).build().also { result ->
             assertEquals(1, result.size)
