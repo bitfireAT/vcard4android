@@ -11,6 +11,7 @@ import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import ezvcard.property.DateOrTimeProperty
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.logging.Level
 
@@ -40,7 +41,10 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             return null
 
         val dateStr: String = when {
-            dateOrTime.date != null -> dateOrTime.date.toString()
+            dateOrTime.date != null -> {
+                val format = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ROOT)
+                format.format(dateOrTime.date)
+            }
             dateOrTime.partialDate != null ->
                 dateOrTime.partialDate.toISO8601(true)      // AOSP Contacts app expects this format ("--06-01")
             else -> {
