@@ -24,7 +24,6 @@ import org.junit.*
 import org.junit.Assert.*
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 
 class AndroidContactTest {

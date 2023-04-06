@@ -8,10 +8,9 @@ import android.content.ContentValues
 import android.provider.ContactsContract.CommonDataKinds.Event
 import at.bitfire.vcard4android.Contact
 import ezvcard.util.PartialDate
-import java.time.LocalDate
 import org.junit.Assert.*
 import org.junit.Test
-import java.util.*
+import java.time.LocalDate
 
 class EventHandlerTest {
 
