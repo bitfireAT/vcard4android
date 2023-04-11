@@ -15,6 +15,9 @@ import org.apache.commons.lang3.StringUtils
 import java.net.URI
 import java.net.URISyntaxException
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.temporal.ChronoField
 import java.time.temporal.Temporal
 import java.util.*
@@ -41,8 +44,23 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
         fun fromVCard(vCard: VCard, downloader: Contact.Downloader? = null) =
             ContactReader(vCard, downloader).toContact()
 
+        /**
+         * Takes the [DateOrTimeProperty.date] field, and if it's not null, and
+         * [DateOrTimeProperty.partialDate] has not been set, gets the [Contact.DATE_PARAMETER_OMIT_YEAR]
+         * parameter from [prop], and if the year stored in the date is equal to this omitted year,
+         * copies the `date` into `partialDate` removing the year.
+         *
+         * **IMPORTANT: [prop]'s [DateOrTimeProperty.date] can only be a [LocalDate], [LocalDateTime]
+         * or [OffsetDateTime]; [Instant] is not supported.**
+         */
         fun checkPartialDate(prop: DateOrTimeProperty) {
             val date = prop.date
+
+            if (!date.isSupported(ChronoField.YEAR)){
+                Constants.log.warning("Passed a Temporal into checkPartialDate that doesn't support the YEAR field.")
+                return
+            }
+
             if (prop.partialDate == null && date != null) {
                 prop.getParameter(Contact.DATE_PARAMETER_OMIT_YEAR)?.let { omitYearStr ->
                     if (date.get(ChronoField.YEAR).toString() == omitYearStr) {
