@@ -15,7 +15,12 @@ import org.junit.Assert.*
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.net.URI
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 class ContactWriterTest {
@@ -37,7 +42,7 @@ class ContactWriterTest {
 
     @Test
     fun testAnniversary_vCard3() {
-        val date = Date(121, 6, 30)
+        val date = LocalDate.of(121, 6, 30)
         val vCard = generate(version = VCardVersion.V3_0) {
             anniversary = Anniversary(date)
         }
@@ -47,7 +52,7 @@ class ContactWriterTest {
 
     @Test
     fun testAnniversary_vCard4() {
-        val ann = Anniversary(Date(121, 6, 30))
+        val ann = Anniversary(LocalDate.of(121, 6, 30))
         val vCard = generate(version = VCardVersion.V4_0) {
             anniversary = ann
         }
@@ -57,7 +62,7 @@ class ContactWriterTest {
 
     @Test
     fun testBirthday() {
-        val bday = Birthday(Date(121, 6, 30))
+        val bday = Birthday(LocalDate.of(121, 6, 30))
         val vCard = generate {
             birthDay = bday
         }
@@ -67,7 +72,7 @@ class ContactWriterTest {
 
     @Test
     fun testCustomDate() {
-        val date = XAbDate(Date(121, 6, 30))
+        val date = XAbDate(LocalDate.of(121, 6, 30))
         val vCard = generate {
             customDates += LabeledProperty(date)
         }
@@ -491,18 +496,18 @@ class ContactWriterTest {
     @Test
     fun testRewritePartialDate_vCard3_Date() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
-        val date = Birthday(Date(121, 6, 30))
+        val date = Birthday(LocalDate.of(121, 6, 30))
         generator.rewritePartialDate(date)
-        assertEquals(Date(121, 6, 30), date.date)
+        assertEquals(LocalDate.of(121, 6, 30), date.date)
         assertNull(date.partialDate)
     }
 
     @Test
     fun testRewritePartialDate_vCard4_Date() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
-        val date = Birthday(Date(121, 6, 30))
+        val date = Birthday(LocalDate.of(121, 6, 30))
         generator.rewritePartialDate(date)
-        assertEquals(Date(121, 6, 30), date.date)
+        assertEquals(LocalDate.of(121, 6, 30), date.date)
         assertNull(date.partialDate)
         assertEquals(0, date.parameters.size())
     }
@@ -512,7 +517,7 @@ class ContactWriterTest {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(PartialDate.parse("20210730"))
         generator.rewritePartialDate(date)
-        assertEquals(Date(121, 6, 30), date.date)
+        assertEquals(LocalDate.of(2021, 7, 30), date.date)
         assertNull(date.partialDate)
         assertEquals(0, date.parameters.size())
     }
@@ -532,7 +537,7 @@ class ContactWriterTest {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V3_0)
         val date = Birthday(PartialDate.parse("--0730"))
         generator.rewritePartialDate(date)
-        assertEquals(Date(-300+4, 6, 30), date.date)
+        assertEquals(LocalDate.of(1604, 7, 30), date.date)
         assertNull(date.partialDate)
         assertEquals(1, date.parameters.size())
         assertEquals("1604", date.getParameter(Contact.DATE_PARAMETER_OMIT_YEAR))
@@ -552,30 +557,28 @@ class ContactWriterTest {
     @Test
     fun testWriteJCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
-        generator.vCard.revision = Revision(Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC.id)).apply {
-            set(2021, 6, 30, 1, 2, 3)
-        })
+        generator.vCard.revision = Revision(
+            ZonedDateTime.of(2021, 7, 30, 1, 2, 3, 0, ZoneOffset.UTC)
+        )
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, true)
-        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.11.3\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03Z\"]]]", stream.toString())
+        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.12.0\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03+00:00\"]]]", stream.toString())
     }
 
 
     @Test
     fun testWriteVCard() {
         val generator = ContactWriter.fromContact(Contact(), VCardVersion.V4_0)
-        generator.vCard.revision = Revision(Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC.id)).apply {
-            set(2021, 6, 30, 1, 2, 3)
-        })
+        generator.vCard.revision = Revision(ZonedDateTime.of(2021, 7, 30, 1, 2, 3, 0, ZoneOffset.UTC))
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, false)
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
-                "PRODID:ez-vcard 0.11.3\r\n" +
+                "PRODID:ez-vcard 0.12.0\r\n" +
                 "FN:\r\n" +
-                "REV:20210730T010203Z\r\n" +
+                "REV:20210730T010203+0000\r\n" +
                 "END:VCARD\r\n", stream.toString())
     }
 

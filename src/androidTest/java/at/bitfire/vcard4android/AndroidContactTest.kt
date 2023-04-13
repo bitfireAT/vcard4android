@@ -24,7 +24,7 @@ import org.junit.*
 import org.junit.Assert.*
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
-import java.text.SimpleDateFormat
+import java.time.LocalDate
 
 class AndroidContactTest {
 
@@ -71,7 +71,7 @@ class AndroidContactTest {
         vcard.phoneticGivenName = "Först"
         vcard.phoneticMiddleName = "Mittelerde"
         vcard.phoneticFamilyName = "Fämilie"
-        vcard.birthDay = Birthday(SimpleDateFormat("yyyy-MM-dd").parse("1980-04-16"))
+        vcard.birthDay = Birthday(LocalDate.parse("1980-04-16"))
         vcard.customDates += LabeledProperty(XAbDate(PartialDate.parse("--0102")), "Custom Date")
         vcard.photo = samplePhoto
 

@@ -16,8 +16,10 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class ContactTest {
@@ -176,8 +178,9 @@ class ContactTest {
         }
         assertTrue(url1 && url2)
 
+        val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
         // BDAY
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         assertEquals("1996-04-15", dateFormat.format(c.birthDay!!.date))
         // ANNIVERSARY
         assertEquals("2014-08-12", dateFormat.format(c.anniversary!!.date))
@@ -185,7 +188,7 @@ class ContactTest {
         assertEquals(1, c.customDates.size)
         c.customDates.first.also { date ->
             assertEquals("Custom Date", date.label)
-            assertEquals(ZonedDateTime.of(2021, 7, 29, 0, 0, 0, 0, ZoneId.systemDefault()).toInstant(), date.property.date.toInstant())
+            assertEquals(LocalDate.of(2021, 7, 29), date.property.date)
         }
 
         // RELATED

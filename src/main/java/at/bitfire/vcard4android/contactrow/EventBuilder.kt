@@ -11,6 +11,7 @@ import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import ezvcard.property.DateOrTimeProperty
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.logging.Level
 
@@ -41,7 +42,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
 
         val dateStr: String = when {
             dateOrTime.date != null -> {
-                val format = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+                val format = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ROOT)
                 format.format(dateOrTime.date)
             }
             dateOrTime.partialDate != null ->

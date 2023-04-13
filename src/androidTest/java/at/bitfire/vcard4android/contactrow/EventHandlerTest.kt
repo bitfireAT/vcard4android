@@ -10,7 +10,7 @@ import at.bitfire.vcard4android.Contact
 import ezvcard.util.PartialDate
 import org.junit.Assert.*
 import org.junit.Test
-import java.util.*
+import java.time.LocalDate
 
 class EventHandlerTest {
 
@@ -32,11 +32,9 @@ class EventHandlerTest {
             put(Event.START_DATE, "1984-08-20")
         }, contact)
         assertEquals(
-            Calendar.getInstance().apply {
-                set(1984, /* zero-based */7,  20, 0, 0, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis,
-            contact.customDates[0].property.date.time)
+            LocalDate.of(1984, 8,  20),
+            contact.customDates[0].property.date
+        )
     }
 
     @Test

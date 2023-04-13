@@ -33,13 +33,15 @@ android {
     buildToolsVersion '33.0.2'
 
     defaultConfig {
-        minSdkVersion 19        // Android 4.4
+        minSdkVersion 21        // Android 5.0
         targetSdkVersion 32     // Android 12v2
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+
+        coreLibraryDesugaringEnabled true
     }
 
     namespace 'at.bitfire.vcard4android'
@@ -66,6 +68,7 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     implementation 'androidx.annotation:annotation:1.6.0'
     // noinspection GradleDependency
@@ -74,7 +77,7 @@ dependencies {
     implementation "org.apache.commons:commons-text:${versions.commonsText}"
 
     // ez-vcard to parse/generate vCards
-    api('com.googlecode.ez-vcard:ez-vcard:0.11.3') {        // 0.12.0 requires Java 8, may imply minSdkVersion 26
+    api('com.googlecode.ez-vcard:ez-vcard:0.12.0') {    // requires Java 8
         // hCard functionality not needed
         exclude group: 'org.jsoup'
         exclude group: 'org.freemarker'

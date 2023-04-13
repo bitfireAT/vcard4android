@@ -14,6 +14,12 @@ import ezvcard.util.PartialDate
 import org.apache.commons.lang3.StringUtils
 import java.net.URI
 import java.net.URISyntaxException
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoField
+import java.time.temporal.Temporal
 import java.util.*
 import java.util.logging.Level
 
@@ -38,16 +44,38 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
         fun fromVCard(vCard: VCard, downloader: Contact.Downloader? = null) =
             ContactReader(vCard, downloader).toContact()
 
+        /**
+         * In contrast to vCard 4, there are no dates without year (like birthdays) in vCard 3.
+         * As a workaround, many servers use this format:
+         *
+         * `BDAY;X-APPLE-OMIT-YEAR=1604:1604-08-20`
+         *
+         * To use it properly, we have to convert dates of this format to [PartialDate] (in
+         * our example, a [PartialDate] that represents `--0820`).
+         *
+         * This is what this method is for: it converts dates (y/m/d) with an `X-APPLE-OMIT-YEAR`
+         * parameter to a [PartialDate] (-/m/d) when the year equals to the `X-APPLE-OMIT-YEAR`
+         * parameter.
+         *
+         * [prop]'s [DateOrTimeProperty.date] must be a [LocalDate], [LocalDateTime] or [OffsetDateTime]
+         * for this to work. [Instant] values will be ignored.
+         *
+         * @param prop date/time to check for partial dates; value may be replaced by [PartialDate]
+         */
         fun checkPartialDate(prop: DateOrTimeProperty) {
-            val date = prop.date
+            val date: Temporal? = prop.date
+
+            if (arrayOf(ChronoField.YEAR, ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH).any { date?.isSupported(it) == false }) {
+                Constants.log.log(Level.WARNING, "checkPartialDate: unsupported DateOrTimeProperty", prop)
+                return
+            }
+
             if (prop.partialDate == null && date != null) {
                 prop.getParameter(Contact.DATE_PARAMETER_OMIT_YEAR)?.let { omitYearStr ->
-                    val cal = GregorianCalendar.getInstance()
-                    cal.time = date
-                    if (cal.get(GregorianCalendar.YEAR).toString() == omitYearStr) {
+                    if (date.get(ChronoField.YEAR).toString() == omitYearStr) {
                         val partial = PartialDate.builder()
-                            .date(cal.get(GregorianCalendar.DAY_OF_MONTH))
-                            .month(cal.get(GregorianCalendar.MONTH) + 1)
+                            .date(date.get(ChronoField.DAY_OF_MONTH))
+                            .month(date.get(ChronoField.MONTH_OF_YEAR))
                             .build()
                         prop.partialDate = partial
                     }
