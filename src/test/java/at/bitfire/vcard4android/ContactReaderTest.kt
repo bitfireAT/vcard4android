@@ -15,10 +15,7 @@ import ezvcard.util.PartialDate
 import org.junit.Assert.*
 import org.junit.Test
 import java.net.URI
-import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 
 class ContactReaderTest {
 

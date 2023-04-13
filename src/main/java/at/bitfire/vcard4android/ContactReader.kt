@@ -45,19 +45,28 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
             ContactReader(vCard, downloader).toContact()
 
         /**
-         * Takes the [DateOrTimeProperty.date] field, and if it's not null, and
-         * [DateOrTimeProperty.partialDate] has not been set, gets the [Contact.DATE_PARAMETER_OMIT_YEAR]
-         * parameter from [prop], and if the year stored in the date is equal to this omitted year,
-         * copies the `date` into `partialDate` removing the year.
+         * In contrast to vCard 4, there are no dates without year (like birthdays) in vCard 3.
+         * As a workaround, many servers use this format:
          *
-         * **IMPORTANT: [prop]'s [DateOrTimeProperty.date] can only be a [LocalDate], [LocalDateTime]
-         * or [OffsetDateTime]; [Instant] is not supported.**
+         * `BDAY;X-APPLE-OMIT-YEAR=1604:1604-08-20`
+         *
+         * To use it properly, we have to convert dates of this format to [PartialDate] (in
+         * our example, a [PartialDate] that represents `--0820`).
+         *
+         * This is what this method is for: it converts dates (y/m/d) with an `X-APPLE-OMIT-YEAR`
+         * parameter to a [PartialDate] (-/m/d) when the year equals to the `X-APPLE-OMIT-YEAR`
+         * parameter.
+         *
+         * [prop]'s [DateOrTimeProperty.date] must be a [LocalDate], [LocalDateTime] or [OffsetDateTime]
+         * for this to work. [Instant] values will be ignored.
+         *
+         * @param prop date/time to check for partial dates; value may be replaced by [PartialDate]
          */
         fun checkPartialDate(prop: DateOrTimeProperty) {
             val date: Temporal? = prop.date
 
-            if (arrayOf(ChronoField.YEAR, ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH).any { date?.isSupported(it) == false }){
-                Constants.log.warning("Passed a Temporal into checkPartialDate that doesn't support the YEAR field.")
+            if (arrayOf(ChronoField.YEAR, ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH).any { date?.isSupported(it) == false }) {
+                Constants.log.log(Level.WARNING, "checkPartialDate: unsupported DateOrTimeProperty", prop)
                 return
             }
 
