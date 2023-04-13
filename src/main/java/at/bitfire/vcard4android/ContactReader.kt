@@ -54,9 +54,9 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
          * or [OffsetDateTime]; [Instant] is not supported.**
          */
         fun checkPartialDate(prop: DateOrTimeProperty) {
-            val date = prop.date
+            val date: Temporal? = prop.date
 
-            if (arrayOf(ChronoField.YEAR, ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH).any { !date.isSupported(it) }){
+            if (arrayOf(ChronoField.YEAR, ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH).any { date?.isSupported(it) == false }){
                 Constants.log.warning("Passed a Temporal into checkPartialDate that doesn't support the YEAR field.")
                 return
             }
