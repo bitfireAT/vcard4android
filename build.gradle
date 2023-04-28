@@ -13,7 +13,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.0.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:${versions.dokka}"
     }
@@ -33,15 +33,19 @@ android {
     buildToolsVersion '33.0.2'
 
     defaultConfig {
-        minSdkVersion 21        // Android 5.0
-        targetSdkVersion 32     // Android 12v2
+        minSdkVersion 21        // Android 5
+        targetSdkVersion 33     // Android 13
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
 
         coreLibraryDesugaringEnabled true
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     namespace 'at.bitfire.vcard4android'
@@ -52,11 +56,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     packagingOptions {
         resources {
             excludes += ['LICENSE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt']
         }
     }
+
     lint {
         disable 'AllowBackup', 'InvalidPackage'
     }
