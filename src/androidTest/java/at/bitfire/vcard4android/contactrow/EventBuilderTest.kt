@@ -14,7 +14,9 @@ import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class EventBuilderTest {
 
@@ -27,7 +29,17 @@ class EventBuilderTest {
 
 
     @Test
-    fun testStartDate_FullDate() {
+    fun testStartDate_Date_Instant() {
+        EventBuilder(Uri.EMPTY, null, Contact().apply {
+            anniversary = Anniversary(Instant.ofEpochSecond(1683924316))
+        }, false).build().also { result ->
+            assertEquals(1, result.size)
+            assertEquals("2023-05-12T20:45:16.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
+        }
+    }
+
+    @Test
+    fun testStartDate_Date_LocalDate() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             anniversary = Anniversary(
                 LocalDate.of(1984, 8, 20)
@@ -35,13 +47,24 @@ class EventBuilderTest {
         }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("1984-08-20", result[0].values[CommonDataKinds.Event.START_DATE])
-            assertEquals(CommonDataKinds.Event.TYPE_ANNIVERSARY, result[0].values[CommonDataKinds.Event.TYPE])
+        }
+    }
+
+    @Test
+    fun testStartDate_Date_LocalDateTime() {
+        EventBuilder(Uri.EMPTY, null, Contact().apply {
+            anniversary = Anniversary(
+                LocalDateTime.of(1984, 8, 20, 12, 30, 51)
+            )
+        }, false).build().also { result ->
+            assertEquals(1, result.size)
+            assertEquals("1984-08-20T12:30:51.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
         }
     }
 
 
     @Test
-    fun testStartDate_PartialDate() {
+    fun testStartDate_PartialDate_NoYear() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             anniversary = Anniversary(PartialDate.builder()
                 .date(20)
@@ -53,16 +76,17 @@ class EventBuilderTest {
         }
     }
 
-
     @Test
-    fun testBirthday_FullDate() {
+    fun testStartDate_PartialDate_NoYear_ButHour() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
-            anniversary = Anniversary(
-                LocalDate.of(1984, 8, 20)
-            )
-        }, false).build().also { result ->
+            anniversary = Anniversary(PartialDate.builder()
+                .date(20)
+                .month(8)
+                .hour(14)
+                .build())
+        }, true).build().also { result ->
             assertEquals(1, result.size)
-            assertEquals("1984-08-20", result[0].values[CommonDataKinds.Event.START_DATE])
+            assertEquals("--08-20T14:00:00.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
         }
     }
 
