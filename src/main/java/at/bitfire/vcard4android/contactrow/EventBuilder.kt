@@ -10,13 +10,29 @@ import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import ezvcard.property.DateOrTimeProperty
-import java.text.SimpleDateFormat
+import ezvcard.util.PartialDate
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.LinkedList
+import java.util.Locale
 import java.util.logging.Level
 
 class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
+
+    companion object {
+        const val DATE_AND_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        const val FULL_DATE_FORMAT = "yyyy-MM-dd"
+        const val NO_YEAR_DATE_FORMAT = "--MM-dd"
+        //const val NO_YEAR_DATE_AND_TIME_FORMAT = "--MM-dd'T'HH:mm:ss.SSS'Z'"
+
+        const val TIME_PART = "'T'HH:mm:ss.SSS'Z'"
+    }
 
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
@@ -36,31 +52,92 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
         return result
     }
 
-    fun buildEvent(dateOrTime: DateOrTimeProperty?, typeCode: Int, label: String? = null): BatchOperation.CpoBuilder? {
+    private fun buildEvent(dateOrTime: DateOrTimeProperty?, typeCode: Int, label: String? = null): BatchOperation.CpoBuilder? {
         if (dateOrTime == null)
             return null
 
-        val dateStr: String = when {
-            dateOrTime.date != null -> {
-                val format = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ROOT)
-                format.format(dateOrTime.date)
+        // See here for formats supported by AOSP Contacts:
+        // https://android.googlesource.com/platform/packages/apps/Contacts/+/refs/tags/android-13.0.0_r49/src/com/android/contacts/util/CommonDateUtils.java
+
+        val androidStr: String? =
+            when {
+                dateOrTime.date != null -> {
+                    val date = dateOrTime.date
+                    when (date) {
+                        is Instant -> {
+                            val utc = ZonedDateTime.ofInstant(date, ZoneOffset.UTC)
+                            DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(utc)
+                        }
+                        is LocalDate ->
+                            DateTimeFormatter.ofPattern(FULL_DATE_FORMAT, Locale.US).format(date)
+                        is LocalDateTime ->
+                            DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(date)
+                        else ->
+                            null
+                    }
+                }
+                dateOrTime.partialDate != null ->
+                    partialDateToAndroid(dateOrTime.partialDate)
+                else ->
+                    null
             }
-            dateOrTime.partialDate != null ->
-                dateOrTime.partialDate.toISO8601(true)      // AOSP Contacts app expects this format ("--06-01")
-            else -> {
-                Constants.log.log(Level.WARNING, "Ignoring date/time without (partial) date", dateOrTime)
-                return null
-            }
+        if (androidStr == null) {
+            Constants.log.log(Level.WARNING, "Ignoring date/time without supported (partial) date", dateOrTime)
+            return null
         }
 
         val builder = newDataRow()
             .withValue(Event.TYPE, typeCode)
-            .withValue(Event.START_DATE, dateStr)
+            .withValue(Event.START_DATE, androidStr)
 
         if (label != null)
             builder.withValue(Event.LABEL, label)
 
         return builder
+    }
+
+    private fun partialDateToAndroid(partialDate: PartialDate): String? {
+        // possible values: see RFC 6350 4.3.4 DATE-AND-OR-TIME
+        val dateStr =
+            if (partialDate.hasDateComponent()) {
+                if (partialDate.month != null && partialDate.date != null) {
+                    if (partialDate.year == null) {
+                        val date = LocalDate.of(
+                            /* dummy, won't be used */ 2000,
+                            partialDate.month,
+                            partialDate.date
+                        )
+                        DateTimeFormatter.ofPattern(NO_YEAR_DATE_FORMAT, Locale.US).format(date)
+                    } else /* partialDate.year != null */ {
+                        val date = LocalDate.of(
+                            partialDate.year,
+                            partialDate.month,
+                            partialDate.date
+                        )
+                        DateTimeFormatter.ofPattern(FULL_DATE_FORMAT, Locale.US).format(date)
+                    }
+                } else  // no month and/or day-of-month
+                    null
+            } else  // no date component
+                null
+
+        if (dateStr == null)
+            return null
+
+        val str = StringBuilder(dateStr)
+        // we have a (partial) date, append time if possible
+        if (partialDate.hasTimeComponent()) {
+            val timeStr = DateTimeFormatter.ofPattern(TIME_PART).format(
+                LocalTime.of(
+                    partialDate.hour ?: 0,
+                    partialDate.minute ?: 0,
+                    partialDate.second ?: 0
+                )
+            )
+            str.append(timeStr)
+        }
+
+        return str.toString()
     }
 
 

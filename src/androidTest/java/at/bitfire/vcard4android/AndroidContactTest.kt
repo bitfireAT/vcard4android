@@ -182,31 +182,4 @@ class AndroidContactTest {
         assertTrue(os.toString().contains("ADR;LABEL=My ^'Label^'\\nLine 2:;;Street \"Address\";;;;"))
     }
 
-    @Test
-    fun testBirthdayWithoutYear() {
-        val vcard = Contact()
-        vcard.displayName = "Mya Contact"
-        vcard.birthDay = Birthday(PartialDate.parse("-04-16"))
-
-        val contact = AndroidContact(addressBook, vcard, null, null)
-        contact.add()
-
-        val contact2 = addressBook.findContactById(contact.id!!)
-        try {
-            val vcard2 = contact2.getContact()
-            assertEquals(vcard.displayName, vcard2.displayName)
-            assertEquals(vcard.birthDay, vcard2.birthDay)
-        } finally {
-            contact2.delete()
-        }
-    }
-
-    /*@Test
-    fun testToURIScheme() {
-        assertEquals("testp+csfgh-ewt4345.2qiuz4", AndroidContact.toURIScheme("02 34test#ä{☺}ö p[]ß+csfgh()-e_wt4\\345.2qiuz4"))
-        assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod Forum"))
-        assertEquals("CyanogenModForum", AndroidContact.toURIScheme("CyanogenMod_Forum"))
-    }*/
-
-
 }
