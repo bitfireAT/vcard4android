@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: build/dokka/html
+          path: lib/build/dokka/html
 
   deploy:
     environment:
