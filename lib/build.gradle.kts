@@ -76,15 +76,20 @@ publishing {
     }
 }
 
+apply(from = "../versions.gradle.kts")
+val kotlinVersion: String by extra
+val commonsIO: String by extra
+val commonsText: String by extra
+
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${properties["vcard4android.lib.kotlin.version"]}")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     implementation("androidx.annotation:annotation:1.6.0")
     // noinspection GradleDependency
-    implementation("commons-io:commons-io:${properties["vcard4android.lib.commonsIO.version"]}")
+    implementation("commons-io:commons-io:$commonsIO")
     // noinspection GradleDependency
-    implementation("org.apache.commons:commons-text:${properties["vcard4android.lib.commonsText.version"]}")
+    implementation("org.apache.commons:commons-text:$commonsText")
 
     // ez-vcard to parse/generate vCards
     api("com.googlecode.ez-vcard:ez-vcard:0.12.0") {    // requires Java 8
