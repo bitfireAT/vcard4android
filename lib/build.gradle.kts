@@ -1,3 +1,5 @@
+import android.annotation.SuppressLint
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -80,6 +82,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     implementation("androidx.annotation:annotation:1.6.0")
+    @Suppress("GradleDependency")
     implementation("commons-io:commons-io:2.6")
     implementation("org.apache.commons:commons-text:1.3")
 
