@@ -5,4 +5,4 @@ plugins {
 }
 
 group = "at.bitfire"
-version = project.properties["vcard4android.version"]
+version = System.getProperty("GIT_COMMIT")
