@@ -12,7 +12,6 @@ android {
 
     defaultConfig {
         minSdk = 21        // Android 5
-        targetSdk = 33     // Android 13
 
         aarMetadata {
             minCompileSdk = 29
@@ -39,7 +38,7 @@ android {
         }
     }
 
-    packagingOptions {
+    packaging {
         resources {
             excludes += listOf("LICENSE", "META-INF/LICENSE.txt", "META-INF/NOTICE.txt")
         }
@@ -81,9 +80,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
     implementation("androidx.annotation:annotation:1.6.0")
-    // noinspection GradleDependency
     implementation("commons-io:commons-io:2.6")
-    // noinspection GradleDependency
     implementation("org.apache.commons:commons-text:1.3")
 
     // ez-vcard to parse/generate vCards
