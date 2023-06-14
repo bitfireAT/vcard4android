@@ -1,6 +1,7 @@
 
 [![Development tests](https://github.com/bitfireAT/vcard4android/actions/workflows/test-dev.yml/badge.svg)](https://github.com/bitfireAT/vcard4android/actions/workflows/test-dev.yml)
 [![Documentation](https://img.shields.io/badge/documentation-kdoc-brightgreen)](https://bitfireat.github.io/vcard4android/)
+[![Jitpack link](https://img.shields.io/jitpack/version/com.github.bitfireAT/vcard4android)](https://jitpack.io/#bitfireAT/vcard4android)
 
 
 # vcard4android

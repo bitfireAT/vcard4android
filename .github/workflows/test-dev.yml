@@ -20,8 +20,8 @@ jobs:
         with:
           name: test-results
           path: |
-            build/outputs/lint*
-            build/reports
+            lib/build/outputs/lint*
+            lib/build/reports
 
   test_on_emulator:
     name: Tests with emulator
@@ -79,4 +79,4 @@ jobs:
         with:
           name: test-results
           path: |
-            build/reports
+            lib/build/reports
