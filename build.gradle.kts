@@ -5,4 +5,4 @@ plugins {
 }
 
 group = "at.bitfire"
-version = System.getProperty("GIT_COMMIT")
+version = System.getenv("GIT_COMMIT")

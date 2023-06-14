@@ -68,7 +68,7 @@ publishing {
         register("release", MavenPublication::class.java) {
             groupId = "com.github.bitfireAT"
             artifactId = "vcard4android"
-            version = System.getProperty("GIT_COMMIT")
+            version = System.getenv("GIT_COMMIT")
 
             afterEvaluate {
                 from(components["release"])
