@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "cert4android"
+rootProject.name = "vcard4android"
 include (":lib")
-project(":lib").name = "cert4android"
+project(":lib").name = "vcard4android"
