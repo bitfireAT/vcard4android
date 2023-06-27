@@ -158,7 +158,8 @@ class ContactTest {
                 "END:VCARD\r\n", c.unknownProperties)
 
         // NOTE
-        assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.\n\n\nSecond note", c.note)
+        val ln = System.lineSeparator()
+        assertEquals("This fax number is operational 0800 to 1715 EST, Mon-Fri.${ln}${ln}${ln}Second note", c.note)
 
         // CATEGORIES
         assertEquals(
