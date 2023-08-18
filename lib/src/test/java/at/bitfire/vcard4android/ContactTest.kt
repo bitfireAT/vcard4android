@@ -35,12 +35,6 @@ class ContactTest {
         return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), false,null).first()
     }
 
-    private fun toString(c: Contact, groupMethod: GroupMethod, vCardVersion: VCardVersion): String {
-        val os = ByteArrayOutputStream()
-        c.writeVCard(vCardVersion, os)
-        return os.toString()
-    }
-
 
     @Test
     fun testVCard3FieldsAsVCard3() {

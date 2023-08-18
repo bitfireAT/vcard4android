@@ -8,13 +8,20 @@ import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
 import ezvcard.property.Address
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Before
+import org.junit.Assert.*
 import org.junit.Test
-import java.util.*
 
 class EzVCardTest {
+
+    // https://github.com/mangstadt/ez-vcard/issues/140
+    @Test(expected = AssertionError::class)
+    fun testKind_GROUP_uppercase() {
+        val vCard = Ezvcard.parse("BEGIN:VCARD\r\n" +
+                "VERSION:4.0\r\n" +
+                "KIND:GROUP\r\n" +
+                "END:VCARD").first()
+        assertTrue(vCard.kind.isGroup)
+    }
 
     @Test
     fun testREV_UTC() {
