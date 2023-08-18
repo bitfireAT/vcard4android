@@ -140,6 +140,14 @@ class ContactReaderTest {
     }
 
     @Test
+    fun testKind_Group_Uppercase() {
+        val c = ContactReader.fromVCard(VCard().apply {
+            kind = Kind("GROUP")
+        })
+        assertTrue(c.group)
+    }
+
+    @Test
     fun testKind_Individual() {
         val c = ContactReader.fromVCard(VCard().apply {
             kind = Kind.individual()

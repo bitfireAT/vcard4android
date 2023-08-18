@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoField
 import java.time.temporal.Temporal
-import java.util.*
+import java.util.UUID
 import java.util.logging.Level
 
 /**
@@ -125,13 +125,12 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is Uid ->
                     c.uid = uriToUid(prop.value)
 
-                is Kind, is XAddressBookServerKind -> {
-                    val kindProp = prop as Kind
-                    c.group = kindProp.isGroup
+                is Kind -> {        // includes XAddressBookServerKind
+                    // c.group = prop.isGroup    // https://github.com/mangstadt/ez-vcard/issues/140
+                    c.group = prop.value.equals(Kind.GROUP, true)
                 }
-                is Member, is XAddressBookServerMember -> {
-                    val uriProp = prop as Member
-                    uriToUid(uriProp.uri)?.let { c.members += it }
+                is Member -> {      // includes XAddressBookServerMember
+                    uriToUid(prop.uri)?.let { c.members += it }
                 }
 
                 is FormattedName ->
