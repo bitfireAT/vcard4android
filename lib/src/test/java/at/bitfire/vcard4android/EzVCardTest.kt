@@ -14,7 +14,7 @@ import org.junit.Test
 class EzVCardTest {
 
     // https://github.com/mangstadt/ez-vcard/issues/140
-    @Test(expected = AssertionError::class)
+    @Test()
     fun testKind_GROUP_uppercase() {
         val vCard = Ezvcard.parse("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +

@@ -87,7 +87,7 @@ dependencies {
     implementation("org.apache.commons:commons-text:1.3")
 
     // ez-vcard to parse/generate vCards
-    api("com.googlecode.ez-vcard:ez-vcard:0.12.0") {    // requires Java 8
+    api("com.googlecode.ez-vcard:ez-vcard:0.12.1") {    // requires Java 8
         // hCard functionality not needed
         exclude(group = "org.jsoup")
         exclude(group = "org.freemarker")

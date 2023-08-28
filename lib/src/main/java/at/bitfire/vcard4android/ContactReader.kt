@@ -125,13 +125,10 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is Uid ->
                     c.uid = uriToUid(prop.value)
 
-                is Kind -> {        // includes XAddressBookServerKind
-                    // c.group = prop.isGroup    // https://github.com/mangstadt/ez-vcard/issues/140
-                    c.group = prop.value.equals(Kind.GROUP, true)
-                }
-                is Member -> {      // includes XAddressBookServerMember
+                is Kind ->      // includes XAddressBookServerKind
+                    c.group = prop.isGroup
+                is Member ->    // includes XAddressBookServerMember
                     uriToUid(prop.uri)?.let { c.members += it }
-                }
 
                 is FormattedName ->
                     c.displayName = StringUtils.trimToNull(prop.value)

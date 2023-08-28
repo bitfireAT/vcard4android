@@ -563,7 +563,7 @@ class ContactWriterTest {
 
         val stream = ByteArrayOutputStream()
         generator.writeCard(stream, true)
-        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.12.0\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03+00:00\"]]]", stream.toString())
+        assertEquals("[\"vcard\",[[\"version\",{},\"text\",\"4.0\"],[\"prodid\",{},\"text\",\"ez-vcard 0.12.1\"],[\"fn\",{},\"text\",\"\"],[\"rev\",{},\"timestamp\",\"2021-07-30T01:02:03+00:00\"]]]", stream.toString())
     }
 
 
@@ -576,7 +576,7 @@ class ContactWriterTest {
         generator.writeCard(stream, false)
         assertEquals("BEGIN:VCARD\r\n" +
                 "VERSION:4.0\r\n" +
-                "PRODID:ez-vcard 0.12.0\r\n" +
+                "PRODID:ez-vcard 0.12.1\r\n" +
                 "FN:\r\n" +
                 "REV:20210730T010203+0000\r\n" +
                 "END:VCARD\r\n", stream.toString())
