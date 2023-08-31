@@ -17,6 +17,8 @@ import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 class EventBuilderTest {
 
@@ -134,6 +136,17 @@ class EventBuilderTest {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             birthDay = Birthday(
                 LocalDate.of(1984, /* zero-based */ 7, 20)
+            )
+        }, false).build().also { result ->
+            assertEquals(CommonDataKinds.Event.TYPE_BIRTHDAY, result[0].values[CommonDataKinds.Event.TYPE])
+        }
+    }
+
+    @Test
+    fun testType_BirthdayWithTimezone() {
+        EventBuilder(Uri.EMPTY, null, Contact().apply {
+            birthDay = Birthday(
+                ZonedDateTime.of(1984, /* zero-based */ 7, 20, 0, 0, 0, 0, ZoneOffset.UTC)
             )
         }, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.TYPE_BIRTHDAY, result[0].values[CommonDataKinds.Event.TYPE])
