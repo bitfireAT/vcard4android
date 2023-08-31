@@ -37,6 +37,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
 
+        println("Contact birthday: ${contact.birthDay}")
         buildEvent(contact.birthDay, Event.TYPE_BIRTHDAY)?.let { result += it }
         buildEvent(contact.anniversary, Event.TYPE_ANNIVERSARY)?.let { result += it }
 
@@ -62,8 +63,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
         val androidStr: String? =
             when {
                 dateOrTime.date != null -> {
-                    val date = dateOrTime.date
-                    when (date) {
+                    when (val date = dateOrTime.date) {
                         is Instant -> {
                             val utc = ZonedDateTime.ofInstant(date, ZoneOffset.UTC)
                             DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(utc)
@@ -72,6 +72,10 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                             DateTimeFormatter.ofPattern(FULL_DATE_FORMAT, Locale.US).format(date)
                         is LocalDateTime ->
                             DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(date)
+                        is ZonedDateTime ->{
+                            val utc = date.withZoneSameInstant(ZoneOffset.UTC)
+                            DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(utc)
+                        }
                         else ->
                             null
                     }
