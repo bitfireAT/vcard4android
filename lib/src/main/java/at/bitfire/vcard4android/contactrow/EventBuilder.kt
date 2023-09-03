@@ -11,12 +11,7 @@ import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import ezvcard.property.DateOrTimeProperty
 import ezvcard.util.PartialDate
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.util.LinkedList
 import java.util.Locale
@@ -37,7 +32,6 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
 
-        println("Contact birthday: ${contact.birthDay}")
         buildEvent(contact.birthDay, Event.TYPE_BIRTHDAY)?.let { result += it }
         buildEvent(contact.anniversary, Event.TYPE_ANNIVERSARY)?.let { result += it }
 
@@ -72,7 +66,8 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                             DateTimeFormatter.ofPattern(FULL_DATE_FORMAT, Locale.US).format(date)
                         is LocalDateTime ->
                             DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(date)
-                        is ZonedDateTime ->{
+                        is ZonedDateTime -> {
+                            // time zones not supported by Contacts storage, convert to UTC
                             val utc = date.withZoneSameInstant(ZoneOffset.UTC)
                             DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(utc)
                         }
