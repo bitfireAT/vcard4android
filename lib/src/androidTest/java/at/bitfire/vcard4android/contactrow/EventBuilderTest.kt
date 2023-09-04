@@ -17,6 +17,8 @@ import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 class EventBuilderTest {
 
@@ -59,6 +61,17 @@ class EventBuilderTest {
         }, false).build().also { result ->
             assertEquals(1, result.size)
             assertEquals("1984-08-20T12:30:51.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
+        }
+    }
+
+    @Test
+    fun testStartDate_DateTime_WithOffset() {
+        EventBuilder(Uri.EMPTY, null, Contact().apply {
+            birthDay = Birthday(
+                ZonedDateTime.of(1984, 7, 20, 0, 0, 0, 0, ZoneOffset.ofHours(1))
+            )
+        }, false).build().also { result ->
+            assertEquals("1984-07-19T23:00:00.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
         }
     }
 
