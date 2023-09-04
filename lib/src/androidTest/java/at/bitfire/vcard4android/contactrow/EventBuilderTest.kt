@@ -92,6 +92,17 @@ class EventBuilderTest {
         }
     }
 
+    @Test
+    fun testStartDate_WithOffset() {
+        EventBuilder(Uri.EMPTY, null, Contact().apply {
+            birthDay = Birthday(
+                ZonedDateTime.of(1984, 7, 20, 0, 0, 0, 0, ZoneOffset.UTC)
+            )
+        }, false).build().also { result ->
+            assertEquals("1984-07-20T00:00:00.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
+        }
+    }
+
 
     @Test
     fun testLabel() {
@@ -136,17 +147,6 @@ class EventBuilderTest {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             birthDay = Birthday(
                 LocalDate.of(1984, /* zero-based */ 7, 20)
-            )
-        }, false).build().also { result ->
-            assertEquals(CommonDataKinds.Event.TYPE_BIRTHDAY, result[0].values[CommonDataKinds.Event.TYPE])
-        }
-    }
-
-    @Test
-    fun testType_BirthdayWithTimezone() {
-        EventBuilder(Uri.EMPTY, null, Contact().apply {
-            birthDay = Birthday(
-                ZonedDateTime.of(1984, /* zero-based */ 7, 20, 0, 0, 0, 0, ZoneOffset.UTC)
             )
         }, false).build().also { result ->
             assertEquals(CommonDataKinds.Event.TYPE_BIRTHDAY, result[0].values[CommonDataKinds.Event.TYPE])
