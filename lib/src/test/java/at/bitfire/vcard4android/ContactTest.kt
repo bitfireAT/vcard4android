@@ -5,22 +5,28 @@
 package at.bitfire.vcard4android
 
 import ezvcard.VCardVersion
-import ezvcard.parameter.*
+import ezvcard.parameter.AddressType
+import ezvcard.parameter.EmailType
+import ezvcard.parameter.ImppType
+import ezvcard.parameter.RelatedType
+import ezvcard.parameter.TelephoneType
 import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
 import org.apache.commons.io.IOUtils
-import org.junit.Assert.*
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.nio.charset.Charset
-import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.*
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class ContactTest {
 
@@ -173,12 +179,10 @@ class ContactTest {
         }
         assertTrue(url1 && url2)
 
-        val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
         // BDAY
-        assertEquals("1996-04-15", dateFormat.format(c.birthDay!!.date))
+        assertEquals(OffsetDateTime.of(1996, 4, 15, 20, 12, 43, 0, ZoneOffset.ofHours(4)), c.birthDay!!.date)
         // ANNIVERSARY
-        assertEquals("2014-08-12", dateFormat.format(c.anniversary!!.date))
+        assertEquals(LocalDate.of(2014, 8, 12), c.anniversary!!.date)
         // X-ABDATE
         assertEquals(1, c.customDates.size)
         c.customDates.first.also { date ->

@@ -13,10 +13,12 @@ import ezvcard.property.Anniversary
 import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -65,10 +67,10 @@ class EventBuilderTest {
     }
 
     @Test
-    fun testStartDate_DateTime_WithOffset() {
+    fun testStartDate_DateTime_WithOffset_OffsetDateTime() {
         EventBuilder(Uri.EMPTY, null, Contact().apply {
             birthDay = Birthday(
-                ZonedDateTime.of(1984, 7, 20, 0, 0, 0, 0, ZoneOffset.ofHours(1))
+                OffsetDateTime.of(1984, 7, 20, 0, 0, 0, 0, ZoneOffset.ofHours(1))
             )
         }, false).build().also { result ->
             assertEquals("1984-07-19T23:00:00.000Z", result[0].values[CommonDataKinds.Event.START_DATE])
