@@ -25,6 +25,8 @@ import org.junit.Assert.*
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class AndroidContactTest {
 
@@ -119,6 +121,29 @@ class AndroidContactTest {
             assertEquals("test@example.com", contact2.emails.first.property.value)
         } finally {
             dbContact2.delete()
+        }
+    }
+
+    @Test
+    fun testBirthdayWithOffset() {
+        val vCard = "BEGIN:VCARD\r\n" +
+            "VERSION:3.0\n\n" +
+            "N:Doe;John;;;\n\n" +
+            "FN:John Doe\n\n" +
+            "BDAY:20010415T000000+0200\n\n" +
+            "END:VCARD\n\n"
+        val contacts = Contact.fromReader(StringReader(vCard), false, null)
+
+        assertEquals(1, contacts.size)
+        contacts.first().birthDay.let { birthday ->
+            assertNotNull(birthday)
+
+            val date = birthday?.date
+            assertNotNull(date)
+
+            assertEquals(
+                OffsetDateTime.of(2001, 4, 15, 0, 0, 0, 0, ZoneOffset.ofHours(2)), date
+            )
         }
     }
 
