@@ -32,7 +32,7 @@ CATEGORIES:A,B\'C
 URL:https://www.davx5.com/
 blog.URL;TYPE=x-blog:http://www.swbyps.restaurant.french/~chezchic.html
 blog.X-ABLabel:blog
-BDAY:1996-04-15
+BDAY:1996-04-15T201243+04:00
 ANNIVERSARY:2014-08-12
 RELATED;CHARSET=UTF-8;TYPE=co-worker,crush;VALUE=text:Ägidius
 RELATED;TYPE=parent;VALUE=uri:muuum@example.com
