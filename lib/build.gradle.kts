@@ -1,10 +1,8 @@
-import android.annotation.SuppressLint
-
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.dokka")
-    id("maven-publish")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.dokka)
+    `maven-publish`
 }
 
 android {
@@ -30,6 +28,7 @@ android {
         jvmToolchain(17)
     }
 
+    @Suppress("UnstableApiUsage")
     buildFeatures {
         buildConfig = true
     }
@@ -78,23 +77,23 @@ publishing {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    implementation(libs.kotlin.stdlib)
+    coreLibraryDesugaring(libs.desugar)
 
-    implementation("androidx.annotation:annotation:1.6.0")
-    @Suppress("GradleDependency")
-    implementation("commons-io:commons-io:2.6")
-    implementation("org.apache.commons:commons-text:1.3")
+    implementation(libs.androidx.annotation)
+    @Suppress("VulnerableLibrariesLocal", "RedundantSuppression")
+    implementation(libs.commons.io)
+    implementation(libs.commons.text)
 
     // ez-vcard to parse/generate vCards
-    api("com.googlecode.ez-vcard:ez-vcard:0.12.1") {    // requires Java 8
+    api(libs.ezvcard) {    // requires Java 8
         // hCard functionality not needed
         exclude(group = "org.jsoup")
         exclude(group = "org.freemarker")
     }
 
-    androidTestImplementation("androidx.test:runner:1.5.2")
-    androidTestImplementation("androidx.test:rules:1.5.0")
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.runner)
 
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
 }
