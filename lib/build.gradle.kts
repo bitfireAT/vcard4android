@@ -81,8 +81,9 @@ dependencies {
     coreLibraryDesugaring(libs.desugar)
 
     implementation(libs.androidx.annotation)
-    @Suppress("VulnerableLibrariesLocal", "RedundantSuppression")
+    @Suppress("RedundantSuppression")
     implementation(libs.commons.io)
+    @Suppress("RedundantSuppression")
     implementation(libs.commons.text)
 
     // ez-vcard to parse/generate vCards
