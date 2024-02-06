@@ -13,12 +13,20 @@ class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Conta
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     override fun build(): List<BatchOperation.CpoBuilder> {
-        if (contact.displayName == null &&
-            contact.prefix == null &&
-            contact.givenName == null && contact.middleName == null && contact.familyName == null &&
-            contact.suffix == null &&
-            contact.phoneticGivenName == null && contact.phoneticMiddleName == null && contact.phoneticFamilyName == null)
-                return emptyList()
+        val hasStructuredComponents =
+            contact.prefix != null ||
+            contact.givenName != null || contact.middleName != null || contact.familyName != null ||
+            contact.suffix != null ||
+            contact.phoneticGivenName != null || contact.phoneticMiddleName != null || contact.phoneticFamilyName != null
+
+        // no structured name info
+        if (contact.displayName == null && !hasStructuredComponents)
+            return emptyList()
+
+        // only displayname and it's equivalent to the organization →
+        // don't create structured name row because it would split the organization into given/family name
+        if (contact.displayName != null && contact.displayName == contact.organization?.values?.firstOrNull() && !hasStructuredComponents)
+            return emptyList()
 
         return listOf(newDataRow().apply {
             withValue(StructuredName.DISPLAY_NAME, contact.displayName)
