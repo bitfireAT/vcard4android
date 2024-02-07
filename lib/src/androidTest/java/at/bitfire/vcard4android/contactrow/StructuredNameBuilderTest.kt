@@ -7,6 +7,11 @@ package at.bitfire.vcard4android.contactrow
 import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.StructuredName
 import at.bitfire.vcard4android.Contact
+import at.bitfire.vcard4android.LabeledProperty
+import ezvcard.property.Email
+import ezvcard.property.Nickname
+import ezvcard.property.Organization
+import ezvcard.property.Telephone
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -18,7 +23,73 @@ class StructuredNameBuilderTest {
             assertEquals(0, result.size)
         }
     }
-    
+
+    @Test
+    fun testSkipWhenOnly_Email() {
+        StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {
+            displayName = "test@example.com"
+            emails.add(LabeledProperty(Email("test@example.com")))
+        }, false).build().also { result ->
+            assertEquals(0, result.size)
+        }
+    }
+
+    @Test
+    fun testSkipWhenOnly_Nickname() {
+        StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {
+            displayName = "Foo"
+            nickName = LabeledProperty(Nickname().apply {
+                values.add("Foo")
+            })
+        }, false).build().also { result ->
+            assertEquals(0, result.size)
+        }
+    }
+
+    @Test
+    fun testSkipWhenOnly_Org() {
+        StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {
+            displayName = "Only A Company"
+            organization = Organization().apply {
+                values.add("Only A Company")
+            }
+        }, false).build().also { result ->
+            assertEquals(0, result.size)
+        }
+    }
+
+    @Test
+    fun testSkipWhenOnly_OrgJoined() {
+        StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {
+            displayName = "Only / A / Company"
+            organization = Organization().apply {
+                values.addAll(arrayOf("Only", "A", "Company"))
+            }
+        }, false).build().also { result ->
+            assertEquals(0, result.size)
+        }
+    }
+
+    @Test
+    fun testSkipWhenOnly_PhoneNumber() {
+        StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {
+            displayName = "+12345"
+            phoneNumbers.add(LabeledProperty(Telephone("+12345")))
+        }, false).build().also { result ->
+            assertEquals(0, result.size)
+        }
+    }
+
+    @Test
+    fun testSkipWhenOnly_Uid() {
+        StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {
+            displayName = "e6d19ebc-992a-4fef-9a56-84eab8b3bd9c"
+            uid = "e6d19ebc-992a-4fef-9a56-84eab8b3bd9c"
+        }, false).build().also { result ->
+            assertEquals(0, result.size)
+        }
+    }
+
     @Test
     fun testValues() {
         StructuredNameBuilder(Uri.EMPTY, null, Contact().apply {

@@ -20,16 +20,24 @@ class StructuredNameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Conta
             contact.phoneticGivenName != null || contact.phoneticMiddleName != null || contact.phoneticFamilyName != null
 
         // no structured name info
-        if (contact.displayName == null && !hasStructuredComponents)
+        val displayName = contact.displayName
+        if (displayName == null && !hasStructuredComponents)
             return emptyList()
 
-        // only displayname and it's equivalent to the organization →
-        // don't create structured name row because it would split the organization into given/family name
-        if (contact.displayName != null && contact.displayName == contact.organization?.values?.firstOrNull() && !hasStructuredComponents)
+        // only displayName and it's equivalent to one of the values in ContactWriter.addFormattedName →
+        // don't create structured name row because it wouldn't add information but split the organization into given/family name
+        if (displayName != null && !hasStructuredComponents && (
+                contact.organization?.values?.contains(displayName) == true ||
+                contact.organization?.values?.joinToString(" / ") == displayName ||
+                contact.nickName?.property?.values?.contains(displayName) == true ||
+                contact.emails.any { it.property.value == displayName } ||
+                contact.phoneNumbers.any { it.property.text == displayName } ||
+                contact.uid == displayName
+        ))
             return emptyList()
 
         return listOf(newDataRow().apply {
-            withValue(StructuredName.DISPLAY_NAME, contact.displayName)
+            withValue(StructuredName.DISPLAY_NAME, displayName)
             withValue(StructuredName.PREFIX, contact.prefix)
             withValue(StructuredName.GIVEN_NAME, contact.givenName)
             withValue(StructuredName.MIDDLE_NAME, contact.middleName)
