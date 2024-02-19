@@ -94,7 +94,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             if (photoUri != null)
                 Constants.log.log(Level.FINE, "Photo has been inserted: $photoUri")
             else
-                Constants.log.log(Level.WARNING, "Couldn't store contact photo")
+                Constants.log.log(Level.WARNING, "Timeout when storing photo")
 
             return photoUri
         }
