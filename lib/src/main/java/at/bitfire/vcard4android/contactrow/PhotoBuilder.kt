@@ -15,9 +15,9 @@ import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
-import at.bitfire.vcard4android.ContactsStorageException
 import at.bitfire.vcard4android.Utils.asSyncAdapter
 import org.apache.commons.io.FileUtils
+import java.io.IOException
 import java.util.logging.Level
 
 class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
@@ -29,7 +29,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
          * Inserts a raw contact photo and resets [RawContacts.DIRTY] to 0 then.
          *
          * If the contact provider needs more than 7 seconds to insert the photo, this
-         * method will time out and throw a [ContactsStorageException]. In this case, the
+         * method will time out and log the failure as a warning. In this case, the
          * [RawContacts.DIRTY] flag may be set asynchronously by the contacts provider
          * as soon as it finishes the operation.
          *
@@ -39,8 +39,6 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
          * @param data          contact photo (binary data in a supported format like JPEG or PNG)
          *
          * @return URI of the raw contact display photo ([Photo.PHOTO_URI]); null if image can't be decoded
-         *
-         * @throws ContactsStorageException when the image couldn't be written
          */
         fun insertPhoto(provider: ContentProviderClient, account: Account, rawContactId: Long, data: ByteArray): Uri? {
             // verify that data can be decoded by BitmapFactory, so that the contacts provider can process it
@@ -60,8 +58,12 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                 .build()
             Constants.log.log(Level.FINE, "Writing photo to $uri (${FileUtils.byteCountToDisplaySize(data.size.toLong())})")
             provider.openAssetFile(uri, "w")?.use { fd ->
-                fd.createOutputStream()?.use { os ->
-                    os.write(data)
+                try {
+                    fd.createOutputStream()?.use { os ->
+                        os.write(data)
+                    }
+                } catch (e: IOException) {
+                    Constants.log.log(Level.WARNING, "Couldn't store contact photo", e)
                 }
             }
 
@@ -92,7 +94,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             if (photoUri != null)
                 Constants.log.log(Level.FINE, "Photo has been inserted: $photoUri")
             else
-                throw ContactsStorageException("Couldn't store contact photo")
+                Constants.log.log(Level.WARNING, "Couldn't store contact photo")
 
             return photoUri
         }
