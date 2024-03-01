@@ -57,7 +57,7 @@ android {
     testOptions {
         managedDevices {
             localDevices {
-                create("pixel3") {
+                create("virtual") {
                     device = "Pixel 3"
                     apiLevel = 33
                     systemImageSource = "aosp-atd"
