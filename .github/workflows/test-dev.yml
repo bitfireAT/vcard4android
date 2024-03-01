@@ -44,9 +44,7 @@ jobs:
       - name: Cache AVD
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.android/avd
-            ~/.android/adb*
+          path: ~/.config/.android/avd
           key: avd-${{ hashFiles('lib/build.gradle.kts') }}   # gradle-managed devices are defined there
 
       - name: Run device tests
@@ -57,6 +55,5 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: |
-            lib/build/reports
+          path: lib/build/reports
           overwrite: true
