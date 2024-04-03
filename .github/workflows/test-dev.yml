@@ -8,30 +8,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v3
 
       - name: Check
         run: ./gradlew --no-daemon check
-      - name: Archive results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: |
-            lib/build/outputs/lint*
-            lib/build/reports
-          overwrite: true
 
   test_on_emulator:
     name: Tests with emulator
-    runs-on: ubuntu-latest-4-cores
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api-level: [ 31 ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@v3
 
@@ -50,10 +44,3 @@ jobs:
       - name: Run device tests
         run: ./gradlew --no-daemon virtualCheck
 
-      - name: Archive results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: lib/build/reports
-          overwrite: true
