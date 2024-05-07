@@ -44,30 +44,35 @@ class BatchOperation(
      * Commits all operations from [queue] and then empties the queue.
      *
      * @return number of affected rows
+     *
+     * @throws RemoteException on calendar provider errors. In case of [android.os.DeadObjectException],
+     * the provider has probably been killed/crashed or the calling process is cached and thus IPC is frozen (Android 14+).
+     *
+     * @throws ContactsStorageException if
+     *
+     * - the transaction is too large and can't be split (wrapped [TransactionTooLargeException])
+     * - the batch can't be processed (wrapped [OperationApplicationException])
+     * - the content provider throws a [RuntimeException] (will be wrapped)
      */
     fun commit(): Int {
         var affected = 0
-        if (!queue.isEmpty())
-            try {
-                if (Constants.log.isLoggable(Level.FINE)) {
-                    Constants.log.log(Level.FINE, "Committing ${queue.size} operations:")
-                    for ((idx, op) in queue.withIndex())
-                        Constants.log.log(Level.FINE, "#$idx: ${op.build()}")
-                }
-
-                results = arrayOfNulls(queue.size)
-                runBatch(0, queue.size)
-
-                for (result in results.filterNotNull())
-                    when {
-                        result.count != null -> affected += result.count ?: 0
-                        result.uri != null   -> affected += 1
-                    }
-                Constants.log.fine("… $affected record(s) affected")
-
-            } catch(e: Exception) {
-                throw ContactsStorageException("Couldn't apply batch operation", e)
+        if (!queue.isEmpty()) {
+            if (Constants.log.isLoggable(Level.FINE)) {
+                Constants.log.log(Level.FINE, "Committing ${queue.size} operations:")
+                for ((idx, op) in queue.withIndex())
+                    Constants.log.log(Level.FINE, "#$idx: ${op.build()}")
             }
+
+            results = arrayOfNulls(queue.size)
+            runBatch(0, queue.size)
+
+            for (result in results.filterNotNull())
+                when {
+                    result.count != null -> affected += result.count ?: 0
+                    result.uri != null -> affected += 1
+                }
+            Constants.log.fine("… $affected record(s) affected")
+        }
 
         queue.clear()
         return affected
@@ -79,11 +84,18 @@ class BatchOperation(
     /**
      * Runs a subset of the operations in [queue] using [providerClient] in a transaction.
      * Catches [TransactionTooLargeException] and splits the operations accordingly.
+     *
      * @param start index of first operation which will be run (inclusive)
      * @param end   index of last operation which will be run (exclusive!)
-     * @throws RemoteException on calendar provider errors
-     * @throws OperationApplicationException when the batch can't be processed
-     * @throws ContactsStorageException if the transaction is too large
+     *
+     * @throws RemoteException on calendar provider errors. In case of [android.os.DeadObjectException],
+     * the provider has probably been killed/crashed or the calling process is cached and thus IPC is frozen (Android 14+).
+     *
+     * @throws ContactsStorageException if
+     *
+     * - the transaction is too large and can't be split (wrapped [TransactionTooLargeException])
+     * - the batch can't be processed (wrapped [OperationApplicationException])
+     * - the content provider throws a [RuntimeException] (will be wrapped)
      */
     private fun runBatch(start: Int, end: Int) {
         if (end == start)
@@ -91,7 +103,7 @@ class BatchOperation(
 
         try {
             val ops = toCPO(start, end)
-            Constants.log.fine("Running ${ops.size} operations ($start .. ${end-1})")
+            Constants.log.fine("Running ${ops.size} operations ($start .. ${end - 1})")
             val partResults = providerClient.applyBatch(ops)
 
             val n = end - start
@@ -99,10 +111,17 @@ class BatchOperation(
                 Constants.log.warning("Batch operation returned only ${partResults.size} instead of $n results")
 
             System.arraycopy(partResults, 0, results, start, partResults.size)
+
+        } catch (e: OperationApplicationException) {
+            throw ContactsStorageException("Couldn't apply batch operation", e)
+
+        } catch (e: RuntimeException) {
+            throw ContactsStorageException("Content provider threw a runtime exception", e)
+
         } catch(e: TransactionTooLargeException) {
             if (end <= start + 1)
                 // only one operation, can't be split
-                throw ContactsStorageException("Can't transfer data to content provider (data row too large)")
+                throw ContactsStorageException("Can't transfer data to content provider (too large data row can't be split)", e)
 
             Constants.log.warning("Transaction too large, splitting (losing atomicity)")
             val mid = start + (end - start)/2
