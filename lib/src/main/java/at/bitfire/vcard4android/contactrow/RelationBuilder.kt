@@ -18,7 +18,7 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, re
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
         for (related in contact.relations) {
-            val name = related.text.trim().takeIf { it.isNotBlank() } ?: related.uri.trim().takeIf { it.isNotBlank() }
+            val name = related.text?.trim()?.takeIf { it.isNotBlank() } ?: related.uri?.trim()?.takeIf { it.isNotBlank() }
             if (name.isNullOrBlank())
                 continue
 

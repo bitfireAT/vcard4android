@@ -24,7 +24,7 @@ class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact
             val depts = LinkedList<String>()
             while (org.hasNext())
                 depts += org.next()
-            department = depts.joinToString(" / ").trim().takeIf { it.isNotBlank() }
+            department = depts.joinToString(" / ").trim().takeIf { t -> t.isNotBlank() }
         }
 
         if (company == null && department == null && contact.jobTitle == null && contact.jobDescription == null)

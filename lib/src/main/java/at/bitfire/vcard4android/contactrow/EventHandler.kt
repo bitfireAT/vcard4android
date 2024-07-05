@@ -48,7 +48,7 @@ object EventHandler: DataRowHandler() {
                 Event.TYPE_CUSTOM */
                 else -> {
                     val abDate = if (full != null) XAbDate(full) else XAbDate(partial)
-                    val label = values.getAsString(Event.LABEL).trim().takeIf { it.isNotBlank() }
+                    val label = values.getAsString(Event.LABEL)?.trim()?.takeIf { it.isNotBlank() }
                     contact.customDates += LabeledProperty(abDate, label)
                 }
             }
