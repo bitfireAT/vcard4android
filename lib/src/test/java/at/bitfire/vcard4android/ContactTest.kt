@@ -12,7 +12,6 @@ import ezvcard.parameter.RelatedType
 import ezvcard.parameter.TelephoneType
 import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
-import org.apache.commons.io.IOUtils
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -202,7 +201,7 @@ class ContactTest {
 
         // PHOTO
         javaClass.classLoader!!.getResourceAsStream("lol.jpg").use { photo ->
-            assertArrayEquals(IOUtils.toByteArray(photo), c.photo)
+            assertArrayEquals(photo.readBytes(), c.photo)
         }
     }
 
