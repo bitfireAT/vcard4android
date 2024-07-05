@@ -196,7 +196,11 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                     if (relation.types.isEmpty())
                         name.addParameter("TYPE", "other")
                     else
-                        label = relation.types.joinToString(", ") { type -> type.value.uppercase() }
+                        label = relation.types.joinToString(", ") { type ->
+                            type.value.replaceFirstChar {
+                                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                            }
+                        }
                 }
             }
 

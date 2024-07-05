@@ -53,7 +53,11 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, re
                 if (related.types.isEmpty())
                     related.types += CustomType.Related.OTHER
 
-                val types = related.types.map { type -> type.value.uppercase() }
+                val types = related.types.map { type ->
+                    type.value.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                    }
+                }
                 val typesStr = types.joinToString(", ")
                 builder.withValue(Relation.LABEL, typesStr)
             }
