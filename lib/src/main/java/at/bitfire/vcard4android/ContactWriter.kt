@@ -4,6 +4,7 @@
 
 package at.bitfire.vcard4android
 
+import at.bitfire.vcard4android.Utils.capitalize
 import at.bitfire.vcard4android.Utils.isEmpty
 import at.bitfire.vcard4android.property.*
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
@@ -197,9 +198,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                         name.addParameter("TYPE", "other")
                     else
                         label = relation.types.joinToString(", ") { type ->
-                            type.value.replaceFirstChar {
-                                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-                            }
+                            type.value.capitalize()
                         }
                 }
             }

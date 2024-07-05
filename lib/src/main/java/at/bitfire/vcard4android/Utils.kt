@@ -11,6 +11,7 @@ import android.database.DatabaseUtils
 import android.net.Uri
 import android.provider.ContactsContract
 import ezvcard.property.StructuredName
+import java.util.Locale
 
 object Utils {
 
@@ -43,6 +44,12 @@ object Utils {
             return "$kb KB"
         }
         return "$this B"
+    }
+
+    fun String.capitalize(): String = split(' ').joinToString(" ") { word ->
+        word.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+        }
     }
 
 }

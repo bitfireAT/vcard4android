@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Relation
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
+import at.bitfire.vcard4android.Utils.capitalize
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.RelatedType
 import java.util.*
@@ -53,11 +54,7 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, re
                 if (related.types.isEmpty())
                     related.types += CustomType.Related.OTHER
 
-                val types = related.types.map { type ->
-                    type.value.replaceFirstChar {
-                        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
-                    }
-                }
+                val types = related.types.map { type -> type.value.capitalize() }
                 val typesStr = types.joinToString(", ")
                 builder.withValue(Relation.LABEL, typesStr)
             }
