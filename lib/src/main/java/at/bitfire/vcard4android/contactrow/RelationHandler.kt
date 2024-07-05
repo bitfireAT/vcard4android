@@ -10,7 +10,6 @@ import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.RelatedType
 import ezvcard.property.Related
-import org.apache.commons.lang3.StringUtils
 
 object RelationHandler: DataRowHandler() {
 
@@ -67,7 +66,7 @@ object RelationHandler: DataRowHandler() {
             Relation.TYPE_SPOUSE ->
                 related.types += RelatedType.SPOUSE
             Relation.TYPE_CUSTOM ->
-                StringUtils.trimToNull(values.getAsString(Relation.LABEL))?.let { typeStr ->
+                values.getAsString(Relation.LABEL)?.trim()?.takeIf { it.isNotBlank() }?.let { typeStr ->
                     for (type in typeStr.split(','))
                         related.types += RelatedType.get(type.lowercase().trim())
                 }

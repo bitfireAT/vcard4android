@@ -10,8 +10,6 @@ import ezvcard.VCardVersion
 import ezvcard.io.json.JCardReader
 import ezvcard.io.text.VCardReader
 import ezvcard.property.*
-import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder
 import java.io.IOException
 import java.io.OutputStream
 import java.io.Reader
@@ -144,8 +142,7 @@ class Contact {
     )
 
     override fun hashCode(): Int {
-        val builder = HashCodeBuilder(29, 3).append(compareFields())
-        return builder.toHashCode()
+        return compareFields().sumOf { 29 * 3 + it.hashCode() }
     }
 
     override fun equals(other: Any?) =
@@ -154,11 +151,40 @@ class Contact {
         else
             false
 
-    override fun toString(): String {
-        val builder = ReflectionToStringBuilder(this)
-        builder.setExcludeFieldNames("photo")
-        return builder.toString()
-    }
+    override fun toString(): String =
+        mapOf(
+            "uid" to uid,
+            "group" to group,
+            "members" to members,
+            "displayName" to displayName,
+            "prefix" to prefix,
+            "givenName" to givenName,
+            "middleName" to middleName,
+            "familyName" to familyName,
+            "suffix" to suffix,
+            "phoneticGivenName" to phoneticGivenName,
+            "phoneticMiddleName" to phoneticMiddleName,
+            "phoneticFamilyName" to phoneticFamilyName,
+            "nickName" to nickName,
+            "organization" to organization,
+            "jobTitle" to jobTitle,
+            "jobDescription" to jobDescription,
+            "phoneNumbers" to phoneNumbers,
+            "emails" to emails,
+            "impps" to impps,
+            "addresses" to addresses,
+            "categories" to categories,
+            "urls" to urls,
+            "relations" to relations,
+            "note" to note,
+            "anniversary" to anniversary,
+            "birthDay" to birthDay,
+            "customDates" to customDates,
+            "unknownProperties" to unknownProperties
+        )
+            .toList()
+            .joinToString(",") { (k, v) -> "$k=$v" }
+            .let { "Contact[$it]" }
 
 
     interface Downloader {

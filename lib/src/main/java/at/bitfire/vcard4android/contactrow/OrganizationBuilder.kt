@@ -8,7 +8,6 @@ import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Organization
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
-import org.apache.commons.lang3.StringUtils
 import java.util.*
 
 class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
@@ -25,7 +24,7 @@ class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact
             val depts = LinkedList<String>()
             while (org.hasNext())
                 depts += org.next()
-            department = StringUtils.trimToNull(depts.joinToString(" / "))
+            department = depts.joinToString(" / ").trim().takeIf { it.isNotBlank() }
         }
 
         if (company == null && department == null && contact.jobTitle == null && contact.jobDescription == null)

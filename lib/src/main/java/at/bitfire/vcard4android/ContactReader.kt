@@ -11,7 +11,6 @@ import ezvcard.VCard
 import ezvcard.parameter.RelatedType
 import ezvcard.property.*
 import ezvcard.util.PartialDate
-import org.apache.commons.lang3.StringUtils
 import java.net.URI
 import java.net.URISyntaxException
 import java.time.Instant
@@ -105,7 +104,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 uriString
             }
 
-            return StringUtils.trimToNull(uid)
+            return uid.trim().takeIf { it.isNotBlank() }
         }
 
     }
@@ -131,20 +130,20 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                     uriToUid(prop.uri)?.let { c.members += it }
 
                 is FormattedName ->
-                    c.displayName = StringUtils.trimToNull(prop.value)
+                    c.displayName = prop.value.trim().takeIf { it.isNotBlank() }
                 is StructuredName -> {
-                    c.prefix = StringUtils.trimToNull(prop.prefixes.joinToString(" "))
-                    c.givenName = StringUtils.trimToNull(prop.given)
-                    c.middleName = StringUtils.trimToNull(prop.additionalNames.joinToString(" "))
-                    c.familyName = StringUtils.trimToNull(prop.family)
-                    c.suffix = StringUtils.trimToNull(prop.suffixes.joinToString(" "))
+                    c.prefix = prop.prefixes.joinToString(" ").trim().takeIf { it.isNotBlank() }
+                    c.givenName = prop.given.trim().takeIf { it.isNotBlank() }
+                    c.middleName = prop.additionalNames.joinToString(" ").trim().takeIf { it.isNotBlank() }
+                    c.familyName = prop.family.trim().takeIf { it.isNotBlank() }
+                    c.suffix = prop.suffixes.joinToString(" ").trim().takeIf { it.isNotBlank() }
                 }
                 is XPhoneticFirstName ->
-                    c.phoneticGivenName = StringUtils.trimToNull(prop.value)
+                    c.phoneticGivenName = prop.value.trim().takeIf { it.isNotBlank() }
                 is XPhoneticMiddleName ->
-                    c.phoneticMiddleName = StringUtils.trimToNull(prop.value)
+                    c.phoneticMiddleName = prop.value.trim().takeIf { it.isNotBlank() }
                 is XPhoneticLastName ->
-                    c.phoneticFamilyName = StringUtils.trimToNull(prop.value)
+                    c.phoneticFamilyName = prop.value.trim().takeIf { it.isNotBlank() }
                 is Nickname ->
                     c.nickName = LabeledProperty(prop, findAndRemoveLabel(prop.group))
 
@@ -154,9 +153,9 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is Organization ->
                     c.organization = prop
                 is Title ->
-                    c.jobTitle = StringUtils.trimToNull(prop.value)
+                    c.jobTitle = prop.value.trim().takeIf { it.isNotBlank() }
                 is Role ->
-                    c.jobDescription = StringUtils.trimToNull(prop.value)
+                    c.jobDescription = prop.value.trim().takeIf { it.isNotBlank() }
 
                 is Telephone ->
                     if (!prop.text.isNullOrBlank())
@@ -252,7 +251,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 }
 
                 is Note -> {
-                    StringUtils.trimToNull(prop.value)?.let { note ->
+                    prop.value.trim().takeIf { it.isNotBlank() }?.let { note ->
                         if (c.note == null)
                             c.note = note
                         else
@@ -324,7 +323,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
         for (label in vCard.getProperties(XAbLabel::class.java)) {
             if (label.group.equals(group, true)) {
                 vCard.removeProperty(label)
-                return StringUtils.trimToNull(label.value)
+                return label.value.trim().takeIf { it.isNotBlank() }
             }
         }
 

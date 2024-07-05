@@ -15,13 +15,8 @@ import ezvcard.io.text.VCardWriter
 import ezvcard.parameter.ImageType
 import ezvcard.parameter.RelatedType
 import ezvcard.property.*
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.text.WordUtils
 import java.io.OutputStream
-import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.temporal.ChronoField
 import java.util.*
 import java.util.logging.Level
 
@@ -128,7 +123,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
         // vCard 4 REQUIRES FN [RFC 6350 6.2.1 FN]
         val fn =
             // use display name, if available
-            StringUtils.trimToNull(contact.displayName) ?:
+            contact.displayName?.trim()?.takeIf { it.isNotBlank() } ?:
             // no display name, try organization
             contact.organization?.values?.joinToString(" / ") ?:
             // otherwise, try nickname
@@ -201,7 +196,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                     if (relation.types.isEmpty())
                         name.addParameter("TYPE", "other")
                     else
-                        label = relation.types.joinToString(", ") { type -> WordUtils.capitalize(type.value) }
+                        label = relation.types.joinToString(", ") { type -> type.value.uppercase() }
                 }
             }
 
