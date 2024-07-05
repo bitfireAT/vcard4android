@@ -16,8 +16,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.Contact
+import at.bitfire.vcard4android.IOUtils
 import at.bitfire.vcard4android.impl.TestAddressBook
-import org.apache.commons.io.IOUtils
 import org.junit.Assert.*
 import org.junit.BeforeClass
 import org.junit.ClassRule
