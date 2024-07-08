@@ -27,51 +27,50 @@ import java.util.*
  *
  * [Contact]s are written to and read from the Android storage by [AndroidContact].
  */
-class Contact {
-
-    var uid: String? = null
-    var group = false
+data class Contact(
+    var uid: String? = null,
+    var group: Boolean = false,
 
     /** list of UIDs of group members without urn:uuid prefix (only meaningful if [group] is true) */
-    val members = mutableSetOf<String>()
+    val members: MutableSet<String> = mutableSetOf(),
 
-    var displayName: String? = null
-    var prefix: String? = null
-    var givenName: String? = null
-    var middleName: String? = null
-    var familyName: String? = null
-    var suffix: String? = null
+    var displayName: String? = null,
+    var prefix: String? = null,
+    var givenName: String? = null,
+    var middleName: String? = null,
+    var familyName: String? = null,
+    var suffix: String? = null,
 
-    var phoneticGivenName: String? = null
-    var phoneticMiddleName: String? = null
-    var phoneticFamilyName: String? = null
+    var phoneticGivenName: String? = null,
+    var phoneticMiddleName: String? = null,
+    var phoneticFamilyName: String? = null,
 
     /** vCard NICKNAME – Android only supports one nickname **/
-    var nickName: LabeledProperty<Nickname>? = null
+    var nickName: LabeledProperty<Nickname>? = null,
 
-    var organization: Organization? = null
-    var jobTitle: String? = null           // vCard TITLE
-    var jobDescription: String? = null     // vCard ROLE
+    var organization: Organization? = null,
+    var jobTitle: String? = null,           // vCard TITLE
+    var jobDescription: String? = null,     // vCard ROLE
 
-    val phoneNumbers = LinkedList<LabeledProperty<Telephone>>()
-    val emails = LinkedList<LabeledProperty<Email>>()
-    val impps = LinkedList<LabeledProperty<Impp>>()
-    val addresses = LinkedList<LabeledProperty<Address>>()
-    val categories = LinkedList<String>()
-    val urls = LinkedList<LabeledProperty<Url>>()
-    val relations = LinkedList<Related>()
+    val phoneNumbers: LinkedList<LabeledProperty<Telephone>> = LinkedList(),
+    val emails: LinkedList<LabeledProperty<Email>> = LinkedList(),
+    val impps: LinkedList<LabeledProperty<Impp>> = LinkedList(),
+    val addresses: LinkedList<LabeledProperty<Address>> = LinkedList(),
+    val categories: LinkedList<String> = LinkedList(),
+    val urls: LinkedList<LabeledProperty<Url>> = LinkedList(),
+    val relations: LinkedList<Related> = LinkedList(),
 
-    var note: String? = null
+    var note: String? = null,
 
-    var anniversary: Anniversary? = null
-    var birthDay: Birthday? = null
-    val customDates = LinkedList<LabeledProperty<XAbDate>>()
+    var anniversary: Anniversary? = null,
+    var birthDay: Birthday? = null,
+    val customDates: LinkedList<LabeledProperty<XAbDate>> = LinkedList(),
 
-    var photo: ByteArray? = null
+    var photo: ByteArray? = null,
 
     /** unknown properties in text vCard format */
     var unknownProperties: String? = null
-
+) {
 
     companion object {
         // productID (if set) will be used to generate a PRODID property.
@@ -150,41 +149,6 @@ class Contact {
             compareFields().contentDeepEquals(other.compareFields())
         else
             false
-
-    override fun toString(): String =
-        mapOf(
-            "uid" to uid,
-            "group" to group,
-            "members" to members,
-            "displayName" to displayName,
-            "prefix" to prefix,
-            "givenName" to givenName,
-            "middleName" to middleName,
-            "familyName" to familyName,
-            "suffix" to suffix,
-            "phoneticGivenName" to phoneticGivenName,
-            "phoneticMiddleName" to phoneticMiddleName,
-            "phoneticFamilyName" to phoneticFamilyName,
-            "nickName" to nickName,
-            "organization" to organization,
-            "jobTitle" to jobTitle,
-            "jobDescription" to jobDescription,
-            "phoneNumbers" to phoneNumbers,
-            "emails" to emails,
-            "impps" to impps,
-            "addresses" to addresses,
-            "categories" to categories,
-            "urls" to urls,
-            "relations" to relations,
-            "note" to note,
-            "anniversary" to anniversary,
-            "birthDay" to birthDay,
-            "customDates" to customDates,
-            "unknownProperties" to unknownProperties
-        )
-            .toList()
-            .joinToString(",") { (k, v) -> "$k=$v" }
-            .let { "Contact[$it]" }
 
 
     interface Downloader {
