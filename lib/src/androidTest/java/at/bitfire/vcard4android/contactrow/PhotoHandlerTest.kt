@@ -16,7 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.Contact
-import at.bitfire.vcard4android.IOUtils
+import at.bitfire.vcard4android.TestUtils
 import at.bitfire.vcard4android.impl.TestAddressBook
 import org.junit.Assert
 import org.junit.Assert.*
@@ -64,13 +64,13 @@ class PhotoHandlerTest {
 
     @Test
     fun testConvertToJpeg_Jpeg() {
-        val blob = IOUtils.resourceToByteArray("/small.jpg")
+        val blob = TestUtils.resourceToByteArray("/small.jpg")
         assertArrayEquals(blob, PhotoHandler.convertToJpeg(blob, 75))
     }
 
     @Test
     fun testConvertToJpeg_Png() {
-        val blob = IOUtils.resourceToByteArray("/small.png")
+        val blob = TestUtils.resourceToByteArray("/small.png")
         assertFalse(Arrays.equals(blob, PhotoHandler.convertToJpeg(blob, 75)))
     }
 
@@ -86,7 +86,7 @@ class PhotoHandlerTest {
 
     @Test
     fun testPhoto_Blob() {
-        val blob = IOUtils.resourceToByteArray("/small.jpg")
+        val blob = TestUtils.resourceToByteArray("/small.jpg")
         val contact = Contact()
         PhotoHandler(null).handle(ContentValues().apply {
             put(Photo.PHOTO, blob)
@@ -98,7 +98,7 @@ class PhotoHandlerTest {
     fun testPhoto_FileId() {
         val contact = Contact().apply {
             displayName = "Contact with photo"
-            photo = IOUtils.resourceToByteArray("/large.jpg")
+            photo = TestUtils.resourceToByteArray("/large.jpg")
         }
         val androidContact = AndroidContact(addressBook, contact, null, null)
         val rawContactId = ContentUris.parseId(androidContact.add())

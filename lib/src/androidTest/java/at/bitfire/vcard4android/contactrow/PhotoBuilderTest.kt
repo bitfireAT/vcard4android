@@ -16,7 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.Contact
-import at.bitfire.vcard4android.IOUtils
+import at.bitfire.vcard4android.TestUtils
 import at.bitfire.vcard4android.impl.TestAddressBook
 import org.junit.Assert.*
 import org.junit.BeforeClass
@@ -81,7 +81,7 @@ class PhotoBuilderTest {
         val rawContactId = ContentUris.parseId(contactUri)
 
         try {
-            val photo = IOUtils.resourceToByteArray("/large.jpg")
+            val photo = TestUtils.resourceToByteArray("/large.jpg")
             val photoUri = PhotoBuilder.insertPhoto(provider, testAccount, rawContactId, photo)
             assertNotNull(photoUri)
 
