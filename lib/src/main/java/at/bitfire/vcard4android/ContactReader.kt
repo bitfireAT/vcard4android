@@ -4,6 +4,7 @@
 
 package at.bitfire.vcard4android
 
+import at.bitfire.vcard4android.Utils.trimToNull
 import at.bitfire.vcard4android.property.*
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import ezvcard.Ezvcard
@@ -104,7 +105,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 uriString
             }
 
-            return uid?.trim()?.takeIf { it.isNotBlank() }
+            return uid?.trimToNull()
         }
 
     }
@@ -130,20 +131,20 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                     uriToUid(prop.uri)?.let { c.members += it }
 
                 is FormattedName ->
-                    c.displayName = prop.value?.trim()?.takeIf { it.isNotBlank() }
+                    c.displayName = prop.value?.trimToNull()
                 is StructuredName -> {
-                    c.prefix = prop.prefixes.joinToString(" ").trim().takeIf { it.isNotBlank() }
-                    c.givenName = prop.given?.trim()?.takeIf { it.isNotBlank() }
-                    c.middleName = prop.additionalNames.joinToString(" ").trim().takeIf { it.isNotBlank() }
-                    c.familyName = prop.family?.trim()?.takeIf { it.isNotBlank() }
-                    c.suffix = prop.suffixes.joinToString(" ").trim().takeIf { it.isNotBlank() }
+                    c.prefix = prop.prefixes.joinToString(" ").trimToNull()
+                    c.givenName = prop.given?.trimToNull()
+                    c.middleName = prop.additionalNames.joinToString(" ").trimToNull()
+                    c.familyName = prop.family?.trimToNull()
+                    c.suffix = prop.suffixes.joinToString(" ").trimToNull()
                 }
                 is XPhoneticFirstName ->
-                    c.phoneticGivenName = prop.value?.trim()?.takeIf { it.isNotBlank() }
+                    c.phoneticGivenName = prop.value?.trimToNull()
                 is XPhoneticMiddleName ->
-                    c.phoneticMiddleName = prop.value?.trim()?.takeIf { it.isNotBlank() }
+                    c.phoneticMiddleName = prop.value?.trimToNull()
                 is XPhoneticLastName ->
-                    c.phoneticFamilyName = prop.value?.trim()?.takeIf { it.isNotBlank() }
+                    c.phoneticFamilyName = prop.value?.trimToNull()
                 is Nickname ->
                     c.nickName = LabeledProperty(prop, findAndRemoveLabel(prop.group))
 
@@ -153,9 +154,9 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is Organization ->
                     c.organization = prop
                 is Title ->
-                    c.jobTitle = prop.value?.trim()?.takeIf { it.isNotBlank() }
+                    c.jobTitle = prop.value?.trimToNull()
                 is Role ->
-                    c.jobDescription = prop.value?.trim()?.takeIf { it.isNotBlank() }
+                    c.jobDescription = prop.value?.trimToNull()
 
                 is Telephone ->
                     if (!prop.text.isNullOrBlank())
@@ -251,7 +252,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 }
 
                 is Note -> {
-                    prop.value?.trim()?.takeIf { it.isNotBlank() }?.let { note ->
+                    prop.value.trimToNull()?.let { note ->
                         if (c.note == null)
                             c.note = note
                         else
@@ -323,7 +324,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
         for (label in vCard.getProperties(XAbLabel::class.java)) {
             if (label.group.equals(group, true)) {
                 vCard.removeProperty(label)
-                return label.value?.trim()?.takeIf { it.isNotBlank() }
+                return label.value.trimToNull()
             }
         }
 

@@ -9,6 +9,7 @@ import android.provider.ContactsContract.CommonDataKinds.Event
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
+import at.bitfire.vcard4android.Utils.trimToNull
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.property.Anniversary
 import ezvcard.property.Birthday
@@ -48,7 +49,7 @@ object EventHandler: DataRowHandler() {
                 Event.TYPE_CUSTOM */
                 else -> {
                     val abDate = if (full != null) XAbDate(full) else XAbDate(partial)
-                    val label = values.getAsString(Event.LABEL)?.trim()?.takeIf { it.isNotBlank() }
+                    val label = values.getAsString(Event.LABEL).trimToNull()
                     contact.customDates += LabeledProperty(abDate, label)
                 }
             }

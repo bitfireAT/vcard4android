@@ -52,4 +52,10 @@ object Utils {
         }
     }
 
+    /**
+     * Returns a string having leading and trailing whitespace removed.
+     * If the resulting string is empty, returns null.
+     */
+    fun String?.trimToNull(): String? = this?.trim()?.takeIf { it.isNotBlank() }
+
 }

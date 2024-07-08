@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.StructuredPostal
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
+import at.bitfire.vcard4android.Utils.trimToNull
 import ezvcard.parameter.AddressType
 import java.util.*
 
@@ -39,14 +40,14 @@ class StructuredPostalBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Con
                     lines += extended
 
                 val postalAndCity = LinkedList<String>()
-                if (address.postalCode?.trim()?.takeIf { it.isNotBlank() } != null)
+                if (address.postalCode.trimToNull() != null)
                     postalAndCity += address.postalCodes.joinToString(" / ")
-                if (address.locality?.trim()?.takeIf { it.isNotBlank() } != null)
+                if (address.locality.trimToNull() != null)
                     postalAndCity += address.localities.joinToString(" / ")
                 if (postalAndCity.isNotEmpty())
                     lines += postalAndCity.joinToString(" ")
 
-                if (address.country?.trim()?.takeIf { it.isNotBlank() } != null) {
+                if (address.country.trimToNull() != null) {
                     val line = StringBuilder(address.countries.joinToString(" / "))
                     if (!address.region.isNullOrBlank()) {
                         val regions = address.regions.joinToString(" / ")
