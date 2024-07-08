@@ -140,10 +140,6 @@ data class Contact(
         /* unknownProperties */
     )
 
-    override fun hashCode(): Int {
-        return compareFields().sumOf { 29 * 3 + it.hashCode() }
-    }
-
     override fun equals(other: Any?) =
         if (other is Contact)
             compareFields().contentDeepEquals(other.compareFields())
