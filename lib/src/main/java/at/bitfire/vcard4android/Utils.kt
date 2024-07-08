@@ -21,15 +21,6 @@ object Utils {
         return values
     }
 
-    fun StructuredName.isEmpty() =
-        prefixes.isEmpty() && given == null && additionalNames.isEmpty() && family == null && suffixes.isEmpty()
-
-    fun Uri.asSyncAdapter(account: Account): Uri = buildUpon()
-        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, account.name)
-        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_TYPE, account.type)
-        .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
-        .build()
-
     fun Long.byteCountToDisplaySize(): String {
         val gb = this / 1_073_741_824 // 2^30
         if (gb > 0) {
@@ -57,5 +48,14 @@ object Utils {
      * If the resulting string is empty, returns null.
      */
     fun String?.trimToNull(): String? = this?.trim()?.takeIf { it.isNotBlank() }
+
+    fun StructuredName.isEmpty() =
+        prefixes.isEmpty() && given == null && additionalNames.isEmpty() && family == null && suffixes.isEmpty()
+
+    fun Uri.asSyncAdapter(account: Account): Uri = buildUpon()
+        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, account.name)
+        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_TYPE, account.type)
+        .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
+        .build()
 
 }
