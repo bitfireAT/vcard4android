@@ -17,7 +17,7 @@ import androidx.annotation.CallSuper
 import java.io.FileNotFoundException
 
 open class AndroidGroup(
-        val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
+    val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {
@@ -163,8 +163,7 @@ open class AndroidGroup(
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id))
     }
 
-    override fun toString(): String {
-        return "AndroidGroup(id=$id, fileName=$fileName, eTag=$eTag)"
-    }
+    override fun toString() =
+        "AndroidGroup(id=$id, fileName=$fileName, eTag=$eTag, _contact=$_contact)"
 
 }

@@ -146,6 +146,8 @@ data class Contact(
         else
             false
 
+    override fun hashCode() = compareFields().contentHashCode()
+
 
     interface Downloader {
         fun download(url: String, accepts: String): ByteArray?
