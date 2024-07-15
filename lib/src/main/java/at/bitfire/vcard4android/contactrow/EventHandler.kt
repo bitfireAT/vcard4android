@@ -9,13 +9,11 @@ import android.provider.ContactsContract.CommonDataKinds.Event
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
+import at.bitfire.vcard4android.Utils.trimToNull
 import at.bitfire.vcard4android.property.XAbDate
 import ezvcard.property.Anniversary
 import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
-import org.apache.commons.lang3.StringUtils
-import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.*
@@ -51,7 +49,7 @@ object EventHandler: DataRowHandler() {
                 Event.TYPE_CUSTOM */
                 else -> {
                     val abDate = if (full != null) XAbDate(full) else XAbDate(partial)
-                    val label = StringUtils.trimToNull(values.getAsString(Event.LABEL))
+                    val label = values.getAsString(Event.LABEL).trimToNull()
                     contact.customDates += LabeledProperty(abDate, label)
                 }
             }

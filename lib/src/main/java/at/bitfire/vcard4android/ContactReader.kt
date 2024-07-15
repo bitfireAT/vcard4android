@@ -4,6 +4,7 @@
 
 package at.bitfire.vcard4android
 
+import at.bitfire.vcard4android.Utils.trimToNull
 import at.bitfire.vcard4android.property.*
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import ezvcard.Ezvcard
@@ -11,7 +12,6 @@ import ezvcard.VCard
 import ezvcard.parameter.RelatedType
 import ezvcard.property.*
 import ezvcard.util.PartialDate
-import org.apache.commons.lang3.StringUtils
 import java.net.URI
 import java.net.URISyntaxException
 import java.time.Instant
@@ -105,7 +105,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 uriString
             }
 
-            return StringUtils.trimToNull(uid)
+            return uid?.trimToNull()
         }
 
     }
@@ -131,20 +131,20 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                     uriToUid(prop.uri)?.let { c.members += it }
 
                 is FormattedName ->
-                    c.displayName = StringUtils.trimToNull(prop.value)
+                    c.displayName = prop.value?.trimToNull()
                 is StructuredName -> {
-                    c.prefix = StringUtils.trimToNull(prop.prefixes.joinToString(" "))
-                    c.givenName = StringUtils.trimToNull(prop.given)
-                    c.middleName = StringUtils.trimToNull(prop.additionalNames.joinToString(" "))
-                    c.familyName = StringUtils.trimToNull(prop.family)
-                    c.suffix = StringUtils.trimToNull(prop.suffixes.joinToString(" "))
+                    c.prefix = prop.prefixes.joinToString(" ").trimToNull()
+                    c.givenName = prop.given?.trimToNull()
+                    c.middleName = prop.additionalNames.joinToString(" ").trimToNull()
+                    c.familyName = prop.family?.trimToNull()
+                    c.suffix = prop.suffixes.joinToString(" ").trimToNull()
                 }
                 is XPhoneticFirstName ->
-                    c.phoneticGivenName = StringUtils.trimToNull(prop.value)
+                    c.phoneticGivenName = prop.value?.trimToNull()
                 is XPhoneticMiddleName ->
-                    c.phoneticMiddleName = StringUtils.trimToNull(prop.value)
+                    c.phoneticMiddleName = prop.value?.trimToNull()
                 is XPhoneticLastName ->
-                    c.phoneticFamilyName = StringUtils.trimToNull(prop.value)
+                    c.phoneticFamilyName = prop.value?.trimToNull()
                 is Nickname ->
                     c.nickName = LabeledProperty(prop, findAndRemoveLabel(prop.group))
 
@@ -154,9 +154,9 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 is Organization ->
                     c.organization = prop
                 is Title ->
-                    c.jobTitle = StringUtils.trimToNull(prop.value)
+                    c.jobTitle = prop.value?.trimToNull()
                 is Role ->
-                    c.jobDescription = StringUtils.trimToNull(prop.value)
+                    c.jobDescription = prop.value?.trimToNull()
 
                 is Telephone ->
                     if (!prop.text.isNullOrBlank())
@@ -252,7 +252,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                 }
 
                 is Note -> {
-                    StringUtils.trimToNull(prop.value)?.let { note ->
+                    prop.value.trimToNull()?.let { note ->
                         if (c.note == null)
                             c.note = note
                         else
@@ -324,7 +324,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
         for (label in vCard.getProperties(XAbLabel::class.java)) {
             if (label.group.equals(group, true)) {
                 vCard.removeProperty(label)
-                return StringUtils.trimToNull(label.value)
+                return label.value.trimToNull()
             }
         }
 

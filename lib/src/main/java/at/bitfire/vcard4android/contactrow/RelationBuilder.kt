@@ -8,10 +8,10 @@ import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Relation
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
+import at.bitfire.vcard4android.Utils.capitalize
+import at.bitfire.vcard4android.Utils.trimToNull
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.RelatedType
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.text.WordUtils
 import java.util.*
 
 class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
@@ -20,7 +20,7 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, re
     override fun build(): List<BatchOperation.CpoBuilder> {
         val result = LinkedList<BatchOperation.CpoBuilder>()
         for (related in contact.relations) {
-            val name = StringUtils.trimToNull(related.text) ?: StringUtils.trimToNull(related.uri)
+            val name = related.text.trimToNull() ?: related.uri.trimToNull()
             if (name.isNullOrBlank())
                 continue
 
@@ -55,7 +55,7 @@ class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, re
                 if (related.types.isEmpty())
                     related.types += CustomType.Related.OTHER
 
-                val types = related.types.map { type -> WordUtils.capitalize(type.value) }
+                val types = related.types.map { type -> type.value.capitalize() }
                 val typesStr = types.joinToString(", ")
                 builder.withValue(Relation.LABEL, typesStr)
             }

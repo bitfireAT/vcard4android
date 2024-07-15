@@ -16,7 +16,6 @@ import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.Utils.asSyncAdapter
-import org.apache.commons.io.FileUtils
 import java.io.IOException
 import java.util.logging.Level
 
@@ -56,7 +55,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                 .appendPath(rawContactId.toString())
                 .appendPath(RawContacts.DisplayPhoto.CONTENT_DIRECTORY)
                 .build()
-            Constants.log.log(Level.FINE, "Writing photo to $uri (${FileUtils.byteCountToDisplaySize(data.size.toLong())})")
+            Constants.log.log(Level.FINE, "Writing photo to $uri (${data.size} bytes)")
             provider.openAssetFile(uri, "w")?.use { fd ->
                 try {
                     fd.createOutputStream()?.use { os ->

@@ -14,11 +14,10 @@ import android.provider.ContactsContract.Groups
 import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
-import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
 
 open class AndroidGroup(
-        val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
+    val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {
@@ -164,6 +163,7 @@ open class AndroidGroup(
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id))
     }
 
-    override fun toString() = ToStringBuilder.reflectionToString(this)!!
+    override fun toString() =
+        "AndroidGroup(id=$id, fileName=$fileName, eTag=$eTag, _contact=$_contact)"
 
 }

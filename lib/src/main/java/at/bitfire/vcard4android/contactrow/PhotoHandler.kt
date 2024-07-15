@@ -13,8 +13,6 @@ import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Photo
 import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.logging.Level
@@ -73,8 +71,8 @@ class PhotoHandler(val provider: ContentProviderClient?): DataRowHandler() {
                 provider?.openAssetFile(photoUri, "r")?.let { file ->
                     file.createInputStream().use {
                         // Samsung Android 12 bug: they return a PNG image with MIME type image/jpeg
-                        convertToJpeg(IOUtils.toByteArray(it), 75)?.let { jpeg ->
-                            Constants.log.log(Level.FINE, "Got high-res contact photo (${FileUtils.byteCountToDisplaySize(jpeg.size.toLong())})")
+                        convertToJpeg(it.readBytes(), 75)?.let { jpeg ->
+                            Constants.log.log(Level.FINE, "Got high-res contact photo (${jpeg.size} bytes)")
                             contact.photo = jpeg
                         }
                     }
@@ -88,7 +86,7 @@ class PhotoHandler(val provider: ContentProviderClient?): DataRowHandler() {
             values.getAsByteArray(Photo.PHOTO)?.let { thumbnail ->
                 // Samsung Android 12 bug: even the thumbnail is a PNG image
                 convertToJpeg(thumbnail, 95)?.let { jpeg ->
-                    Constants.log.log(Level.FINE, "Got contact photo thumbnail (${FileUtils.byteCountToDisplaySize(jpeg.size.toLong())})")
+                    Constants.log.log(Level.FINE, "Got contact photo thumbnail (${jpeg.size} bytes)")
                     contact.photo = jpeg
                 }
             }

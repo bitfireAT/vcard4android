@@ -16,11 +16,10 @@ import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
 import at.bitfire.vcard4android.contactrow.ContactProcessor
 import at.bitfire.vcard4android.contactrow.PhotoBuilder
-import org.apache.commons.lang3.builder.ToStringBuilder
 import java.io.FileNotFoundException
 
 open class AndroidContact(
-        open val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
+    open val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {
@@ -214,6 +213,7 @@ open class AndroidContact(
 
     protected fun dataSyncURI() = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)
 
-    override fun toString() = ToStringBuilder.reflectionToString(this)!!
+    override fun toString() =
+        "AndroidContact(id=$id, fileName=$fileName, eTag=$eTag, _contact=$_contact)"
 
 }
