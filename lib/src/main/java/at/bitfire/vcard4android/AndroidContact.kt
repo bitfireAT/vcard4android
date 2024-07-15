@@ -213,9 +213,8 @@ open class AndroidContact(
 
     protected fun dataSyncURI() = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)
 
-    override fun toString() = mapOf("id" to id, "fileName" to fileName, "eTag" to eTag)
-        .toList()
-        .joinToString(",") { (k, v) -> "$k=$v" }
-        .let { "AndroidContact[$it]" }
+    override fun toString(): String {
+        return "AndroidContact(id=$id, fileName=$fileName, eTag=$eTag)"
+    }
 
 }

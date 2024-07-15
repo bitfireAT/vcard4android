@@ -163,9 +163,8 @@ open class AndroidGroup(
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id))
     }
 
-    override fun toString() = mapOf("id" to id, "fileName" to fileName, "eTag" to eTag)
-        .toList()
-        .joinToString(",") { (k, v) -> "$k=$v" }
-        .let { "AndroidGroup[$it]" }
+    override fun toString(): String {
+        return "AndroidGroup(id=$id, fileName=$fileName, eTag=$eTag)"
+    }
 
 }
