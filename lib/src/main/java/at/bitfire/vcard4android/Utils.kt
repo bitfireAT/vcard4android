@@ -21,22 +21,6 @@ object Utils {
         return values
     }
 
-    fun Long.byteCountToDisplaySize(): String {
-        val gb = this / 1_073_741_824 // 2^30
-        if (gb > 0) {
-            return "$gb GB"
-        }
-        val mb = this / 1_048_576 // 2^20
-        if (mb > 0) {
-            return "$mb MB"
-        }
-        val kb = this / 1024 // 2^10
-        if (kb > 0) {
-            return "$kb KB"
-        }
-        return "$this B"
-    }
-
     fun String.capitalize(): String = split(' ').joinToString(" ") { word ->
         word.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
