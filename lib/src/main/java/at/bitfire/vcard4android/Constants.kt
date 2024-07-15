@@ -4,16 +4,11 @@
 
 package at.bitfire.vcard4android
 
-import java.util.logging.Level
 import java.util.logging.Logger
 
 object Constants {
 
-    val log: Logger = Logger.getLogger("vcard4android")
-
-    init {
-        if (BuildConfig.DEBUG)
-            log.level = Level.ALL
-    }
+    @Deprecated("Use java.util.Logger.getLogger(javaClass.name) instead", ReplaceWith("Logger.getLogger(javaClass.name)", "java.util.logging.Logger"))
+    val log: Logger = Logger.getLogger("at.bitfire.vcard4android")
 
 }
