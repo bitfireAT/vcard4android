@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "at.bitfire.vcard4android"
 
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 23        // Android 6
@@ -26,11 +26,6 @@ android {
     }
     kotlin {
         jvmToolchain(17)
-    }
-
-    @Suppress("UnstableApiUsage")
-    buildFeatures {
-        buildConfig = true
     }
 
     buildTypes {
