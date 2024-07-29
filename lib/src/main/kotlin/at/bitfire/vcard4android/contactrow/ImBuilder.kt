@@ -7,10 +7,9 @@ package at.bitfire.vcard4android.contactrow
 import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Im
 import at.bitfire.vcard4android.BatchOperation
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import ezvcard.parameter.ImppType
-import java.util.*
+import java.util.LinkedList
 
 class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
@@ -22,7 +21,7 @@ class ImBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly
 
             val protocol = impp.protocol
             if (protocol == null) {
-                Constants.log.warning("Ignoring IM address without protocol")
+                logger.warning("Ignoring IM address without protocol")
                 continue
 
             } else if (protocol == "sip")

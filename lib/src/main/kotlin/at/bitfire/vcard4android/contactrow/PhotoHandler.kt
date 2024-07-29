@@ -11,7 +11,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Photo
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -72,13 +71,13 @@ class PhotoHandler(val provider: ContentProviderClient?): DataRowHandler() {
                     file.createInputStream().use {
                         // Samsung Android 12 bug: they return a PNG image with MIME type image/jpeg
                         convertToJpeg(it.readBytes(), 75)?.let { jpeg ->
-                            Constants.log.log(Level.FINE, "Got high-res contact photo (${jpeg.size} bytes)")
+                            logger.log(Level.FINE, "Got high-res contact photo (${jpeg.size} bytes)")
                             contact.photo = jpeg
                         }
                     }
                 }
             } catch(e: IOException) {
-                Constants.log.log(Level.WARNING, "Couldn't read local contact photo file", e)
+                logger.log(Level.WARNING, "Couldn't read local contact photo file", e)
             }
         }
 
@@ -86,7 +85,7 @@ class PhotoHandler(val provider: ContentProviderClient?): DataRowHandler() {
             values.getAsByteArray(Photo.PHOTO)?.let { thumbnail ->
                 // Samsung Android 12 bug: even the thumbnail is a PNG image
                 convertToJpeg(thumbnail, 95)?.let { jpeg ->
-                    Constants.log.log(Level.FINE, "Got contact photo thumbnail (${jpeg.size} bytes)")
+                    logger.log(Level.FINE, "Got contact photo thumbnail (${jpeg.size} bytes)")
                     contact.photo = jpeg
                 }
             }

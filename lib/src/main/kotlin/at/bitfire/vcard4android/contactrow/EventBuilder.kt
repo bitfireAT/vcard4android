@@ -7,7 +7,6 @@ package at.bitfire.vcard4android.contactrow
 import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Event
 import at.bitfire.vcard4android.BatchOperation
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import ezvcard.property.DateOrTimeProperty
 import ezvcard.util.PartialDate
@@ -77,7 +76,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                             DateTimeFormatter.ofPattern(DATE_AND_TIME_FORMAT, Locale.US).format(utc)
                         }
                         else -> {
-                            Constants.log.warning("Unsupported date/time class: ${date::class.java.name}")
+                            logger.warning("Unsupported date/time class: ${date::class.java.name}")
                             null
                         }
                     }
@@ -88,7 +87,7 @@ class EventBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                     null
             }
         if (androidStr == null) {
-            Constants.log.log(Level.WARNING, "Ignoring date/time without supported (partial) date", dateOrTime)
+            logger.log(Level.WARNING, "Ignoring date/time without supported (partial) date", dateOrTime)
             return null
         }
 

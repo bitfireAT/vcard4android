@@ -10,9 +10,9 @@ import android.net.Uri
 import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.AndroidContact
 import at.bitfire.vcard4android.BatchOperation
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import java.util.logging.Level
+import java.util.logging.Logger
 
 class ContactProcessor(
     val provider: ContentProviderClient?
@@ -85,8 +85,10 @@ class ContactProcessor(
         if (handlers.isNotEmpty())
             for (handler in handlers)
                 handler.handle(values, contact)
-        else
-            Constants.log.log(Level.WARNING, "No registered handler for $mimeType", values)
+        else {
+            val logger = Logger.getLogger(javaClass.name)
+            logger.log(Level.WARNING, "No registered handler for $mimeType", values)
+        }
     }
 
 

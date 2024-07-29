@@ -15,16 +15,22 @@ import android.provider.ContactsContract.RawContacts
 import android.provider.ContactsContract.RawContacts.Data
 import androidx.annotation.CallSuper
 import java.io.FileNotFoundException
+import java.util.logging.Logger
 
 open class AndroidGroup(
     val addressBook: AndroidAddressBook<out AndroidContact, out AndroidGroup>
 ) {
 
     companion object {
+        
         const val COLUMN_FILENAME = Groups.SOURCE_ID
         const val COLUMN_UID = Groups.SYNC1
         const val COLUMN_ETAG = Groups.SYNC2
+        
     }
+    
+    protected val logger
+        get() = Logger.getLogger(javaClass.name)
 
     var id: Long? = null
 
@@ -80,7 +86,7 @@ open class AndroidGroup(
                 arrayOf(GroupMembership.CONTENT_ITEM_TYPE, id.toString()), null)?.use { membershipCursor ->
             while (membershipCursor.moveToNext()) {
                 val contactId = membershipCursor.getLong(0)
-                Constants.log.fine("Member ID: $contactId")
+                logger.fine("Member ID: $contactId")
 
                 // get UID from the member
                 addressBook.provider.query(addressBook.syncAdapterURI(ContentUris.withAppendedId(RawContacts.CONTENT_URI, contactId)),
@@ -88,11 +94,11 @@ open class AndroidGroup(
                     if (rawContactCursor.moveToNext()) {
                         val uid = rawContactCursor.getString(0)
                         if (!uid.isNullOrBlank()) {
-                            Constants.log.fine("Found member of group: $uid")
+                            logger.fine("Found member of group: $uid")
                             // add UID to contact members (vCard MEMBERS field)
                             contact.members += uid
                         } else
-                            Constants.log.severe("Couldn't add member $contactId to group contact because it doesn't have an UID (yet)")
+                            logger.severe("Couldn't add member $contactId to group contact because it doesn't have an UID (yet)")
                     }
                 }
             }

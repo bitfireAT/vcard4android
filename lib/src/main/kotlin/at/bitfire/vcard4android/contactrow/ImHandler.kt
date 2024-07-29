@@ -6,7 +6,6 @@ package at.bitfire.vcard4android.contactrow
 
 import android.content.ContentValues
 import android.provider.ContactsContract.CommonDataKinds.Im
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
 import ezvcard.parameter.ImppType
@@ -22,7 +21,7 @@ object ImHandler: DataRowHandler() {
 
         val handle = values.getAsString(Im.DATA)
         if (handle == null) {
-            Constants.log.warning("Ignoring instant messenger record without handle")
+            logger.warning("Ignoring instant messenger record without handle")
             return
         }
 
@@ -50,7 +49,7 @@ object ImHandler: DataRowHandler() {
                 try {
                     impp = Impp(protocolToUriScheme(values.getAsString(Im.CUSTOM_PROTOCOL)), handle)
                 } catch(e: IllegalArgumentException) {
-                    Constants.log.warning("Messenger type/value can't be expressed as URI; ignoring")
+                    logger.warning("Messenger type/value can't be expressed as URI; ignoring")
                 }
         }
 

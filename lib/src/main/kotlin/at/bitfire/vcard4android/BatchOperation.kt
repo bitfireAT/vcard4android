@@ -4,15 +4,20 @@
 
 package at.bitfire.vcard4android
 
-import android.content.*
+import android.content.ContentProviderClient
+import android.content.ContentProviderOperation
+import android.content.ContentProviderResult
+import android.content.ContentUris
+import android.content.OperationApplicationException
 import android.net.Uri
 import android.os.RemoteException
 import android.os.TransactionTooLargeException
-import java.util.*
+import java.util.LinkedList
 import java.util.logging.Level
+import java.util.logging.Logger
 
 class BatchOperation(
-        private val providerClient: ContentProviderClient
+    private val providerClient: ContentProviderClient
 ) {
 
     companion object {
@@ -26,7 +31,9 @@ class BatchOperation(
 
     }
 
-    internal val queue = LinkedList<CpoBuilder>()
+    private val logger = Logger.getLogger(javaClass.name)
+
+    private val queue = LinkedList<CpoBuilder>()
     private var results = arrayOfNulls<ContentProviderResult?>(0)
 
 
@@ -57,10 +64,10 @@ class BatchOperation(
     fun commit(): Int {
         var affected = 0
         if (!queue.isEmpty()) {
-            if (Constants.log.isLoggable(Level.FINE)) {
-                Constants.log.log(Level.FINE, "Committing ${queue.size} operations:")
+            if (logger.isLoggable(Level.FINE)) {
+                logger.log(Level.FINE, "Committing ${queue.size} operations:")
                 for ((idx, op) in queue.withIndex())
-                    Constants.log.log(Level.FINE, "#$idx: ${op.build()}")
+                    logger.log(Level.FINE, "#$idx: ${op.build()}")
             }
 
             results = arrayOfNulls(queue.size)
@@ -71,7 +78,7 @@ class BatchOperation(
                     result.count != null -> affected += result.count ?: 0
                     result.uri != null -> affected += 1
                 }
-            Constants.log.fine("… $affected record(s) affected")
+            logger.fine("… $affected record(s) affected")
         }
 
         queue.clear()
@@ -103,12 +110,12 @@ class BatchOperation(
 
         try {
             val ops = toCPO(start, end)
-            Constants.log.fine("Running ${ops.size} operations ($start .. ${end - 1})")
+            logger.fine("Running ${ops.size} operations ($start .. ${end - 1})")
             val partResults = providerClient.applyBatch(ops)
 
             val n = end - start
             if (partResults.size != n)
-                Constants.log.warning("Batch operation returned only ${partResults.size} instead of $n results")
+                logger.warning("Batch operation returned only ${partResults.size} instead of $n results")
 
             System.arraycopy(partResults, 0, results, start, partResults.size)
 
@@ -123,7 +130,7 @@ class BatchOperation(
                 // only one operation, can't be split
                 throw ContactsStorageException("Can't transfer data to content provider (too large data row can't be split)", e)
 
-            Constants.log.warning("Transaction too large, splitting (losing atomicity)")
+            logger.warning("Transaction too large, splitting (losing atomicity)")
             val mid = start + (end - start)/2
 
             runBatch(start, mid)

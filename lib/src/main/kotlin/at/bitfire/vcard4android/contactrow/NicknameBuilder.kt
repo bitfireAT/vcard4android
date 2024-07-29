@@ -9,7 +9,7 @@ import android.provider.ContactsContract.CommonDataKinds
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.property.CustomType
-import java.util.*
+import java.util.LinkedList
 
 class NicknameBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {

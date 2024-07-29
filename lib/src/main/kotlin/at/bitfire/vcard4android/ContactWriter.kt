@@ -7,8 +7,16 @@ package at.bitfire.vcard4android
 import at.bitfire.vcard4android.Utils.capitalize
 import at.bitfire.vcard4android.Utils.isEmpty
 import at.bitfire.vcard4android.Utils.trimToNull
-import at.bitfire.vcard4android.property.*
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
+import at.bitfire.vcard4android.property.CustomType
+import at.bitfire.vcard4android.property.XAbDate
+import at.bitfire.vcard4android.property.XAbLabel
+import at.bitfire.vcard4android.property.XAbRelatedNames
+import at.bitfire.vcard4android.property.XAddressBookServerKind
+import at.bitfire.vcard4android.property.XAddressBookServerMember
+import at.bitfire.vcard4android.property.XPhoneticFirstName
+import at.bitfire.vcard4android.property.XPhoneticLastName
+import at.bitfire.vcard4android.property.XPhoneticMiddleName
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.VCardVersion
@@ -16,11 +24,21 @@ import ezvcard.io.json.JCardWriter
 import ezvcard.io.text.VCardWriter
 import ezvcard.parameter.ImageType
 import ezvcard.parameter.RelatedType
-import ezvcard.property.*
+import ezvcard.property.Categories
+import ezvcard.property.DateOrTimeProperty
+import ezvcard.property.Kind
+import ezvcard.property.Member
+import ezvcard.property.Photo
+import ezvcard.property.Related
+import ezvcard.property.Revision
+import ezvcard.property.StructuredName
+import ezvcard.property.Uid
+import ezvcard.property.VCardProperty
 import java.io.OutputStream
 import java.time.LocalDate
-import java.util.*
+import java.util.LinkedList
 import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * Responsible for converting the [Contact] data class (which is not version-specific)
@@ -30,18 +48,22 @@ import java.util.logging.Level
  */
 class ContactWriter private constructor(val contact: Contact, val version: VCardVersion) {
 
-    private val unknownProperties = LinkedList<VCardProperty>()
-    val vCard = VCard()
-
-    /** counter for item ID of labelled properties: 1 means "item1." etc. */
-    private var currentItemId = 1
-
     companion object {
 
         fun fromContact(contact: Contact, version: VCardVersion) =
             ContactWriter(contact, version)
 
     }
+
+    private val unknownProperties = LinkedList<VCardProperty>()
+    val vCard = VCard()
+
+    /** counter for item ID of labelled properties: 1 means "item1." etc. */
+    private var currentItemId = 1
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
+
 
     init {
         parseUnknownProperties()
@@ -297,7 +319,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
                 }
             }
         } catch (e: Exception) {
-            Constants.log.log(Level.WARNING, "Couldn't parse original vCard with retained properties", e)
+            logger.log(Level.WARNING, "Couldn't parse original vCard with retained properties", e)
         }
     }
 
@@ -364,7 +386,7 @@ class ContactWriter private constructor(val contact: Contact, val version: VCard
             val msgs = LinkedList<String>()
             for ((key, warnings) in validation)
                 msgs += "  * " + key?.javaClass?.simpleName + " - " + warnings?.joinToString(" | ")
-            Constants.log.log(Level.WARNING, "vCard validation warnings", msgs.joinToString(","))
+            logger.log(Level.WARNING, "vCard validation warnings", msgs.joinToString(","))
         }
     }
 

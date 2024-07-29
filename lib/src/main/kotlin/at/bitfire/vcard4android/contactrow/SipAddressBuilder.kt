@@ -9,7 +9,7 @@ import android.provider.ContactsContract.CommonDataKinds.SipAddress
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 import ezvcard.parameter.ImppType
-import java.util.*
+import java.util.LinkedList
 
 class SipAddressBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {

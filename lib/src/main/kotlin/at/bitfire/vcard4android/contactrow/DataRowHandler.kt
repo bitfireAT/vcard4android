@@ -7,11 +7,14 @@ package at.bitfire.vcard4android.contactrow
 import android.content.ContentValues
 import androidx.annotation.CallSuper
 import at.bitfire.vcard4android.Contact
+import java.util.logging.Logger
 
 /**
  * Handler for a raw contact's data row.
  */
 abstract class DataRowHandler {
+
+    protected val logger = Logger.getLogger(javaClass.name)
 
     abstract fun forMimeType(): String
 
