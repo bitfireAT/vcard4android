@@ -7,10 +7,7 @@ package at.bitfire.vcard4android.property
 import ezvcard.io.scribe.DateOrTimePropertyScribe
 import ezvcard.property.DateOrTimeProperty
 import ezvcard.util.PartialDate
-import java.time.Instant
-import java.time.LocalDate
 import java.time.temporal.Temporal
-import java.util.*
 
 class XAbDate: DateOrTimeProperty {
 

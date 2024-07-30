@@ -10,7 +10,7 @@ import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.Utils.trimToNull
 import ezvcard.parameter.AddressType
-import java.util.*
+import java.util.LinkedList
 
 /**
  * Data row builder for structured addresses.

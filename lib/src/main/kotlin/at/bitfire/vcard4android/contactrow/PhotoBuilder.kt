@@ -13,16 +13,19 @@ import android.net.Uri
 import android.provider.ContactsContract.CommonDataKinds.Photo
 import android.provider.ContactsContract.RawContacts
 import at.bitfire.vcard4android.BatchOperation
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.Utils.asSyncAdapter
 import java.io.IOException
 import java.util.logging.Level
+import java.util.logging.Logger
 
 class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
 
     companion object {
+
+        private val logger
+            get() = Logger.getLogger(PhotoBuilder::class.java.name)
 
         /**
          * Inserts a raw contact photo and resets [RawContacts.DIRTY] to 0 then.
@@ -46,7 +49,7 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             BitmapFactory.decodeByteArray(data, 0, data.size, opts)
             val valid = opts.outHeight != -1 && opts.outWidth != -1
             if (!valid) {
-                Constants.log.log(Level.WARNING, "Ignoring invalid contact photo")
+                logger.log(Level.WARNING, "Ignoring invalid contact photo")
                 return null
             }
 
@@ -55,14 +58,14 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
                 .appendPath(rawContactId.toString())
                 .appendPath(RawContacts.DisplayPhoto.CONTENT_DIRECTORY)
                 .build()
-            Constants.log.log(Level.FINE, "Writing photo to $uri (${data.size} bytes)")
+            logger.log(Level.FINE, "Writing photo to $uri (${data.size} bytes)")
             provider.openAssetFile(uri, "w")?.use { fd ->
                 try {
                     fd.createOutputStream()?.use { os ->
                         os.write(data)
                     }
                 } catch (e: IOException) {
-                    Constants.log.log(Level.WARNING, "Couldn't store contact photo", e)
+                    logger.log(Level.WARNING, "Couldn't store contact photo", e)
                 }
             }
 
@@ -91,9 +94,9 @@ class PhotoBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             provider.update(rawContactUri, notDirty, null, null)
 
             if (photoUri != null)
-                Constants.log.log(Level.FINE, "Photo has been inserted: $photoUri")
+                logger.log(Level.FINE, "Photo has been inserted: $photoUri")
             else
-                Constants.log.log(Level.WARNING, "Timeout when storing photo")
+                logger.log(Level.WARNING, "Timeout when storing photo")
 
             return photoUri
         }

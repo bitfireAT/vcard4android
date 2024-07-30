@@ -6,7 +6,6 @@ package at.bitfire.vcard4android.contactrow
 
 import android.content.ContentValues
 import android.provider.ContactsContract.CommonDataKinds.Event
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
 import at.bitfire.vcard4android.Utils.trimToNull
@@ -16,7 +15,6 @@ import ezvcard.property.Birthday
 import ezvcard.util.PartialDate
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
-import java.util.*
 import java.util.logging.Level
 
 object EventHandler: DataRowHandler() {
@@ -35,7 +33,7 @@ object EventHandler: DataRowHandler() {
             try {
                 partial = PartialDate.parse(dateStr)
             } catch (e: IllegalArgumentException) {
-                Constants.log.log(Level.WARNING, "Couldn't parse birthday/anniversary date from database", e)
+                logger.log(Level.WARNING, "Couldn't parse birthday/anniversary date from database", e)
             }
         }
 

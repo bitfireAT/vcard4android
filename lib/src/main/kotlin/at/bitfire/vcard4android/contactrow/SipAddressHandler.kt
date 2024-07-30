@@ -6,7 +6,6 @@ package at.bitfire.vcard4android.contactrow
 
 import android.content.ContentValues
 import android.provider.ContactsContract.CommonDataKinds.SipAddress
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.LabeledProperty
 import ezvcard.parameter.ImppType
@@ -36,7 +35,7 @@ object SipAddressHandler: DataRowHandler() {
             }
             contact.impps.add(labeledImpp)
         } catch(e: IllegalArgumentException) {
-            Constants.log.warning("Ignoring invalid locally stored SIP address")
+            logger.warning("Ignoring invalid locally stored SIP address")
         }
    }
 

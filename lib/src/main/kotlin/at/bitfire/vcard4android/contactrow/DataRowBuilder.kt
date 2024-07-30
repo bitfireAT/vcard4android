@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.ContactsContract
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
+import java.util.logging.Logger
 
 /**
  * Builder for a data row to insert into the Android contact provider.
@@ -28,6 +29,8 @@ abstract class DataRowBuilder(
     val contact: Contact,
     val readOnly: Boolean
 ) {
+
+    protected val logger = Logger.getLogger(javaClass.name)
 
     abstract fun build(): List<BatchOperation.CpoBuilder>
 

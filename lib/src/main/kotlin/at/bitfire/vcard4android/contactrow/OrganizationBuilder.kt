@@ -9,7 +9,7 @@ import android.provider.ContactsContract.CommonDataKinds.Organization
 import at.bitfire.vcard4android.BatchOperation
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.Utils.trimToNull
-import java.util.*
+import java.util.LinkedList
 
 class OrganizationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {

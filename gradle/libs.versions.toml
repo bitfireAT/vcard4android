@@ -1,6 +1,6 @@
 [versions]
 agp = "8.5.1"
-androidx-annotation = "1.8.0"
+androidx-annotation = "1.8.1"
 androidx-test-runner = "1.6.1"
 androidx-rest-rules = "1.6.1"
 desugar = "2.0.4"

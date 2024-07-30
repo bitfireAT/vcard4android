@@ -8,11 +8,10 @@ import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Email
 import at.bitfire.vcard4android.BatchOperation
-import at.bitfire.vcard4android.Constants
 import at.bitfire.vcard4android.Contact
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.EmailType
-import java.util.*
+import java.util.LinkedList
 import java.util.logging.Level
 
 class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
@@ -32,7 +31,7 @@ class EmailBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readO
             try {
                 pref = email.pref
             } catch(e: IllegalStateException) {
-                Constants.log.log(Level.FINER, "Can't understand email PREF", e)
+                logger.log(Level.FINER, "Can't understand email PREF", e)
             }
             var isPrimary = pref != null
             if (types.contains(EmailType.PREF)) {

@@ -5,12 +5,46 @@
 package at.bitfire.vcard4android
 
 import at.bitfire.vcard4android.Utils.trimToNull
-import at.bitfire.vcard4android.property.*
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
+import at.bitfire.vcard4android.property.CustomType
+import at.bitfire.vcard4android.property.XAbDate
+import at.bitfire.vcard4android.property.XAbLabel
+import at.bitfire.vcard4android.property.XAbRelatedNames
+import at.bitfire.vcard4android.property.XPhoneticFirstName
+import at.bitfire.vcard4android.property.XPhoneticLastName
+import at.bitfire.vcard4android.property.XPhoneticMiddleName
+import at.bitfire.vcard4android.property.XSip
 import ezvcard.Ezvcard
 import ezvcard.VCard
 import ezvcard.parameter.RelatedType
-import ezvcard.property.*
+import ezvcard.property.Address
+import ezvcard.property.Anniversary
+import ezvcard.property.Birthday
+import ezvcard.property.Categories
+import ezvcard.property.DateOrTimeProperty
+import ezvcard.property.Email
+import ezvcard.property.FormattedName
+import ezvcard.property.Impp
+import ezvcard.property.Kind
+import ezvcard.property.Label
+import ezvcard.property.Logo
+import ezvcard.property.Member
+import ezvcard.property.Nickname
+import ezvcard.property.Note
+import ezvcard.property.Organization
+import ezvcard.property.Photo
+import ezvcard.property.ProductId
+import ezvcard.property.Related
+import ezvcard.property.Revision
+import ezvcard.property.Role
+import ezvcard.property.SortString
+import ezvcard.property.Sound
+import ezvcard.property.Source
+import ezvcard.property.StructuredName
+import ezvcard.property.Telephone
+import ezvcard.property.Title
+import ezvcard.property.Uid
+import ezvcard.property.Url
 import ezvcard.util.PartialDate
 import java.net.URI
 import java.net.URISyntaxException
@@ -22,6 +56,7 @@ import java.time.temporal.ChronoField
 import java.time.temporal.Temporal
 import java.util.UUID
 import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * Responsible for converting a specific vCard with a specific version to
@@ -32,6 +67,9 @@ import java.util.logging.Level
 class ContactReader internal constructor(val vCard: VCard, val downloader: Contact.Downloader? = null) {
 
     companion object {
+        
+        private val logger
+            get() = Logger.getLogger(ContactReader::class.java.name)
 
         /**
          * Maximum size for binary data like LOGO and SOUND data URIs.
@@ -66,7 +104,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
             val date: Temporal? = prop.date
 
             if (arrayOf(ChronoField.YEAR, ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH).any { date?.isSupported(it) == false }) {
-                Constants.log.log(Level.WARNING, "checkPartialDate: unsupported DateOrTimeProperty", prop)
+                logger.log(Level.WARNING, "checkPartialDate: unsupported DateOrTimeProperty", prop)
                 return
             }
 
@@ -101,7 +139,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                         uriString
                 }
             } catch(e: URISyntaxException) {
-                Constants.log.warning("Invalid URI for UID: $uriString")
+                logger.warning("Invalid URI for UID: $uriString")
                 uriString
             }
 
@@ -288,7 +326,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
         }
 
         if (c.uid == null) {
-            Constants.log.warning("Received vCard without UID, generating new one")
+            logger.warning("Received vCard without UID, generating new one")
             c.uid = UUID.randomUUID().toString()
         }
 
@@ -308,7 +346,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
                         .registerCustomScribes()
                         .go()
             } catch(e: Exception) {
-                Constants.log.log(Level.WARNING, "Couldn't serialize unknown properties, dropping them", e)
+                logger.log(Level.WARNING, "Couldn't serialize unknown properties, dropping them", e)
             }
 
         return c
@@ -337,7 +375,7 @@ class ContactReader internal constructor(val vCard: VCard, val downloader: Conta
 
         val url = photo.url
         if (photo.url != null && downloader != null) {
-            Constants.log.info("Downloading photo from $url")
+            logger.info("Downloading photo from $url")
             return downloader.download(url, "image/*")
         }
 

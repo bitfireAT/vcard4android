@@ -12,7 +12,7 @@ import at.bitfire.vcard4android.Utils.capitalize
 import at.bitfire.vcard4android.Utils.trimToNull
 import at.bitfire.vcard4android.property.CustomType
 import ezvcard.parameter.RelatedType
-import java.util.*
+import java.util.LinkedList
 
 class RelationBuilder(dataRowUri: Uri, rawContactId: Long?, contact: Contact, readOnly: Boolean)
     : DataRowBuilder(Factory.mimeType(), dataRowUri, rawContactId, contact, readOnly) {
