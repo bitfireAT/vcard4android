@@ -6,6 +6,8 @@ package at.bitfire.vcard4android
 
 import at.bitfire.vcard4android.property.CustomScribes.registerCustomScribes
 import at.bitfire.vcard4android.property.XAbDate
+import com.google.common.base.Ascii
+import com.google.common.base.MoreObjects
 import ezvcard.VCardVersion
 import ezvcard.io.json.JCardReader
 import ezvcard.io.text.VCardReader
@@ -80,6 +82,8 @@ data class Contact(
         const val DATE_PARAMETER_OMIT_YEAR = "X-APPLE-OMIT-YEAR"
         const val DATE_PARAMETER_OMIT_YEAR_DEFAULT = 1604
 
+        const val TO_STRING_MAX_VALUE_SIZE = 2000
+
         /**
          * Parses an InputStream that contains a vCard.
          *
@@ -147,6 +151,45 @@ data class Contact(
             false
 
     override fun hashCode() = compareFields().contentHashCode()
+
+    /**
+     * Implements [Object.toString]. Truncates properties with potential big values:
+     *
+     * - [photo]
+     * - [unknownProperties]
+     */
+    override fun toString() = MoreObjects.toStringHelper(this)
+        .omitNullValues()
+        .add("uid", uid)
+        .add("group", group)
+        .add("members", members)
+        .add("displayName", displayName)
+        .add("prefix", prefix)
+        .add("givenName", givenName)
+        .add("middleName", middleName)
+        .add("familyName", familyName)
+        .add("suffix", suffix)
+        .add("phoneticGivenName", phoneticGivenName)
+        .add("phoneticMiddleName", phoneticMiddleName)
+        .add("phoneticFamilyName", phoneticFamilyName)
+        .add("nickName", nickName)
+        .add("organization", organization)
+        .add("jobTitle", jobTitle)
+        .add("jobDescription", jobDescription)
+        .add("phoneNumbers", phoneNumbers)
+        .add("emails", emails)
+        .add("impps", impps)
+        .add("addresses", addresses)
+        .add("categories", categories)
+        .add("urls", urls)
+        .add("relations", relations)
+        .add("note", note?.let { Ascii.truncate(it, TO_STRING_MAX_VALUE_SIZE, "...") })
+        .add("anniversary", anniversary)
+        .add("birthDay", birthDay)
+        .add("customDates", customDates)
+        .add("photo", photo?.let { "byte[${it.size}]" })
+        .add("unknownProperties", unknownProperties?.let { Ascii.truncate(it, TO_STRING_MAX_VALUE_SIZE, "...") })
+        .toString()
 
 
     interface Downloader {

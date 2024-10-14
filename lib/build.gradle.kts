@@ -86,6 +86,7 @@ dependencies {
     coreLibraryDesugaring(libs.desugar)
 
     implementation(libs.androidx.annotation)
+    implementation(libs.guava)
 
     // ez-vcard to parse/generate vCards
     api(libs.ezvcard) {    // requires Java 8
