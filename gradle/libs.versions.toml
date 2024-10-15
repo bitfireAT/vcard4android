@@ -6,6 +6,7 @@ androidx-rest-rules = "1.6.1"
 desugar = "2.1.2"
 dokka = "1.9.20"
 ezvcard = "0.12.1"
+guava = "33.3.1-android"
 kotlin = "2.0.21"
 junit = "4.13.2"
 
@@ -15,6 +16,7 @@ androidx-test-runner = { module = "androidx.test:runner", version.ref = "android
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-rest-rules" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
 ezvcard = { module = "com.googlecode.ez-vcard:ez-vcard", version.ref = "ezvcard" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
 

@@ -11,6 +11,7 @@ import ezvcard.parameter.ImppType
 import ezvcard.parameter.RelatedType
 import ezvcard.parameter.TelephoneType
 import ezvcard.property.Birthday
+import ezvcard.property.Email
 import ezvcard.util.PartialDate
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -26,6 +27,7 @@ import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.LinkedList
 
 class ContactTest {
 
@@ -38,6 +40,21 @@ class ContactTest {
         val os = ByteArrayOutputStream()
         c.writeVCard(vCardVersion, os)
         return Contact.fromReader(InputStreamReader(ByteArrayInputStream(os.toByteArray()), Charsets.UTF_8), false,null).first()
+    }
+
+
+    @Test
+    fun testToString_TruncatesLargeFields() {
+        val c = Contact(
+            displayName = "Test",
+            members = mutableSetOf("1", "2", "3"),
+            emails = LinkedList(listOf(LabeledProperty(Email("test@example.com")))),
+            note = "Some Text\n".repeat(1000),
+            photo = ByteArray(10*1024*1024) { 'A'.code.toByte() },  // 10 MB
+            unknownProperties = "UNKNOWN:Property\n".repeat(1000)
+        )
+        val result = c.toString()
+        assertTrue(result.length < 4500)   // 2000 note + 2000 unknown properties + rest
     }
 
 
