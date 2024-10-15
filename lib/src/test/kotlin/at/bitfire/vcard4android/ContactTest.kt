@@ -50,7 +50,7 @@ class ContactTest {
             members = mutableSetOf("1", "2", "3"),
             emails = LinkedList(listOf(LabeledProperty(Email("test@example.com")))),
             note = "Some Text\n".repeat(1000),
-            photo = ByteArray(10*1024*1024) { 'A'.toByte() },  // 10 MB
+            photo = ByteArray(10*1024*1024) { 'A'.code.toByte() },  // 10 MB
             unknownProperties = "UNKNOWN:Property\n".repeat(1000)
         )
         val result = c.toString()
