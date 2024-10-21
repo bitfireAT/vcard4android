@@ -36,9 +36,9 @@ object Utils {
     fun StructuredName.isEmpty() =
         prefixes.isEmpty() && given == null && additionalNames.isEmpty() && family == null && suffixes.isEmpty()
 
-    fun Uri.asSyncAdapter(account: Account): Uri = buildUpon()
-        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, account.name)
-        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_TYPE, account.type)
+    fun Uri.asSyncAdapter(addressBookAccount: Account): Uri = buildUpon()
+        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_NAME, addressBookAccount.name)
+        .appendQueryParameter(ContactsContract.RawContacts.ACCOUNT_TYPE, addressBookAccount.type)
         .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
         .build()
 

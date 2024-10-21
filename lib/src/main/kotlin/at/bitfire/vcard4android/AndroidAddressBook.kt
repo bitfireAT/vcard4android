@@ -16,10 +16,10 @@ import java.io.FileNotFoundException
 import java.util.*
 
 open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
-        var account: Account,
-        val provider: ContentProviderClient?,
-        protected val contactFactory: AndroidContactFactory<T1>,
-        protected val groupFactory: AndroidGroupFactory<T2>
+    var addressBookAccount: Account,
+    val provider: ContentProviderClient?,
+    protected val contactFactory: AndroidContactFactory<T1>,
+    protected val groupFactory: AndroidGroupFactory<T2>
 ) {
 
     open var readOnly: Boolean = false
@@ -45,14 +45,14 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
          * @throws android.os.RemoteException on content provider errors
          */
         set(values) {
-            values.put(ContactsContract.Settings.ACCOUNT_NAME, account.name)
-            values.put(ContactsContract.Settings.ACCOUNT_TYPE, account.type)
+            values.put(ContactsContract.Settings.ACCOUNT_NAME, addressBookAccount.name)
+            values.put(ContactsContract.Settings.ACCOUNT_TYPE, addressBookAccount.type)
             provider!!.insert(syncAdapterURI(ContactsContract.Settings.CONTENT_URI), values)
         }
 
     var syncState: ByteArray?
-        get() = ContactsContract.SyncState.get(provider, account)
-        set(data) = ContactsContract.SyncState.set(provider, account, data)
+        get() = ContactsContract.SyncState.get(provider, addressBookAccount)
+        set(data) = ContactsContract.SyncState.set(provider, addressBookAccount, data)
 
 
     fun queryContacts(where: String?, whereArgs: Array<String>?): List<T1> {
@@ -85,7 +85,7 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 
 
     fun allGroups(callback: (T2) -> Unit) {
-        queryGroups("${Groups.ACCOUNT_TYPE}=? AND ${Groups.ACCOUNT_NAME}=?", arrayOf(account.type, account.name)) { group ->
+        queryGroups("${Groups.ACCOUNT_TYPE}=? AND ${Groups.ACCOUNT_NAME}=?", arrayOf(addressBookAccount.type, addressBookAccount.name)) { group ->
             callback(group)
         }
     }
@@ -106,8 +106,8 @@ open class AndroidAddressBook<T1: AndroidContact, T2: AndroidGroup>(
 
     fun syncAdapterURI(uri: Uri) = uri.buildUpon()
             .appendQueryParameter(ContactsContract.CALLER_IS_SYNCADAPTER, "true")
-            .appendQueryParameter(RawContacts.ACCOUNT_NAME, account.name)
-            .appendQueryParameter(RawContacts.ACCOUNT_TYPE, account.type)
+            .appendQueryParameter(RawContacts.ACCOUNT_NAME, addressBookAccount.name)
+            .appendQueryParameter(RawContacts.ACCOUNT_TYPE, addressBookAccount.type)
             .build()!!
 
     fun rawContactsSyncUri() = syncAdapterURI(RawContacts.CONTENT_URI)

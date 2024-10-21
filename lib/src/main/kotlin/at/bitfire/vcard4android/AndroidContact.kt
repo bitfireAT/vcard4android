@@ -126,7 +126,7 @@ open class AndroidContact(
         id = ContentUris.parseId(resultUri)
 
         getContact().photo?.let { photo ->
-            PhotoBuilder.insertPhoto(provider, addressBook.account, id!!, photo)
+            PhotoBuilder.insertPhoto(provider, addressBook.addressBookAccount, id!!, photo)
         }
 
         return resultUri
@@ -158,7 +158,7 @@ open class AndroidContact(
         batch.commit()
 
         getContact().photo?.let { photo ->
-            PhotoBuilder.insertPhoto(provider, addressBook.account, id!!, photo)
+            PhotoBuilder.insertPhoto(provider, addressBook.addressBookAccount, id!!, photo)
         }
 
         return uri
@@ -177,8 +177,8 @@ open class AndroidContact(
     @CallSuper
     protected open fun buildContact(builder: BatchOperation.CpoBuilder, update: Boolean) {
         if (!update)
-            builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.account.name)
-                    .withValue(RawContacts.ACCOUNT_TYPE, addressBook.account.type)
+            builder	.withValue(RawContacts.ACCOUNT_NAME, addressBook.addressBookAccount.name)
+                    .withValue(RawContacts.ACCOUNT_TYPE, addressBook.addressBookAccount.type)
 
         builder .withValue(RawContacts.DIRTY, 0)
                 .withValue(RawContacts.DELETED, 0)

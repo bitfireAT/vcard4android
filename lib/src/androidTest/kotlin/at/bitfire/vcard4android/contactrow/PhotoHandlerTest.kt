@@ -32,7 +32,7 @@ class PhotoHandlerTest {
         @ClassRule
         val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-        private val testAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
+        private val testAddressBookAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
 
         val testContext = InstrumentationRegistry.getInstrumentation().context
         private lateinit var provider: ContentProviderClient
@@ -44,7 +44,7 @@ class PhotoHandlerTest {
             provider = testContext.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
             Assert.assertNotNull(provider)
 
-            addressBook = TestAddressBook(testAccount, provider)
+            addressBook = TestAddressBook(testAddressBookAccount, provider)
         }
 
         @BeforeClass

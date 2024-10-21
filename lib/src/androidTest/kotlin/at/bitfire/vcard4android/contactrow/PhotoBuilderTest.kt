@@ -31,7 +31,7 @@ class PhotoBuilderTest {
         @ClassRule
         val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-        private val testAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
+        private val testAddressBookAccount = Account("AndroidContactTest", "at.bitfire.vcard4android")
 
         val testContext = InstrumentationRegistry.getInstrumentation().context
         private lateinit var provider: ContentProviderClient
@@ -43,7 +43,7 @@ class PhotoBuilderTest {
             provider = testContext.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
             assertNotNull(provider)
 
-            addressBook = TestAddressBook(testAccount, provider)
+            addressBook = TestAddressBook(testAddressBookAccount, provider)
         }
 
         @BeforeClass
@@ -82,7 +82,7 @@ class PhotoBuilderTest {
 
         try {
             val photo = TestUtils.resourceToByteArray("/large.jpg")
-            val photoUri = PhotoBuilder.insertPhoto(provider, testAccount, rawContactId, photo)
+            val photoUri = PhotoBuilder.insertPhoto(provider, testAddressBookAccount, rawContactId, photo)
             assertNotNull(photoUri)
 
             // the photo is processed and often resized by the contacts provider
@@ -114,7 +114,7 @@ class PhotoBuilderTest {
         val contact = AndroidContact(addressBook, Contact().apply { displayName = "Contact with photo" }, null, null)
         contact.add()
         try {
-            assertNull(PhotoBuilder.insertPhoto(provider, testAccount, contact.id!!, ByteArray(100) /* invalid photo  */))
+            assertNull(PhotoBuilder.insertPhoto(provider, testAddressBookAccount, contact.id!!, ByteArray(100) /* invalid photo  */))
         } finally {
             contact.delete()
         }
