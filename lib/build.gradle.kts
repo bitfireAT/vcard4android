@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "at.bitfire.vcard4android"
 
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 23        // Android 6
