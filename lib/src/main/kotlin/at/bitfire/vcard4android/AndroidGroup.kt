@@ -130,8 +130,8 @@ open class AndroidGroup(
      */
     fun add(): Uri {
         val values = contentValues()
-		values.put(Groups.ACCOUNT_TYPE, addressBook.account.type)
-		values.put(Groups.ACCOUNT_NAME, addressBook.account.name)
+		values.put(Groups.ACCOUNT_TYPE, addressBook.addressBookAccount.type)
+		values.put(Groups.ACCOUNT_NAME, addressBook.addressBookAccount.name)
         values.put(Groups.SHOULD_SYNC, 1)
         if (addressBook.readOnly)
             values.put(Groups.GROUP_IS_READ_ONLY, 1)

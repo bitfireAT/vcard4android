@@ -24,7 +24,7 @@ class AndroidGroupTest {
         @ClassRule
         val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-        private val testAccount = Account("AndroidContactGroupTest", "at.bitfire.vcard4android")
+        private val testAddressBookAccount = Account("AndroidContactGroupTest", "at.bitfire.vcard4android")
 
         private lateinit var provider: ContentProviderClient
         private lateinit var addressBook: TestAddressBook
@@ -36,7 +36,7 @@ class AndroidGroupTest {
             provider = context.contentResolver.acquireContentProviderClient(ContactsContract.AUTHORITY)!!
             assertNotNull(provider)
 
-            addressBook = TestAddressBook(testAccount, provider)
+            addressBook = TestAddressBook(testAddressBookAccount, provider)
         }
 
         @BeforeClass

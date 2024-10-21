@@ -22,7 +22,7 @@ class AndroidAddressBookTest {
         @ClassRule
         val permissionRule = GrantPermissionRule.grant(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)!!
 
-        private val testAccount = Account("AndroidAddressBookTest", "at.bitfire.vcard4android")
+        private val testAddressBookAccount = Account("AndroidAddressBookTest", "at.bitfire.vcard4android")
         private lateinit var provider: ContentProviderClient
 
         @BeforeClass
@@ -44,7 +44,7 @@ class AndroidAddressBookTest {
 
     @Test
 	fun testSettings() {
-		val addressBook = TestAddressBook(testAccount, provider)
+		val addressBook = TestAddressBook(testAddressBookAccount, provider)
 
         var values = ContentValues()
         values.put(ContactsContract.Settings.SHOULD_SYNC, false)
@@ -65,7 +65,7 @@ class AndroidAddressBookTest {
 
     @Test
     fun testSyncState() {
-		val addressBook = TestAddressBook(testAccount, provider)
+		val addressBook = TestAddressBook(testAddressBookAccount, provider)
 
         addressBook.syncState = ByteArray(0)
         assertEquals(0, addressBook.syncState!!.size)
