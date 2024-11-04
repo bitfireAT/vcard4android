@@ -164,7 +164,7 @@ open class AndroidGroup(
 
     // helpers
 
-    private fun groupSyncURI(): Uri {
+    fun groupSyncURI(): Uri {
         val id = requireNotNull(id)
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(Groups.CONTENT_URI, id))
     }
