@@ -206,12 +206,12 @@ open class AndroidContact(
 
     // helpers
 
-    protected fun rawContactSyncURI(): Uri {
+    fun rawContactSyncURI(): Uri {
         val id = requireNotNull(id)
         return addressBook.syncAdapterURI(ContentUris.withAppendedId(RawContacts.CONTENT_URI, id))
     }
 
-    protected fun dataSyncURI() = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)
+    fun dataSyncURI() = addressBook.syncAdapterURI(ContactsContract.Data.CONTENT_URI)
 
     override fun toString() =
         "AndroidContact(id=$id, fileName=$fileName, eTag=$eTag, _contact=$_contact)"
