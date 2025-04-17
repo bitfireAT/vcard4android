@@ -1,13 +1,13 @@
 [versions]
-agp = "8.7.1"
-androidx-annotation = "1.8.2"
+agp = "8.9.1"
+androidx-annotation = "1.9.1"
 androidx-test-runner = "1.6.2"
 androidx-rest-rules = "1.6.1"
-desugar = "2.1.2"
+desugar = "2.1.5"
 dokka = "1.9.20"
 ezvcard = "0.12.1"
-guava = "33.3.1-android"
-kotlin = "2.0.21"
+guava = "33.4.8-android"
+kotlin = "2.1.20"
 junit = "4.13.2"
 
 [libraries]
