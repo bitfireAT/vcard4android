@@ -16,6 +16,9 @@ android {
         aarMetadata {
             minCompileSdk = 29
         }
+
+        // These ProGuard/R8 rules will be included in the final APK.
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     compileOptions {
@@ -25,15 +28,18 @@ android {
         jvmToolchain(21)
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-        }
-    }
-
     packaging {
         resources {
             excludes += listOf("LICENSE", "META-INF/LICENSE.txt", "META-INF/NOTICE.txt")
+        }
+    }
+
+    buildTypes {
+        release {
+            // Android libraries shouldn't be minified:
+            // https://developer.android.com/studio/projects/android-library#Considerations
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
     }
 
