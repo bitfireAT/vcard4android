@@ -6,3 +6,6 @@
 
 # AGP seems to remove this class, but ezvcard.io uses it. See https://github.com/bitfireAT/davx5/issues/499
 -keep class javax.xml.namespace.QName { *; }
+
+# don't warn about jsoup
+-dontwarn org.jsoup.**
