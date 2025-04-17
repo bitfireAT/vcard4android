@@ -3,6 +3,9 @@
 [![Documentation](https://img.shields.io/badge/documentation-kdoc-brightgreen)](https://bitfireat.github.io/vcard4android/)
 [![Jitpack link](https://img.shields.io/jitpack/version/com.github.bitfireAT/vcard4android)](https://jitpack.io/#bitfireAT/vcard4android)
 
+_This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
+by Google LLC. Android is a trademark of Google LLC._
+
 
 # vcard4android
 
@@ -13,13 +16,13 @@ It's a framework for
   from/into data classes that are compatible with the Android Contacts Provider, and
 * accessing the Android Contacts Provider by a unified API.
 
-It has been primarily developed for [DAVx⁵](https://www.davx5.com) and is currently intended
-to be used as git submodule.
+It has been primarily developed for [DAVx⁵](https://www.davx5.com).
 
-_This software is not affiliated to, nor has it been authorized, sponsored or otherwise approved
-by Google LLC. Android is a trademark of Google LLC._
+To view the available gradle tasks for the library: `./gradlew vcard4android:tasks`
+(the `vcard4android` module is defined in `settings.gradle`).
 
 Generated KDoc: https://bitfireat.github.io/vcard4android/
+
 
 
 ## Contact
